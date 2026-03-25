@@ -1,0 +1,11 @@
+{
+  "id": "clintrial-explorer",
+  "name": "Clinical Trials Explorer",
+  "description": "Browse and analyze Roche/Genentech clinical trials from ClinicalTrials.gov",
+  "version": "0.1.0",
+  "icon": "flask-conical",
+  "path": "/apps/clintrial",
+  "internal_port": 3001,
+  "health_endpoint": "/health",
+  "constellation": "clintrial"
+}
