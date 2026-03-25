@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
-"""Import Roche/Genentech trials from ClinicalTrials.gov into WIP."""
+"""Import Roche/Genentech trials from ClinicalTrials.gov into WIP.
+
+Usage:
+    python import_trials.py              # Incremental: only trials changed since last sync
+    python import_trials.py --full       # Full: reimport everything (slow)
+    python import_trials.py --since 2025-01-01  # Only trials updated after this date
+"""
 
 import requests
 import json
 import sys
 import time
 import re
+import os
 import urllib3
+from datetime import datetime, timezone
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 WIP_BASE = "https://localhost:8443"
 WIP_API_KEY = "dev_master_key_for_testing"
 CTGOV_BASE = "https://clinicaltrials.gov/api/v2"
 NAMESPACE = "clintrial"
+SYNC_STATE_FILE = os.path.join(os.path.dirname(__file__), "..", "data-model", "sync-state.json")
 
 # Template IDs
 TEMPLATES = {
@@ -180,8 +189,34 @@ COUNTS = {
     "baselines_created": 0,
     "baselines_updated": 0,
     "files_uploaded": 0,
+    "skipped": 0,
     "errors": 0,
 }
+
+
+def load_sync_state():
+    """Load sync state from file. Returns dict of {nct_id: {last_update, synced_at}}."""
+    path = os.path.normpath(SYNC_STATE_FILE)
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return {"trials": {}, "last_sync": None}
+
+
+def save_sync_state(state):
+    """Save sync state to file."""
+    path = os.path.normpath(SYNC_STATE_FILE)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    state["last_sync"] = datetime.now(timezone.utc).isoformat()
+    with open(path, "w") as f:
+        json.dump(state, f, indent=2)
+
+
+def get_last_update_date(study):
+    """Extract lastUpdatePostDate from a CT.gov study."""
+    proto = study.get("protocolSection", {})
+    status_mod = proto.get("statusModule", {})
+    return status_mod.get("lastUpdatePostDateStruct", {}).get("date", "")
 
 
 def wip_headers():
@@ -301,8 +336,9 @@ def resolve_molecules(interventions):
     return found
 
 
-def fetch_trials_for_sponsor(sponsor, page_size=10):
+def fetch_trials_for_sponsor(sponsor, page_size=10, since_date=None):
     """Search ClinicalTrials.gov for trials by sponsor.
+    If since_date is set (YYYY-MM-DD), only returns trials updated after that date.
     Returns list of study dicts.
     """
     url = f"{CTGOV_BASE}/studies"
@@ -311,6 +347,9 @@ def fetch_trials_for_sponsor(sponsor, page_size=10):
         "pageSize": page_size,
         "fields": "protocolSection,hasResults",
     }
+    if since_date:
+        # Only fetch trials updated after this date
+        params["filter.advanced"] = f"AREA[LastUpdatePostDate]RANGE[{since_date},MAX]"
     try:
         resp = requests.get(url, params=params, timeout=30)
         resp.raise_for_status()
@@ -919,23 +958,54 @@ def import_trial(study):
 
 
 def main():
+    # Parse arguments
+    full_mode = "--full" in sys.argv
+    since_override = None
+    for i, arg in enumerate(sys.argv):
+        if arg == "--since" and i + 1 < len(sys.argv):
+            since_override = sys.argv[i + 1]
+
+    # Load sync state
+    sync_state = load_sync_state()
+    last_sync = sync_state.get("last_sync")
+    known_trials = sync_state.get("trials", {})
+
+    # Determine the "since" date for incremental mode
+    if full_mode:
+        since_date = None
+        mode_label = "FULL (reimporting everything)"
+    elif since_override:
+        since_date = since_override
+        mode_label = f"INCREMENTAL (since {since_date}, user-specified)"
+    elif last_sync:
+        # Use last sync date, back off by 1 day for safety
+        from datetime import timedelta
+        last_dt = datetime.fromisoformat(last_sync.replace("Z", "+00:00"))
+        safe_date = (last_dt - timedelta(days=1)).strftime("%Y-%m-%d")
+        since_date = safe_date
+        mode_label = f"INCREMENTAL (since {since_date}, based on last sync {last_sync[:10]})"
+    else:
+        since_date = None
+        mode_label = "FULL (first run, no sync state)"
+
     print("=" * 70)
     print("Clinical Trials Import: Roche/Genentech -> WIP")
+    print(f"Mode: {mode_label}")
+    print(f"Known trials in sync state: {len(known_trials)}")
     print("=" * 70)
 
     # Step 1: Fetch trials from both sponsors
-    # Use larger page sizes and paginate to get enough lead-sponsored trials
     target_per_sponsor = 50
 
     print(f"\nFetching Hoffmann-La Roche trials (target: {target_per_sponsor})...")
-    roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", page_size=200)
+    roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", page_size=200, since_date=since_date)
     print(f"  Found {len(roche_trials)} lead-sponsored Roche trials")
 
     print(f"\nFetching Genentech, Inc. trials (target: {target_per_sponsor})...")
-    genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", page_size=200)
+    genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", page_size=200, since_date=since_date)
     print(f"  Found {len(genentech_trials)} lead-sponsored Genentech trials")
 
-    # Step 2: Deduplicate by NCT ID, take up to target_per_sponsor from each
+    # Step 2: Deduplicate and filter unchanged trials
     seen_ncts = set()
     selected = []
 
@@ -943,26 +1013,44 @@ def main():
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
         if nct and nct not in seen_ncts:
             seen_ncts.add(nct)
-            selected.append((study, "Roche"))
+            # Check if already synced with same lastUpdatePostDate
+            ct_update = get_last_update_date(study)
+            prev = known_trials.get(nct, {})
+            if not full_mode and prev.get("last_update") == ct_update and ct_update:
+                COUNTS["skipped"] += 1
+                continue
+            selected.append((study, "Roche", ct_update))
 
     for study in genentech_trials[:target_per_sponsor]:
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
         if nct and nct not in seen_ncts:
             seen_ncts.add(nct)
-            selected.append((study, "Genentech"))
+            ct_update = get_last_update_date(study)
+            prev = known_trials.get(nct, {})
+            if not full_mode and prev.get("last_update") == ct_update and ct_update:
+                COUNTS["skipped"] += 1
+                continue
+            selected.append((study, "Genentech", ct_update))
 
-    print(f"\nSelected {len(selected)} trials for import:")
-    for study, source in selected:
+    print(f"\nSelected {len(selected)} trials to import ({COUNTS['skipped']} skipped, unchanged):")
+    for study, source, _ in selected[:20]:
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
         title = study.get("protocolSection", {}).get("identificationModule", {}).get("briefTitle", "")
         print(f"  [{source}] {nct}: {title[:65]}")
+    if len(selected) > 20:
+        print(f"  ... and {len(selected) - 20} more")
+
+    if not selected:
+        print("\nNothing to import — all trials are up to date.")
+        save_sync_state(sync_state)
+        return
 
     # Step 3: Create organizations FIRST
     print("\n" + "=" * 70)
     print("Phase 1: Creating Organizations")
     print("=" * 70)
     orgs_to_create = set()
-    for study, _ in selected:
+    for study, _, _ in selected:
         proto = study.get("protocolSection", {})
         sponsor_mod = proto.get("sponsorCollaboratorsModule", {})
         lead = sponsor_mod.get("leadSponsor", {}).get("name")
@@ -975,25 +1063,33 @@ def main():
 
     for org_name in sorted(orgs_to_create):
         create_organization(org_name)
-        time.sleep(0.2)
+        time.sleep(0.1)
 
     # Step 4: Fetch full details and import trials
     print("\n" + "=" * 70)
-    print("Phase 2: Importing Trials (with outcomes and sites)")
+    print("Phase 2: Importing Trials (with outcomes, sites, results, AEs, PDFs)")
     print("=" * 70)
 
-    for study, source in selected:
+    for study, source, ct_update in selected:
         nct_id = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
         # Fetch full detail (search results may have limited fields)
         full_study = fetch_trial_detail(nct_id)
         if full_study:
             import_trial(full_study)
         else:
-            # Fall back to search result data
             import_trial(study)
-        time.sleep(0.3)  # Brief pause between trials
 
-    # Step 5: Print summary
+        # Record in sync state
+        sync_state["trials"][nct_id] = {
+            "last_update": ct_update or get_last_update_date(full_study or study),
+            "synced_at": datetime.now(timezone.utc).isoformat(),
+            "source": source,
+        }
+        time.sleep(0.2)
+
+    # Step 5: Save sync state and print summary
+    save_sync_state(sync_state)
+
     print("\n" + "=" * 70)
     print("IMPORT SUMMARY")
     print("=" * 70)
@@ -1004,10 +1100,12 @@ def main():
     print(f"  Adverse Events: {COUNTS['aes_created']} created, {COUNTS['aes_updated']} updated")
     print(f"  Baselines:      {COUNTS['baselines_created']} created, {COUNTS['baselines_updated']} updated")
     print(f"  Files uploaded: {COUNTS['files_uploaded']}")
+    print(f"  Skipped:        {COUNTS['skipped']} (unchanged)")
     print(f"  Errors:         {COUNTS['errors']}")
     print()
-    total = sum(v for k, v in COUNTS.items() if k != "errors")
+    total = sum(v for k, v in COUNTS.items() if k not in ("errors", "skipped"))
     print(f"  Total documents: {total}")
+    print(f"  Sync state: {len(sync_state['trials'])} trials tracked")
 
 
 if __name__ == "__main__":
