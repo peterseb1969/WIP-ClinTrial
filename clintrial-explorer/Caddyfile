@@ -1,0 +1,20 @@
+:3001 {
+	root * /srv
+	file_server
+
+	# SPA fallback — serve index.html for any path not matching a file
+	try_files {path} /index.html
+
+	# Health endpoint
+	respond /health 200 {
+		body "OK"
+		close
+	}
+
+	# Proxy API requests to WIP services
+	reverse_proxy /api/* {$WIP_UPSTREAM:localhost:8443} {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}
