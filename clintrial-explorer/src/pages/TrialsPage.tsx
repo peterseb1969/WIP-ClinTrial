@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Search, X, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import { Card } from '@/components/Card'
@@ -28,6 +28,8 @@ type FilterKey =
   | 'search'
   | 'country'
 
+const FILTER_STORAGE_KEY = 'clintrial-trial-filters'
+
 export function TrialsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -35,6 +37,28 @@ export function TrialsPage() {
   const { has: isBookmarked } = useBookmarks()
   const [page, setPage] = useState(1)
   const [aggregateOpen, setAggregateOpen] = useState(false)
+
+  // On mount: if URL has no params but sessionStorage has saved filters, restore them
+  useEffect(() => {
+    if (searchParams.toString() === '') {
+      try {
+        const saved = sessionStorage.getItem(FILTER_STORAGE_KEY)
+        if (saved) {
+          const restored = new URLSearchParams(saved)
+          if (restored.toString()) {
+            setSearchParams(restored, { replace: true })
+          }
+        }
+      } catch { /* ignore */ }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps — intentionally run only on mount
+
+  // Persist filters to sessionStorage whenever they change
+  useEffect(() => {
+    if (searchParams.toString()) {
+      sessionStorage.setItem(FILTER_STORAGE_KEY, searchParams.toString())
+    }
+  }, [searchParams])
 
   // Read filters from URL
   const filters = useMemo(() => {
@@ -98,6 +122,7 @@ export function TrialsPage() {
   }
 
   const clearFilters = () => {
+    sessionStorage.removeItem(FILTER_STORAGE_KEY)
     setSearchParams({})
     setPage(1)
   }
