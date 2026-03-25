@@ -7,8 +7,8 @@ import { BookmarkButton } from '@/components/BookmarkButton'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { useAllTrials, useTrialsByCountry, type TrialDocument } from '@/hooks/useAllTrials'
-import { useBookmarks } from '@/hooks/useBookmarks'
+import { type TrialDocument } from '@/hooks/useAllTrials'
+import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters, type FilterKey } from '@/hooks/useTrialFilters'
 import { formatPhase } from '@/lib/trial-utils'
 import { cn, formatNumber } from '@/lib/utils'
@@ -17,44 +17,10 @@ const PAGE_SIZE = 25
 
 export function TrialsPage() {
   const navigate = useNavigate()
-  const { data: trials, isLoading, error, refetch } = useAllTrials()
-  const { has: isBookmarked } = useBookmarks()
+  const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
   const { filters, set: setFilter } = useTrialFilters()
   const [page, setPage] = useState(1)
   const [aggregateOpen, setAggregateOpen] = useState(false)
-
-  // Server-side: fetch NCT IDs with sites in a given country
-  const { data: countryNctIds } = useTrialsByCountry(filters.country)
-
-  // Filter trials using global filter state
-  const filtered = useMemo(() => {
-    if (!trials) return []
-    if (filters.country && !countryNctIds) return []
-
-    return trials.filter((t) => {
-      const d = t.data
-      if (filters.status && d.status !== filters.status) return false
-      if (filters.phase && !d.phases?.includes(filters.phase)) return false
-      if (filters.study_type && d.study_type !== filters.study_type) return false
-      if (filters.therapeutic_area && !d.therapeutic_areas?.includes(filters.therapeutic_area)) return false
-      if (filters.molecule && !d.interventions?.includes(filters.molecule)) return false
-      if (filters.sponsor && d.sponsor !== filters.sponsor) return false
-      if (filters.has_results === 'true' && !d.has_results) return false
-      if (filters.has_results === 'false' && d.has_results) return false
-      if (filters.bookmarked === 'true' && !isBookmarked(d.nct_id)) return false
-      if (filters.country && countryNctIds && !countryNctIds.has(d.nct_id)) return false
-      if (filters.condition) {
-        const q = filters.condition.toLowerCase()
-        if (!d.conditions?.some((c) => c.toLowerCase().includes(q))) return false
-      }
-      if (filters.search) {
-        const q = filters.search.toLowerCase()
-        const searchable = [d.nct_id, d.title, d.brief_title, d.acronym, ...(d.conditions || []), ...(d.interventions || [])].filter(Boolean).join(' ').toLowerCase()
-        if (!searchable.includes(q)) return false
-      }
-      return true
-    })
-  }, [trials, filters, isBookmarked, countryNctIds])
 
   // Paginate
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
@@ -96,7 +62,7 @@ export function TrialsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Trials</h1>
         <span className="text-sm text-text-muted">
-          {formatNumber(filtered.length)} of {formatNumber(trials?.length ?? 0)} trials
+          {formatNumber(filtered.length)} of {formatNumber(allTrials?.length ?? 0)} trials
         </span>
       </div>
 
@@ -114,7 +80,7 @@ export function TrialsPage() {
         </div>
 
         {/* Quick filters */}
-        <QuickFilters filters={filters} setFilter={updateFilter} trials={trials ?? []} />
+        <QuickFilters filters={filters} setFilter={updateFilter} trials={allTrials ?? []} />
       </div>
 
       {/* Results table */}
@@ -266,13 +232,13 @@ function QuickFilters({
       <FilterSelect
         label="Status"
         value={filters.status}
-        options={statuses.map(([v, c]) => ({ value: v, label: `${v.replace(/_/g, ' ')} (${c})` }))}
+        options={statuses.map(([v, c]: [string, number]) => ({ value: v, label: `${v.replace(/_/g, ' ')} (${c})` }))}
         onChange={(v) => setFilter('status', v)}
       />
       <FilterSelect
         label="Phase"
         value={filters.phase}
-        options={phases.map(([v, c]) => ({ value: v, label: `${formatPhase(v)} (${c})` }))}
+        options={phases.map(([v, c]: [string, number]) => ({ value: v, label: `${formatPhase(v)} (${c})` }))}
         onChange={(v) => setFilter('phase', v)}
       />
       <FilterToggle
@@ -396,7 +362,7 @@ function AggregatePanel({ trials }: { trials: TrialDocument[] }) {
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-text-muted">Top Conditions</h4>
           <ul className="space-y-1 text-sm">
-            {topConditions.map(([name, count]) => (
+            {topConditions.map(([name, count]: [string, number]) => (
               <li key={name} className="flex justify-between">
                 <span className="truncate pr-2">{name}</span>
                 <span className="flex-shrink-0 text-text-muted">{count}</span>
@@ -409,7 +375,7 @@ function AggregatePanel({ trials }: { trials: TrialDocument[] }) {
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-text-muted">Top Molecules</h4>
           <ul className="space-y-1 text-sm">
-            {topMolecules.map(([name, count]) => (
+            {topMolecules.map(([name, count]: [string, number]) => (
               <li key={name} className="flex justify-between">
                 <span className="truncate pr-2">{name}</span>
                 <span className="flex-shrink-0 text-text-muted">{count}</span>

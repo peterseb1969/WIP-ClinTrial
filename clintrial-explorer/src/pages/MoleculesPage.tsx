@@ -3,51 +3,42 @@ import { Search } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { PageLoading } from '@/components/LoadingSpinner'
-import { useAllTrials } from '@/hooks/useAllTrials'
+import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useFilterNav } from '@/hooks/useFilterNav'
 
 export function MoleculesPage() {
-  const { data: trials, isLoading: loadingTrials } = useAllTrials()
+  const { trials: filtered, isLoading } = useFilteredTrials()
   const addFilter = useFilterNav()
   const [search, setSearch] = useState('')
 
-  // We need to fetch molecules by terminology value. Let me use the client directly.
-  // Actually, useTerms needs terminologyId. Let's find it from the terminologies list.
-  // For now, we'll derive molecule info from the trial data since the terms are already
-  // referenced in trial documents.
-
-  // Build molecule → trial count map from trial data
-  const moleculeStats = useMemo(() => {
-    if (!trials) return new Map<string, number>()
+  // Build molecule → trial count from the filtered set
+  const molecules = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const t of trials) {
+    for (const t of filtered) {
       for (const mol of t.data.interventions || []) {
         counts.set(mol, (counts.get(mol) || 0) + 1)
       }
     }
-    return counts
-  }, [trials])
-
-  // Get unique molecules sorted by trial count
-  const molecules = useMemo(() => {
-    return [...moleculeStats.entries()]
+    return [...counts.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-  }, [moleculeStats])
+  }, [filtered])
 
-  const filtered = useMemo(() => {
+  const searchFiltered = useMemo(() => {
     if (!search) return molecules
     const q = search.toLowerCase()
     return molecules.filter((m) => m.name.toLowerCase().includes(q))
   }, [molecules, search])
 
-  if (loadingTrials) return <PageLoading message="Loading molecules..." />
+  if (isLoading) return <PageLoading message="Loading molecules..." />
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Molecules</h1>
-        <span className="text-sm text-text-muted">{molecules.length} molecules</span>
+        <span className="text-sm text-text-muted">
+          {molecules.length} molecules across {filtered.length} trials
+        </span>
       </div>
 
       {/* Search */}
@@ -64,7 +55,7 @@ export function MoleculesPage() {
 
       {/* Molecule cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((mol) => (
+        {searchFiltered.map((mol) => (
           <Card key={mol.name} className="hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
@@ -90,9 +81,9 @@ export function MoleculesPage() {
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {searchFiltered.length === 0 && (
         <p className="py-12 text-center text-text-muted">
-          No molecules match &quot;{search}&quot;
+          No molecules match{search ? ` "${search}"` : ' the current filters'}.
         </p>
       )}
     </div>

@@ -5,37 +5,66 @@ import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { formatNumber } from '@/lib/utils'
 import { reportQuery } from '@/lib/reporting'
+import { useFilteredTrials } from '@/hooks/useFilteredTrials'
+import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { useFilterNav } from '@/hooks/useFilterNav'
 
 type SortKey = 'country' | 'trials' | 'sites'
 
 export function SitesPage() {
   const addFilter = useFilterNav()
+  const { trials: filtered, isLoading: loadingTrials } = useFilteredTrials()
+  const { hasActive } = useTrialFilters()
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('trials')
   const [sortAsc, setSortAsc] = useState(false)
 
-  // Single SQL query aggregates 25K+ sites server-side
-  const { data: siteStats, isLoading: loadingSites } = useQuery({
+  // Get filtered NCT IDs (excluding any country filter — we don't want to filter sites by country)
+  const filteredNctIds = useMemo(
+    () => new Set(filtered.map((t) => t.data.nct_id)),
+    [filtered],
+  )
+
+  // Fetch all site stats server-side
+  const { data: allSiteStats, isLoading: loadingSites } = useQuery({
     queryKey: ['clintrial', 'site-stats'],
     queryFn: async () => {
-      const result = await reportQuery<{ country: string; trial_count: number; site_count: number }>(
-        `SELECT country, COUNT(DISTINCT nct_id) as trial_count, COUNT(*) as site_count
+      const result = await reportQuery<{ country: string; nct_id: string; site_count: number }>(
+        `SELECT country, nct_id, COUNT(*) as site_count
          FROM doc_ct_trial_site
-         GROUP BY country
-         ORDER BY trial_count DESC`,
+         GROUP BY country, nct_id`,
+        [],
+        50000,
       )
-      return result.rows.map((r) => ({
-        country: r.country || 'Unknown',
-        trialCount: Number(r.trial_count),
-        siteCount: Number(r.site_count),
-      }))
+      return result.rows
     },
     staleTime: 5 * 60 * 1000,
   })
 
-  const filtered = useMemo(() => {
-    if (!siteStats) return []
+  // Aggregate site stats, scoped to filtered trials
+  const siteStats = useMemo(() => {
+    if (!allSiteStats) return []
+    const countryMap = new Map<string, { trials: number; sites: number }>()
+
+    for (const row of allSiteStats) {
+      // If filters are active (other than country), only count sites for matching trials
+      if (hasActive && !filteredNctIds.has(row.nct_id)) continue
+
+      const country = row.country || 'Unknown'
+      const entry = countryMap.get(country) ?? { trials: 0, sites: 0 }
+      entry.trials++
+      entry.sites += Number(row.site_count)
+      countryMap.set(country, entry)
+    }
+
+    return [...countryMap.entries()].map(([country, data]) => ({
+      country,
+      trialCount: data.trials,
+      siteCount: data.sites,
+    }))
+  }, [allSiteStats, filteredNctIds, hasActive])
+
+  const displayed = useMemo(() => {
     let result = siteStats
     if (search) {
       const q = search.toLowerCase()
@@ -51,16 +80,16 @@ export function SitesPage() {
     return result
   }, [siteStats, search, sortKey, sortAsc])
 
-  const totalSites = siteStats?.reduce((s, c) => s + c.siteCount, 0) ?? 0
+  const totalSites = siteStats.reduce((s, c) => s + c.siteCount, 0)
 
-  if (loadingSites) return <PageLoading message="Loading sites data..." />
+  if (loadingTrials || loadingSites) return <PageLoading message="Loading sites data..." />
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sites</h1>
         <span className="text-sm text-text-muted">
-          {formatNumber(totalSites)} sites · {siteStats?.length ?? 0} countries
+          {formatNumber(totalSites)} sites · {siteStats.length} countries
         </span>
       </div>
 
@@ -94,7 +123,7 @@ export function SitesPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((row) => (
+            {displayed.map((row) => (
               <tr key={row.country} className="border-b border-gray-100 hover:bg-gray-50/50">
                 <td className="px-4 py-2.5">
                   <button
