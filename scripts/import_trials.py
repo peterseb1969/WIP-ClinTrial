@@ -157,6 +157,14 @@ COUNTRY_MAP = {
     "American Samoa": "US",
 }
 
+# Additional template IDs for results data
+TEMPLATES_EXTRA = {
+    "CT_TRIAL_AE": "019d25e6-4097-7087-a661-5a1bd4827da8",
+    "CT_TRIAL_BASELINE": "019d25e6-4098-70bd-b345-76bb6e6b8640",
+}
+# Merge into TEMPLATES
+TEMPLATES.update(TEMPLATES_EXTRA)
+
 # Counters for summary
 COUNTS = {
     "orgs_created": 0,
@@ -167,6 +175,11 @@ COUNTS = {
     "outcomes_updated": 0,
     "sites_created": 0,
     "sites_updated": 0,
+    "aes_created": 0,
+    "aes_updated": 0,
+    "baselines_created": 0,
+    "baselines_updated": 0,
+    "files_uploaded": 0,
     "errors": 0,
 }
 
@@ -318,7 +331,7 @@ def fetch_trials_for_sponsor(sponsor, page_size=10):
 
 
 def fetch_trial_detail(nct_id):
-    """Fetch full trial detail from ClinicalTrials.gov."""
+    """Fetch full trial detail from ClinicalTrials.gov including results and documents."""
     url = f"{CTGOV_BASE}/studies/{nct_id}"
     try:
         resp = requests.get(url, timeout=30)
@@ -327,6 +340,19 @@ def fetch_trial_detail(nct_id):
     except Exception as e:
         print(f"ERROR fetching detail for {nct_id}: {e}")
         return None
+
+
+def fetch_trial_results_and_docs(nct_id):
+    """Fetch results section and document section separately (not in search results)."""
+    url = f"{CTGOV_BASE}/studies/{nct_id}"
+    params = {"fields": "resultsSection,documentSection"}
+    try:
+        resp = requests.get(url, params=params, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        print(f"  WARN: Could not fetch results/docs for {nct_id}: {e}")
+        return {}
 
 
 def extract_trial_data(study):
@@ -546,6 +572,270 @@ def create_sites(nct_id, locations, max_sites=20):
     return created
 
 
+def create_adverse_events(nct_id, ae_module):
+    """Create CT_TRIAL_AE documents from the adverseEventsModule."""
+    if not ae_module:
+        return 0
+
+    created = 0
+    event_groups = ae_module.get("eventGroups", [])
+    # Build group lookup for titles
+    group_titles = {g.get("id"): g.get("title", "") for g in event_groups}
+
+    for category, events_key in [("SERIOUS", "seriousEvents"), ("OTHER", "otherEvents")]:
+        events = ae_module.get(events_key, [])
+        for event in events:
+            term = event.get("term", "")
+            if not term:
+                continue
+
+            stats = []
+            for s in event.get("stats", []):
+                stat = {"group_id": s.get("groupId", "")}
+                stat["group_title"] = group_titles.get(stat["group_id"], "")
+                if s.get("numEvents") is not None:
+                    stat["num_events"] = s["numEvents"]
+                if s.get("numAffected") is not None:
+                    stat["num_affected"] = s["numAffected"]
+                if s.get("numAtRisk") is not None:
+                    stat["num_at_risk"] = s["numAtRisk"]
+                stats.append(stat)
+
+            data = {
+                "nct_id": nct_id,
+                "trial": nct_id,
+                "ae_category": category,
+                "term": term,
+                "stats": stats,
+            }
+            if event.get("organSystem"):
+                data["organ_system"] = event["organSystem"]
+            if event.get("sourceVocabulary"):
+                data["source_vocabulary"] = event["sourceVocabulary"]
+
+            result = wip_create_document("CT_TRIAL_AE", data)
+            if result:
+                s = result.get("_import_status", "created")
+                COUNTS["aes_created" if s == "created" else "aes_updated"] += 1
+                created += 1
+
+    return created
+
+
+def create_baselines(nct_id, baseline_module):
+    """Create CT_TRIAL_BASELINE documents from baselineCharacteristicsModule."""
+    if not baseline_module:
+        return 0
+
+    created = 0
+    groups = baseline_module.get("groups", [])
+    group_titles = {g.get("id"): g.get("title", "") for g in groups}
+
+    for measure in baseline_module.get("measures", []):
+        title = measure.get("title", "")
+        if not title:
+            continue
+
+        data = {
+            "nct_id": nct_id,
+            "trial": nct_id,
+            "measure_title": title,
+        }
+        if measure.get("paramType"):
+            data["param_type"] = measure["paramType"]
+        if measure.get("dispersionType"):
+            data["dispersion_type"] = measure["dispersionType"]
+        if measure.get("unitOfMeasure"):
+            data["unit_of_measure"] = measure["unitOfMeasure"]
+
+        # Build categories with measurements
+        categories = []
+        for cls in measure.get("classes", []):
+            for cat in cls.get("categories", []):
+                cat_data = {}
+                if cat.get("title"):
+                    cat_data["title"] = cat["title"]
+                measurements = []
+                for m in cat.get("measurements", []):
+                    meas = {"group_id": m.get("groupId", "")}
+                    meas["group_title"] = group_titles.get(meas["group_id"], "")
+                    if m.get("value") is not None:
+                        meas["value"] = str(m["value"])
+                    if m.get("spread") is not None:
+                        meas["spread"] = str(m["spread"])
+                    if m.get("lowerLimit") is not None:
+                        meas["lower_limit"] = str(m["lowerLimit"])
+                    if m.get("upperLimit") is not None:
+                        meas["upper_limit"] = str(m["upperLimit"])
+                    measurements.append(meas)
+                cat_data["measurements"] = measurements
+                categories.append(cat_data)
+
+        if categories:
+            data["categories"] = categories
+
+        result = wip_create_document("CT_TRIAL_BASELINE", data)
+        if result:
+            s = result.get("_import_status", "created")
+            COUNTS["baselines_created" if s == "created" else "baselines_updated"] += 1
+            created += 1
+
+    return created
+
+
+def update_outcome_with_results(nct_id, results_outcomes):
+    """Update existing CT_TRIAL_OUTCOME documents with numeric result data."""
+    if not results_outcomes:
+        return 0
+
+    updated = 0
+    for om in results_outcomes:
+        otype = om.get("type", "").upper()
+        if otype not in ("PRIMARY", "SECONDARY"):
+            otype = "OTHER"
+
+        # Build result groups from the classes/categories/measurements
+        result_groups = []
+        groups = om.get("groups", [])
+        group_titles = {g.get("id"): g.get("title", "") for g in groups}
+
+        for cls in om.get("classes", []):
+            for cat in cls.get("categories", []):
+                for m in cat.get("measurements", []):
+                    rg = {"group_id": m.get("groupId", "")}
+                    rg["group_title"] = group_titles.get(rg["group_id"], "")
+                    if m.get("value") is not None:
+                        rg["value"] = str(m["value"])
+                    if m.get("spread") is not None:
+                        rg["spread"] = str(m["spread"])
+                    if m.get("lowerLimit") is not None:
+                        rg["lower_limit"] = str(m["lowerLimit"])
+                    if m.get("upperLimit") is not None:
+                        rg["upper_limit"] = str(m["upperLimit"])
+                    if m.get("numSubjects"):
+                        rg["num_subjects"] = str(m["numSubjects"])
+                    result_groups.append(rg)
+
+        # Build analyses
+        analyses = []
+        for a in om.get("analyses", []):
+            analysis = {}
+            if a.get("groupIds"):
+                analysis["group_ids"] = a["groupIds"]
+            if a.get("pValue"):
+                analysis["p_value"] = a["pValue"]
+            if a.get("statisticalMethod"):
+                analysis["statistical_method"] = a["statisticalMethod"]
+            if a.get("nonInferiorityType"):
+                analysis["non_inferiority_type"] = a["nonInferiorityType"]
+            if analysis:
+                analyses.append(analysis)
+
+        # We need to find the matching outcome by measure text (approximate)
+        # For now, create/update outcomes with result data using the same identity
+        # This relies on WIP's identity dedup: same nct_id+type+sequence = update
+        measure = om.get("title", "")
+        if not measure:
+            continue
+
+        # Determine sequence among same-type outcomes
+        same_type = [o for o in results_outcomes if (o.get("type", "").upper() or "OTHER") == otype]
+        seq = next((i + 1 for i, o in enumerate(same_type) if o is om), 1)
+
+        data = {
+            "nct_id": nct_id,
+            "trial": nct_id,
+            "outcome_type": otype,
+            "sequence": seq,
+            "measure": measure,
+        }
+        if om.get("timeFrame"):
+            data["time_frame"] = om["timeFrame"]
+        if om.get("description"):
+            data["description"] = om["description"]
+        if om.get("paramType"):
+            data["param_type"] = om["paramType"]
+        if om.get("dispersionType"):
+            data["dispersion_type"] = om["dispersionType"]
+        if om.get("unitOfMeasure"):
+            data["unit_of_measure"] = om["unitOfMeasure"]
+        if result_groups:
+            data["result_groups"] = result_groups
+        if analyses:
+            data["analyses"] = analyses
+
+        result = wip_create_document("CT_TRIAL_OUTCOME", data)
+        if result:
+            COUNTS["outcomes_updated"] += 1
+            updated += 1
+
+    return updated
+
+
+def download_and_upload_documents(nct_id, doc_section):
+    """Download protocol/SAP PDFs from CT.gov and upload to WIP."""
+    if not doc_section:
+        return []
+
+    large_docs = doc_section.get("largeDocumentModule", {}).get("largeDocs", [])
+    if not large_docs:
+        return []
+
+    file_ids = []
+    nct_num = nct_id.replace("NCT", "")
+    last2 = nct_num[-2:]
+
+    for doc in large_docs:
+        filename = doc.get("filename", "")
+        if not filename:
+            continue
+        # Only download protocols and SAPs
+        type_abbrev = doc.get("typeAbbrev", "")
+        if not any(t in type_abbrev for t in ["Prot", "SAP", "ICF"]):
+            continue
+
+        download_url = f"https://cdn.clinicaltrials.gov/large-docs/{last2}/{nct_id}/{filename}"
+        try:
+            resp = requests.get(download_url, timeout=60)
+            if resp.status_code != 200:
+                print(f"    WARN: Failed to download {filename} (HTTP {resp.status_code})")
+                continue
+
+            # Upload to WIP file storage
+            upload_url = f"{WIP_BASE}/api/document-store/files"
+            files_payload = {"file": (filename, resp.content, "application/pdf")}
+            form_data = {"namespace": NAMESPACE}
+            upload_resp = requests.post(
+                upload_url,
+                files=files_payload,
+                data=form_data,
+                headers={"X-API-Key": WIP_API_KEY},
+                verify=False,
+                timeout=60,
+            )
+            if upload_resp.status_code == 200:
+                upload_result = upload_resp.json()
+                # Extract file_id from response
+                fid = None
+                if isinstance(upload_result, list) and upload_result:
+                    fid = upload_result[0].get("file_id") or upload_result[0].get("id")
+                elif isinstance(upload_result, dict):
+                    fid = upload_result.get("file_id") or upload_result.get("id")
+                if fid:
+                    file_ids.append(fid)
+                    COUNTS["files_uploaded"] += 1
+                    size_kb = len(resp.content) // 1024
+                    print(f"    Uploaded {filename} ({size_kb}KB) -> {fid}")
+                else:
+                    print(f"    WARN: Upload succeeded but no file_id in response: {json.dumps(upload_result)[:200]}")
+            else:
+                print(f"    WARN: Upload failed for {filename} (HTTP {upload_resp.status_code}): {upload_resp.text[:200]}")
+        except Exception as e:
+            print(f"    WARN: Error downloading/uploading {filename}: {e}")
+
+    return file_ids
+
+
 def import_trial(study):
     """Import a single trial with all child documents.
     Assumes organization already exists.
@@ -561,16 +851,16 @@ def import_trial(study):
     print(f"Importing {nct_id}: {trial_data['title'][:70]}")
     print(f"{'='*70}")
 
-    # Step 1: Create the trial
+    # Step 1: Create the trial (may need to update with file IDs later)
     trial_result = create_trial(trial_data)
     if not trial_result:
-        print(f"  FAILED to create trial {nct_id}, skipping outcomes/sites")
+        print(f"  FAILED to create trial {nct_id}, skipping child documents")
         return
 
     # Brief pause to let WIP index
     time.sleep(0.3)
 
-    # Step 2: Create outcomes
+    # Step 2: Create outcomes (basic endpoint descriptions)
     n_primary = len(trial_data.get("primary_outcomes", []))
     n_secondary = len(trial_data.get("secondary_outcomes", []))
     print(f"  Creating outcomes: {n_primary} primary, {n_secondary} secondary")
@@ -581,6 +871,51 @@ def import_trial(study):
     max_s = 50
     print(f"  Creating sites: {min(n_locations, max_s)} of {n_locations} locations")
     create_sites(nct_id, trial_data["locations"], max_sites=max_s)
+
+    # Step 4: Wave 2 — Results, AEs, Baselines, PDFs
+    # Fetch results and document sections (separate API call with specific fields)
+    has_results = trial_data.get("has_results", False)
+    if has_results:
+        print(f"  Fetching results and documents for {nct_id}...")
+        extra = fetch_trial_results_and_docs(nct_id)
+        results_section = extra.get("resultsSection", {})
+
+        # 4a: Adverse events
+        ae_module = results_section.get("adverseEventsModule", {})
+        n_serious = len(ae_module.get("seriousEvents", []))
+        n_other = len(ae_module.get("otherEvents", []))
+        if n_serious or n_other:
+            print(f"  Creating AEs: {n_serious} serious, {n_other} other")
+            create_adverse_events(nct_id, ae_module)
+
+        # 4b: Baseline characteristics
+        baseline_module = results_section.get("baselineCharacteristicsModule", {})
+        n_baselines = len(baseline_module.get("measures", []))
+        if n_baselines:
+            print(f"  Creating baselines: {n_baselines} measures")
+            create_baselines(nct_id, baseline_module)
+
+        # 4c: Update outcomes with numeric result data
+        outcome_measures = results_section.get("outcomeMeasuresModule", {}).get("outcomeMeasures", [])
+        if outcome_measures:
+            print(f"  Updating outcomes with results: {len(outcome_measures)} measures")
+            update_outcome_with_results(nct_id, outcome_measures)
+
+        # 4d: Download protocol/SAP PDFs
+        doc_section = extra.get("documentSection", {})
+        n_docs = len(doc_section.get("largeDocumentModule", {}).get("largeDocs", []))
+        if n_docs:
+            print(f"  Downloading {n_docs} document(s)...")
+            file_ids = download_and_upload_documents(nct_id, doc_section)
+            # TODO: update trial document with file IDs once file linking is tested
+    else:
+        # Even trials without results might have documents
+        extra = fetch_trial_results_and_docs(nct_id)
+        doc_section = extra.get("documentSection", {})
+        n_docs = len(doc_section.get("largeDocumentModule", {}).get("largeDocs", []))
+        if n_docs:
+            print(f"  Downloading {n_docs} document(s)...")
+            file_ids = download_and_upload_documents(nct_id, doc_section)
 
 
 def main():
@@ -666,14 +1001,12 @@ def main():
     print(f"  Trials:         {COUNTS['trials_created']} created, {COUNTS['trials_updated']} updated")
     print(f"  Outcomes:       {COUNTS['outcomes_created']} created, {COUNTS['outcomes_updated']} updated")
     print(f"  Sites:          {COUNTS['sites_created']} created, {COUNTS['sites_updated']} updated")
+    print(f"  Adverse Events: {COUNTS['aes_created']} created, {COUNTS['aes_updated']} updated")
+    print(f"  Baselines:      {COUNTS['baselines_created']} created, {COUNTS['baselines_updated']} updated")
+    print(f"  Files uploaded: {COUNTS['files_uploaded']}")
     print(f"  Errors:         {COUNTS['errors']}")
     print()
-    total = (
-        COUNTS["orgs_created"] + COUNTS["orgs_updated"]
-        + COUNTS["trials_created"] + COUNTS["trials_updated"]
-        + COUNTS["outcomes_created"] + COUNTS["outcomes_updated"]
-        + COUNTS["sites_created"] + COUNTS["sites_updated"]
-    )
+    total = sum(v for k, v in COUNTS.items() if k != "errors")
     print(f"  Total documents: {total}")
 
 
