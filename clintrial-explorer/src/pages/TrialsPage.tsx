@@ -136,7 +136,32 @@ export function TrialsPage() {
         </span>
       </div>
 
-      {/* Search + active filters */}
+      {/* Active filter tags — prominent, right under the title */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+          <span className="text-xs font-medium text-primary">Filtered by:</span>
+          {Object.entries(filters)
+            .filter(([k]) => k !== 'search')
+            .map(([key, value]) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key as FilterKey, null)}
+                className="inline-flex items-center gap-1 rounded-full bg-primary text-white px-2.5 py-1 text-xs font-medium hover:bg-primary/80"
+              >
+                {key}: {value}
+                <X className="h-3 w-3" />
+              </button>
+            ))}
+          <button
+            onClick={clearFilters}
+            className="ml-auto text-xs text-primary hover:text-danger font-medium"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
+      {/* Search + quick filters */}
       <div className="space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
@@ -148,29 +173,6 @@ export function TrialsPage() {
             className="w-full rounded-lg border border-gray-300 bg-surface py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
-
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2">
-            {Object.entries(filters)
-              .filter(([k]) => k !== 'search')
-              .map(([key, value]) => (
-                <button
-                  key={key}
-                  onClick={() => setFilter(key as FilterKey, null)}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20"
-                >
-                  {key}: {value}
-                  <X className="h-3 w-3" />
-                </button>
-              ))}
-            <button
-              onClick={clearFilters}
-              className="text-xs text-text-muted hover:text-danger"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
 
         {/* Quick filters */}
         <QuickFilters filters={filters} setFilter={setFilter} trials={trials ?? []} />
