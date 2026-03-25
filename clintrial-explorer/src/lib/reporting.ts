@@ -19,7 +19,11 @@ export async function reportQuery<T = Record<string, unknown>>(
       'Content-Type': 'application/json',
       'X-API-Key': config.wipApiKey,
     },
-    body: JSON.stringify({ sql, params: params ?? null, max_rows: maxRows }),
+    body: JSON.stringify({
+      sql,
+      ...(params && params.length > 0 ? { params } : {}),
+      max_rows: maxRows,
+    }),
   })
 
   if (!res.ok) {
