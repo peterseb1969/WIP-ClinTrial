@@ -1092,8 +1092,25 @@ def main():
     print("Phase 2: Importing Trials (with outcomes, sites, results, AEs, PDFs)")
     print("=" * 70)
 
-    for study, source, ct_update in selected:
+    total_selected = len(selected)
+    import_start = time.time()
+
+    for idx, (study, source, ct_update) in enumerate(selected, 1):
         nct_id = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
+
+        # Progress indicator with ETA
+        elapsed = time.time() - import_start
+        if idx > 1:
+            rate = (idx - 1) / elapsed
+            remaining = (total_selected - idx + 1) / rate
+            mins_left = int(remaining // 60)
+            secs_left = int(remaining % 60)
+            eta = f"  ETA {mins_left}m{secs_left:02d}s"
+        else:
+            eta = ""
+
+        print(f"\n[{idx}/{total_selected}]{eta}")
+
         # Fetch full detail (search results may have limited fields)
         full_study = fetch_trial_detail(nct_id)
         if full_study:
@@ -1101,19 +1118,26 @@ def main():
         else:
             import_trial(study)
 
-        # Record in sync state
+        # Record in sync state (and save periodically so progress isn't lost on crash)
         sync_state["trials"][nct_id] = {
             "last_update": ct_update or get_last_update_date(full_study or study),
             "synced_at": datetime.now(timezone.utc).isoformat(),
             "source": source,
         }
+        if idx % 50 == 0:
+            save_sync_state(sync_state)
+            print(f"  [checkpoint: sync state saved at {idx}/{total_selected}]")
+
         time.sleep(0.2)
 
     # Step 5: Save sync state and print summary
     save_sync_state(sync_state)
+    elapsed_total = time.time() - import_start
+    mins = int(elapsed_total // 60)
+    secs = int(elapsed_total % 60)
 
     print("\n" + "=" * 70)
-    print("IMPORT SUMMARY")
+    print(f"IMPORT SUMMARY  ({mins}m{secs:02d}s elapsed)")
     print("=" * 70)
     print(f"  Organizations:  {COUNTS['orgs_created']} created, {COUNTS['orgs_updated']} updated")
     print(f"  Trials:         {COUNTS['trials_created']} created, {COUNTS['trials_updated']} updated")
