@@ -1,8 +1,12 @@
-import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useFilterNav } from '@/hooks/useFilterNav'
+import type { FilterKey } from '@/hooks/useTrialFilters'
 
 interface ChipLinkProps {
-  to: string
+  /** Filter key to set when clicked */
+  filterKey: FilterKey
+  /** Filter value */
+  filterValue: string
   children: React.ReactNode
   variant?: 'default' | 'primary' | 'accent'
   className?: string
@@ -14,17 +18,19 @@ const variantClasses = {
   accent: 'bg-accent/10 text-accent hover:bg-accent/20',
 }
 
-export function ChipLink({ to, children, variant = 'default', className }: ChipLinkProps) {
+export function ChipLink({ filterKey, filterValue, children, variant = 'default', className }: ChipLinkProps) {
+  const addFilter = useFilterNav()
+
   return (
-    <Link
-      to={to}
+    <button
+      onClick={() => addFilter(filterKey, filterValue)}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors',
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors cursor-pointer',
         variantClasses[variant],
         className,
       )}
     >
       {children}
-    </Link>
+    </button>
   )
 }

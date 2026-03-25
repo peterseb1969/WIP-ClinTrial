@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Search, ArrowUpDown } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
-import { trialsUrl, formatNumber } from '@/lib/utils'
+import { formatNumber } from '@/lib/utils'
 import { reportQuery } from '@/lib/reporting'
+import { useFilterNav } from '@/hooks/useFilterNav'
 
 type SortKey = 'country' | 'trials' | 'sites'
 
 export function SitesPage() {
+  const addFilter = useFilterNav()
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('trials')
   const [sortAsc, setSortAsc] = useState(false)
@@ -96,17 +97,20 @@ export function SitesPage() {
             {filtered.map((row) => (
               <tr key={row.country} className="border-b border-gray-100 hover:bg-gray-50/50">
                 <td className="px-4 py-2.5">
-                  <Link
-                    to={trialsUrl({ country: row.country })}
+                  <button
+                    onClick={() => addFilter('country', row.country)}
                     className="font-medium text-primary hover:underline"
                   >
                     {row.country}
-                  </Link>
+                  </button>
                 </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">
-                  <Link to={trialsUrl({ country: row.country })} className="hover:underline">
+                  <button
+                    onClick={() => addFilter('country', row.country)}
+                    className="hover:underline"
+                  >
                     {formatNumber(row.trialCount)}
-                  </Link>
+                  </button>
                 </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{formatNumber(row.siteCount)}</td>
               </tr>

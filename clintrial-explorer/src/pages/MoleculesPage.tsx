@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useAllTrials } from '@/hooks/useAllTrials'
-import { trialsUrl } from '@/lib/utils'
+import { useFilterNav } from '@/hooks/useFilterNav'
 
 export function MoleculesPage() {
   const { data: trials, isLoading: loadingTrials } = useAllTrials()
+  const addFilter = useFilterNav()
   const [search, setSearch] = useState('')
 
   // We need to fetch molecules by terminology value. Let me use the client directly.
@@ -68,23 +68,23 @@ export function MoleculesPage() {
           <Card key={mol.name} className="hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <Link
-                  to={trialsUrl({ molecule: mol.name })}
-                  className="text-base font-semibold text-primary hover:underline"
+                <button
+                  onClick={() => addFilter('molecule', mol.name)}
+                  className="text-base font-semibold text-primary hover:underline text-left"
                 >
                   {mol.name}
-                </Link>
+                </button>
               </div>
               <Badge variant="accent">{mol.count} trials</Badge>
             </div>
 
             <div className="mt-3">
-              <Link
-                to={trialsUrl({ molecule: mol.name })}
+              <button
+                onClick={() => addFilter('molecule', mol.name)}
                 className="text-xs text-primary hover:underline"
               >
                 View all trials →
-              </Link>
+              </button>
             </div>
           </Card>
         ))}

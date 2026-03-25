@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import {
   ExternalLink,
   FileText,
@@ -28,7 +28,7 @@ import {
   useTrialFiles,
 } from '@/hooks/useTrialDetail'
 import { formatPhase } from '@/lib/trial-utils'
-import { trialsUrl, formatNumber } from '@/lib/utils'
+import { formatNumber } from '@/lib/utils'
 
 type TabId = 'overview' | 'outcomes' | 'sites' | 'aes' | 'baseline' | 'documents'
 
@@ -63,7 +63,7 @@ export function TrialDetailPage() {
               <h1 className="text-xl font-bold">{d.nct_id}</h1>
               <StatusBadge status={d.status} />
               {(d.phases || []).map((p) => (
-                <ChipLink key={p} to={trialsUrl({ phase: p })}>
+                <ChipLink key={p} filterKey="phase" filterValue={p}>
                   {formatPhase(p)}
                 </ChipLink>
               ))}
@@ -76,22 +76,22 @@ export function TrialDetailPage() {
         {/* Clickable metadata chips */}
         <div className="mt-3 flex flex-wrap gap-2">
           {d.sponsor && (
-            <ChipLink to={trialsUrl({ sponsor: d.sponsor })} variant="primary">
+            <ChipLink filterKey="sponsor" filterValue={d.sponsor} variant="primary">
               {d.sponsor}
             </ChipLink>
           )}
           {d.study_type && (
-            <ChipLink to={trialsUrl({ study_type: d.study_type })}>
+            <ChipLink filterKey="study_type" filterValue={d.study_type}>
               {d.study_type.replace(/_/g, ' ')}
             </ChipLink>
           )}
           {(d.interventions || []).map((m) => (
-            <ChipLink key={m} to={trialsUrl({ molecule: m })} variant="accent">
+            <ChipLink key={m} filterKey="molecule" filterValue={m} variant="accent">
               {m}
             </ChipLink>
           ))}
           {(d.therapeutic_areas || []).map((ta) => (
-            <ChipLink key={ta} to={trialsUrl({ therapeutic_area: ta })}>
+            <ChipLink key={ta} filterKey="therapeutic_area" filterValue={ta}>
               {ta}
             </ChipLink>
           ))}
@@ -186,7 +186,7 @@ function OverviewTab({ data: d }: { data: Record<string, unknown> }) {
           <h3 className="mb-3 font-semibold">Conditions</h3>
           <div className="flex flex-wrap gap-2">
             {conditions.map((c) => (
-              <ChipLink key={c} to={trialsUrl({ condition: c })}>
+              <ChipLink key={c} filterKey="condition" filterValue={c}>
                 {c}
               </ChipLink>
             ))}
@@ -262,12 +262,9 @@ function SitesTab({ nctId }: { nctId: string }) {
         <Card key={country}>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">
-              <Link
-                to={trialsUrl({ country })}
-                className="hover:text-primary hover:underline"
-              >
+              <ChipLink filterKey="country" filterValue={country}>
                 {country}
-              </Link>
+              </ChipLink>
             </h3>
             <Badge variant="muted">{countrySites.length} sites</Badge>
           </div>

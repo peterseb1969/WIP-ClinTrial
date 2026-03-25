@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBookmarks } from '@/hooks/useBookmarks'
+import { GlobalFilterBar } from '@/components/GlobalFilterBar'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -125,9 +126,10 @@ export function Layout() {
           )}
         </header>
 
-        {/* Page content */}
+        {/* Global filter bar + Page content */}
         <main className="flex-1 overflow-auto p-4 lg:p-6">
-          <div className="mx-auto max-w-content">
+          <div className="mx-auto max-w-content space-y-4">
+            <GlobalFilterBar />
             <Outlet />
           </div>
         </main>

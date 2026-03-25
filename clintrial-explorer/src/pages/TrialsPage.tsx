@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { Search, X, ChevronDown, ChevronUp, Download } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { Search, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { BookmarkButton } from '@/components/BookmarkButton'
@@ -9,75 +9,26 @@ import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { useAllTrials, useTrialsByCountry, type TrialDocument } from '@/hooks/useAllTrials'
 import { useBookmarks } from '@/hooks/useBookmarks'
+import { useTrialFilters, type FilterKey } from '@/hooks/useTrialFilters'
 import { formatPhase } from '@/lib/trial-utils'
 import { cn, formatNumber } from '@/lib/utils'
 
 const PAGE_SIZE = 25
 
-// All filter keys we support in the URL
-type FilterKey =
-  | 'status'
-  | 'phase'
-  | 'study_type'
-  | 'therapeutic_area'
-  | 'molecule'
-  | 'condition'
-  | 'sponsor'
-  | 'has_results'
-  | 'bookmarked'
-  | 'search'
-  | 'country'
-
-const FILTER_STORAGE_KEY = 'clintrial-trial-filters'
-
 export function TrialsPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { data: trials, isLoading, error, refetch } = useAllTrials()
   const { has: isBookmarked } = useBookmarks()
+  const { filters, set: setFilter } = useTrialFilters()
   const [page, setPage] = useState(1)
   const [aggregateOpen, setAggregateOpen] = useState(false)
-
-  // On mount: if URL has no params but sessionStorage has saved filters, restore them
-  useEffect(() => {
-    if (searchParams.toString() === '') {
-      try {
-        const saved = sessionStorage.getItem(FILTER_STORAGE_KEY)
-        if (saved) {
-          const restored = new URLSearchParams(saved)
-          if (restored.toString()) {
-            setSearchParams(restored, { replace: true })
-          }
-        }
-      } catch { /* ignore */ }
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps — intentionally run only on mount
-
-  // Persist filters to sessionStorage whenever they change
-  useEffect(() => {
-    if (searchParams.toString()) {
-      sessionStorage.setItem(FILTER_STORAGE_KEY, searchParams.toString())
-    }
-  }, [searchParams])
-
-  // Read filters from URL
-  const filters = useMemo(() => {
-    const f: Partial<Record<FilterKey, string>> = {}
-    for (const key of searchParams.keys()) {
-      f[key as FilterKey] = searchParams.get(key) ?? undefined
-    }
-    return f
-  }, [searchParams])
 
   // Server-side: fetch NCT IDs with sites in a given country
   const { data: countryNctIds } = useTrialsByCountry(filters.country)
 
-  const hasActiveFilters = Object.keys(filters).length > 0
-
-  // Filter trials
+  // Filter trials using global filter state
   const filtered = useMemo(() => {
     if (!trials) return []
-    // Wait for country filter to resolve before showing results
     if (filters.country && !countryNctIds) return []
 
     return trials.filter((t) => {
@@ -109,21 +60,9 @@ export function TrialsPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  // Reset page when filters change
-  const setFilter = (key: FilterKey, value: string | null) => {
-    const next = new URLSearchParams(searchParams)
-    if (value) {
-      next.set(key, value)
-    } else {
-      next.delete(key)
-    }
-    setSearchParams(next)
-    setPage(1)
-  }
-
-  const clearFilters = () => {
-    sessionStorage.removeItem(FILTER_STORAGE_KEY)
-    setSearchParams({})
+  // Reset page when a filter changes via the local controls
+  const updateFilter = (key: FilterKey, value: string | null) => {
+    setFilter(key, value)
     setPage(1)
   }
 
@@ -161,31 +100,6 @@ export function TrialsPage() {
         </span>
       </div>
 
-      {/* Active filter tags — prominent, right under the title */}
-      {hasActiveFilters && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
-          <span className="text-xs font-medium text-primary">Filtered by:</span>
-          {Object.entries(filters)
-            .filter(([k]) => k !== 'search')
-            .map(([key, value]) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key as FilterKey, null)}
-                className="inline-flex items-center gap-1 rounded-full bg-primary text-white px-2.5 py-1 text-xs font-medium hover:bg-primary/80"
-              >
-                {key}: {value}
-                <X className="h-3 w-3" />
-              </button>
-            ))}
-          <button
-            onClick={clearFilters}
-            className="ml-auto text-xs text-primary hover:text-danger font-medium"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
-
       {/* Search + quick filters */}
       <div className="space-y-3">
         <div className="relative">
@@ -194,13 +108,13 @@ export function TrialsPage() {
             type="text"
             placeholder="Search NCT ID, title, conditions, molecules..."
             value={filters.search || ''}
-            onChange={(e) => setFilter('search', e.target.value || null)}
+            onChange={(e) => updateFilter('search', e.target.value || null)}
             className="w-full rounded-lg border border-gray-300 bg-surface py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 
         {/* Quick filters */}
-        <QuickFilters filters={filters} setFilter={setFilter} trials={trials ?? []} />
+        <QuickFilters filters={filters} setFilter={updateFilter} trials={trials ?? []} />
       </div>
 
       {/* Results table */}
