@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useWipClient } from '@wip/react'
-import type { Document } from '@wip/client'
+import { reportQuery } from '@/lib/reporting'
 
 export interface TrialData {
   nct_id: string
@@ -29,35 +28,90 @@ export interface TrialData {
   ctgov_url?: string
 }
 
-export interface TrialDocument extends Document {
+export interface TrialDocument {
+  document_id: string
   data: TrialData & Record<string, unknown>
 }
 
-/** Fetch all CT_TRIAL documents (paginated internally). Returns full array. */
-export function useAllTrials() {
-  const client = useWipClient()
+interface TrialRow {
+  document_id: string
+  nct_id: string
+  title: string
+  brief_title: string
+  acronym: string | null
+  status: string
+  phases: string | null
+  study_type: string
+  therapeutic_areas: string | null
+  enrollment: number | null
+  start_date: string | null
+  sponsor: string
+  interventions: string | null
+  conditions: string | null
+  has_results: boolean | null
+  ctgov_url: string | null
+}
 
+function parseJsonArray(val: string | null): string[] {
+  if (!val) return []
+  try {
+    return JSON.parse(val)
+  } catch {
+    return []
+  }
+}
+
+/** Fetch all CT_TRIAL documents via server-side SQL (direct columns, no data_json blob) */
+export function useAllTrials() {
   return useQuery<TrialDocument[]>({
     queryKey: ['clintrial', 'all-trials'],
     queryFn: async () => {
-      const allDocs: TrialDocument[] = []
-      let page = 1
-      const pageSize = 100
-
-      while (true) {
-        const result = await client.documents.listDocuments({
-          template_value: 'CT_TRIAL',
-          status: 'active',
-          page,
-          page_size: pageSize,
-        })
-        allDocs.push(...(result.items as TrialDocument[]))
-        if (page >= result.pages) break
-        page++
-      }
-
-      return allDocs
+      const result = await reportQuery<TrialRow>(
+        `SELECT document_id, nct_id, title, brief_title, acronym,
+                data_status as status, phases, study_type, therapeutic_areas,
+                enrollment, start_date, sponsor, interventions, conditions,
+                has_results, ctgov_url
+         FROM doc_ct_trial`,
+        [],
+        10000,
+      )
+      return result.rows.map((r) => ({
+        document_id: r.document_id,
+        data: {
+          nct_id: r.nct_id,
+          title: r.title || '',
+          brief_title: r.brief_title || '',
+          acronym: r.acronym || undefined,
+          status: r.status || 'UNKNOWN',
+          phases: parseJsonArray(r.phases),
+          study_type: r.study_type || '',
+          therapeutic_areas: parseJsonArray(r.therapeutic_areas),
+          enrollment: r.enrollment ?? undefined,
+          start_date: r.start_date || undefined,
+          sponsor: r.sponsor || '',
+          interventions: parseJsonArray(r.interventions),
+          conditions: parseJsonArray(r.conditions),
+          has_results: r.has_results ?? false,
+          ctgov_url: r.ctgov_url || undefined,
+        } as TrialData & Record<string, unknown>,
+      }))
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes — trial data doesn't change often
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/** Fetch the set of NCT IDs that have sites in a given country */
+export function useTrialsByCountry(country: string | undefined) {
+  return useQuery<Set<string>>({
+    queryKey: ['clintrial', 'trials-by-country', country],
+    queryFn: async () => {
+      const result = await reportQuery<{ nct_id: string }>(
+        `SELECT DISTINCT nct_id FROM doc_ct_trial_site WHERE country = $1`,
+        [country!],
+      )
+      return new Set(result.rows.map((r) => r.nct_id))
+    },
+    enabled: !!country,
+    staleTime: 5 * 60 * 1000,
   })
 }

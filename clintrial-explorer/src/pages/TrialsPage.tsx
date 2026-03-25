@@ -7,7 +7,7 @@ import { BookmarkButton } from '@/components/BookmarkButton'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { useAllTrials, type TrialDocument } from '@/hooks/useAllTrials'
+import { useAllTrials, useTrialsByCountry, type TrialDocument } from '@/hooks/useAllTrials'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { formatPhase } from '@/lib/trial-utils'
 import { cn, formatNumber } from '@/lib/utils'
@@ -45,11 +45,16 @@ export function TrialsPage() {
     return f
   }, [searchParams])
 
+  // Server-side: fetch NCT IDs with sites in a given country
+  const { data: countryNctIds } = useTrialsByCountry(filters.country)
+
   const hasActiveFilters = Object.keys(filters).length > 0
 
   // Filter trials
   const filtered = useMemo(() => {
     if (!trials) return []
+    // Wait for country filter to resolve before showing results
+    if (filters.country && !countryNctIds) return []
 
     return trials.filter((t) => {
       const d = t.data
@@ -62,6 +67,7 @@ export function TrialsPage() {
       if (filters.has_results === 'true' && !d.has_results) return false
       if (filters.has_results === 'false' && d.has_results) return false
       if (filters.bookmarked === 'true' && !isBookmarked(d.nct_id)) return false
+      if (filters.country && countryNctIds && !countryNctIds.has(d.nct_id)) return false
       if (filters.condition) {
         const q = filters.condition.toLowerCase()
         if (!d.conditions?.some((c) => c.toLowerCase().includes(q))) return false
@@ -73,7 +79,7 @@ export function TrialsPage() {
       }
       return true
     })
-  }, [trials, filters, isBookmarked])
+  }, [trials, filters, isBookmarked, countryNctIds])
 
   // Paginate
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
