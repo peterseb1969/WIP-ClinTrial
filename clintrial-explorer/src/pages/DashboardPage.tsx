@@ -20,9 +20,9 @@ import {
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { useAllTrials } from '@/hooks/useAllTrials'
+import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { useBookmarks } from '@/hooks/useBookmarks'
-import { countBy, formatStatus, formatPhase } from '@/lib/trial-utils'
+import { formatStatus, formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
 import { useFilterNav } from '@/hooks/useFilterNav'
 
@@ -33,20 +33,14 @@ const PIE_COLORS = [
 ]
 
 export function DashboardPage() {
-  const { data: trials, isLoading, error, refetch } = useAllTrials()
+  const { data: stats, isLoading, error, refetch } = useDashboardStats()
   const { count: bookmarkCount } = useBookmarks()
   const navigate = useNavigate()
   const addFilter = useFilterNav()
 
-  if (isLoading) return <PageLoading message="Loading trial data..." />
+  if (isLoading) return <PageLoading message="Loading dashboard..." />
   if (error) return <ErrorMessage message={error.message} onRetry={() => refetch()} />
-  if (!trials) return null
-
-  const withResults = trials.filter((t) => t.data.has_results).length
-  const byStatus = countBy(trials, (d) => d.status)
-  const byPhase = countBy(trials, (d) => d.phases)
-  const byArea = countBy(trials, (d) => d.therapeutic_areas).slice(0, 15)
-  const byMolecule = countBy(trials, (d) => d.interventions).slice(0, 15)
+  if (!stats) return null
 
   return (
     <div className="space-y-6">
@@ -57,7 +51,7 @@ export function DashboardPage() {
         <SummaryCard
           icon={FlaskConical}
           label="Total Trials"
-          value={formatNumber(trials.length)}
+          value={formatNumber(stats.total)}
           onClick={() => navigate('/trials')}
         />
         <SummaryCard
@@ -69,13 +63,13 @@ export function DashboardPage() {
         <SummaryCard
           icon={ClipboardCheck}
           label="With Results"
-          value={formatNumber(withResults)}
+          value={formatNumber(stats.withResults)}
           onClick={() => addFilter('has_results', 'true')}
         />
         <SummaryCard
           icon={TrendingUp}
           label="Recruiting"
-          value={formatNumber(byStatus.find((s) => s.name === 'RECRUITING')?.count ?? 0)}
+          value={formatNumber(stats.recruiting)}
           onClick={() => addFilter('status', 'RECRUITING')}
         />
       </div>
@@ -91,7 +85,7 @@ export function DashboardPage() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={byStatus}
+                  data={stats.byStatus}
                   dataKey="count"
                   nameKey="name"
                   cx="50%"
@@ -102,7 +96,7 @@ export function DashboardPage() {
                   cursor="pointer"
                   onClick={(entry) => addFilter('status', entry.name)}
                 >
-                  {byStatus.map((_, i) => (
+                  {stats.byStatus.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                   ))}
                 </Pie>
@@ -113,7 +107,7 @@ export function DashboardPage() {
             </ResponsiveContainer>
           </div>
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
-            {byStatus.slice(0, 6).map((s, i) => (
+            {stats.byStatus.slice(0, 6).map((s, i) => (
               <button
                 key={s.name}
                 onClick={() => addFilter('status', s.name)}
@@ -136,7 +130,7 @@ export function DashboardPage() {
           </CardHeader>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byPhase} layout="vertical">
+              <BarChart data={stats.byPhase} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" />
                 <YAxis
@@ -165,20 +159,20 @@ export function DashboardPage() {
 
       {/* Charts row 2 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Therapeutic areas */}
+        {/* Top conditions */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Therapeutic Areas</CardTitle>
+            <CardTitle>Top Conditions</CardTitle>
           </CardHeader>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byArea} layout="vertical">
+              <BarChart data={stats.byCondition} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  width={160}
+                  width={180}
                   tick={{ fontSize: 11 }}
                 />
                 <Tooltip formatter={(value: number) => [value, 'Trials']} />
@@ -187,7 +181,7 @@ export function DashboardPage() {
                   fill="#5B9BD5"
                   radius={[0, 4, 4, 0]}
                   cursor="pointer"
-                  onClick={(entry) => addFilter('therapeutic_area', entry.name)}
+                  onClick={(entry) => addFilter('condition', entry.name)}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -201,7 +195,7 @@ export function DashboardPage() {
           </CardHeader>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byMolecule} layout="vertical">
+              <BarChart data={stats.byMolecule} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" />
                 <YAxis
