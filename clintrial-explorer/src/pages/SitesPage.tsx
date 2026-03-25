@@ -2,49 +2,32 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, ArrowUpDown } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useWipClient } from '@wip/react'
 import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { trialsUrl, formatNumber } from '@/lib/utils'
+import { reportQuery } from '@/lib/reporting'
 
 type SortKey = 'country' | 'trials' | 'sites'
 
 export function SitesPage() {
-  const client = useWipClient()
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('trials')
   const [sortAsc, setSortAsc] = useState(false)
 
-  // Fetch all sites to get country-level stats
+  // Single SQL query aggregates 25K+ sites server-side
   const { data: siteStats, isLoading: loadingSites } = useQuery({
     queryKey: ['clintrial', 'site-stats'],
     queryFn: async () => {
-      const countryMap = new Map<string, { trials: Set<string>; sites: number }>()
-      let page = 1
-      while (true) {
-        const result = await client.documents.listDocuments({
-          template_value: 'CT_TRIAL_SITE',
-          status: 'active',
-          page,
-          page_size: 100,
-        })
-        for (const doc of result.items) {
-          const country = String(doc.data.country || 'Unknown')
-          const nctId = String(doc.data.nct_id || '')
-          if (!countryMap.has(country)) {
-            countryMap.set(country, { trials: new Set(), sites: 0 })
-          }
-          const entry = countryMap.get(country)!
-          entry.trials.add(nctId)
-          entry.sites++
-        }
-        if (page >= result.pages) break
-        page++
-      }
-      return [...countryMap.entries()].map(([country, data]) => ({
-        country,
-        trialCount: data.trials.size,
-        siteCount: data.sites,
+      const result = await reportQuery<{ country: string; trial_count: number; site_count: number }>(
+        `SELECT country, COUNT(DISTINCT nct_id) as trial_count, COUNT(*) as site_count
+         FROM doc_ct_trial_site
+         GROUP BY country
+         ORDER BY trial_count DESC`,
+      )
+      return result.rows.map((r) => ({
+        country: r.country || 'Unknown',
+        trialCount: Number(r.trial_count),
+        siteCount: Number(r.site_count),
       }))
     },
     staleTime: 5 * 60 * 1000,

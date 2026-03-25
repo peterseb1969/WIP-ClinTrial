@@ -75,12 +75,16 @@ export function TrialDetailPage() {
 
         {/* Clickable metadata chips */}
         <div className="mt-3 flex flex-wrap gap-2">
-          <ChipLink to={trialsUrl({ sponsor: d.sponsor })} variant="primary">
-            {d.sponsor}
-          </ChipLink>
-          <ChipLink to={trialsUrl({ study_type: d.study_type })}>
-            {d.study_type.replace(/_/g, ' ')}
-          </ChipLink>
+          {d.sponsor && (
+            <ChipLink to={trialsUrl({ sponsor: d.sponsor })} variant="primary">
+              {d.sponsor}
+            </ChipLink>
+          )}
+          {d.study_type && (
+            <ChipLink to={trialsUrl({ study_type: d.study_type })}>
+              {d.study_type.replace(/_/g, ' ')}
+            </ChipLink>
+          )}
           {(d.interventions || []).map((m) => (
             <ChipLink key={m} to={trialsUrl({ molecule: m })} variant="accent">
               {m}
@@ -125,7 +129,7 @@ export function TrialDetailPage() {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'overview' && <OverviewTab data={d} />}
+      {activeTab === 'overview' && <OverviewTab data={d as unknown as Record<string, unknown>} />}
       {activeTab === 'outcomes' && <OutcomesTab nctId={d.nct_id} />}
       {activeTab === 'sites' && <SitesTab nctId={d.nct_id} />}
       {activeTab === 'aes' && <AEsTab nctId={d.nct_id} />}

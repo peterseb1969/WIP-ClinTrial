@@ -1,133 +1,73 @@
 import { useQuery } from '@tanstack/react-query'
 import { useWipClient } from '@wip/react'
 import type { Document } from '@wip/client'
-import type { TrialDocument } from './useAllTrials'
+import type { TrialData } from './useAllTrials'
+import { reportQuery } from '@/lib/reporting'
 
-/** Fetch a single trial by NCT ID */
+interface TrialDetailResult {
+  document_id: string
+  data: TrialData
+}
+
+/** Fetch a single trial by NCT ID via reporting SQL */
 export function useTrial(nctId: string) {
-  const client = useWipClient()
-
-  return useQuery<TrialDocument | null>({
+  return useQuery<TrialDetailResult | null>({
     queryKey: ['clintrial', 'trial', nctId],
     queryFn: async () => {
-      const result = await client.documents.queryDocuments({
-        template_id: undefined,
-        filters: [{ field: 'data.nct_id', operator: 'eq', value: nctId }],
-        page_size: 1,
-      })
-      return (result.items[0] as TrialDocument) ?? null
+      const result = await reportQuery<{ document_id: string; data_json: string }>(
+        `SELECT document_id, data_json FROM doc_ct_trial WHERE nct_id = $1 LIMIT 1`,
+        [nctId],
+      )
+      if (result.rows.length === 0) return null
+      const row = result.rows[0]
+      const data = typeof row.data_json === 'string' ? JSON.parse(row.data_json) : row.data_json
+      return { document_id: row.document_id, data } as TrialDetailResult
     },
     enabled: !!nctId,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-/** Fetch outcomes for a trial */
+/** Shape that mirrors the Document type enough for the UI components */
+interface DocLike {
+  document_id: string
+  data: Record<string, unknown>
+}
+
+/** Fetch related documents by nct_id from a reporting table */
+function useTrialRelated(table: string, nctId: string, queryKey: string) {
+  return useQuery<DocLike[]>({
+    queryKey: ['clintrial', queryKey, nctId],
+    queryFn: async () => {
+      const result = await reportQuery<{ document_id: string; data_json: string }>(
+        `SELECT document_id, data_json FROM ${table} WHERE nct_id = $1`,
+        [nctId],
+        5000,
+      )
+      return result.rows.map((row) => {
+        const data = typeof row.data_json === 'string' ? JSON.parse(row.data_json) : row.data_json
+        return { document_id: row.document_id, data }
+      })
+    },
+    enabled: !!nctId,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function useTrialOutcomes(nctId: string) {
-  const client = useWipClient()
-
-  return useQuery<Document[]>({
-    queryKey: ['clintrial', 'outcomes', nctId],
-    queryFn: async () => {
-      const all: Document[] = []
-      let page = 1
-      while (true) {
-        const result = await client.documents.queryDocuments({
-          filters: [
-            { field: 'data.nct_id', operator: 'eq', value: nctId },
-            { field: 'template_value', operator: 'eq', value: 'CT_TRIAL_OUTCOME' },
-          ],
-          page,
-          page_size: 100,
-        })
-        all.push(...result.items)
-        if (page >= result.pages) break
-        page++
-      }
-      return all
-    },
-    enabled: !!nctId,
-    staleTime: 5 * 60 * 1000,
-  })
+  return useTrialRelated('doc_ct_trial_outcome', nctId, 'outcomes')
 }
 
-/** Fetch sites for a trial */
 export function useTrialSites(nctId: string) {
-  const client = useWipClient()
-
-  return useQuery<Document[]>({
-    queryKey: ['clintrial', 'sites', nctId],
-    queryFn: async () => {
-      const all: Document[] = []
-      let page = 1
-      while (true) {
-        const result = await client.documents.queryDocuments({
-          filters: [
-            { field: 'data.nct_id', operator: 'eq', value: nctId },
-            { field: 'template_value', operator: 'eq', value: 'CT_TRIAL_SITE' },
-          ],
-          page,
-          page_size: 100,
-        })
-        all.push(...result.items)
-        if (page >= result.pages) break
-        page++
-      }
-      return all
-    },
-    enabled: !!nctId,
-    staleTime: 5 * 60 * 1000,
-  })
+  return useTrialRelated('doc_ct_trial_site', nctId, 'sites')
 }
 
-/** Fetch adverse events for a trial */
 export function useTrialAEs(nctId: string) {
-  const client = useWipClient()
-
-  return useQuery<Document[]>({
-    queryKey: ['clintrial', 'aes', nctId],
-    queryFn: async () => {
-      const all: Document[] = []
-      let page = 1
-      while (true) {
-        const result = await client.documents.queryDocuments({
-          filters: [
-            { field: 'data.nct_id', operator: 'eq', value: nctId },
-            { field: 'template_value', operator: 'eq', value: 'CT_TRIAL_AE' },
-          ],
-          page,
-          page_size: 100,
-        })
-        all.push(...result.items)
-        if (page >= result.pages) break
-        page++
-      }
-      return all
-    },
-    enabled: !!nctId,
-    staleTime: 5 * 60 * 1000,
-  })
+  return useTrialRelated('doc_ct_trial_ae', nctId, 'aes')
 }
 
-/** Fetch baseline characteristics for a trial */
 export function useTrialBaselines(nctId: string) {
-  const client = useWipClient()
-
-  return useQuery<Document[]>({
-    queryKey: ['clintrial', 'baselines', nctId],
-    queryFn: async () => {
-      const result = await client.documents.queryDocuments({
-        filters: [
-          { field: 'data.nct_id', operator: 'eq', value: nctId },
-          { field: 'template_value', operator: 'eq', value: 'CT_TRIAL_BASELINE' },
-        ],
-        page_size: 100,
-      })
-      return result.items
-    },
-    enabled: !!nctId,
-    staleTime: 5 * 60 * 1000,
-  })
+  return useTrialRelated('doc_ct_trial_baseline', nctId, 'baselines')
 }
 
 /** Fetch files linked to a trial document */
@@ -137,12 +77,10 @@ export function useTrialFiles(trialDocId: string) {
   return useQuery({
     queryKey: ['clintrial', 'files', trialDocId],
     queryFn: async () => {
-      // Get the trial document to find file references
       const doc = await client.documents.getDocument(trialDocId)
       const fileRefs = (doc as Document & { file_references?: Array<{ file_id: string }> }).file_references || []
       if (fileRefs.length === 0) return []
 
-      // Fetch file metadata for each referenced file
       const files = await Promise.all(
         fileRefs.map(async (ref) => {
           try {
