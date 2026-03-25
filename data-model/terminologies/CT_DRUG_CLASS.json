@@ -1,0 +1,46 @@
+{
+  "value": "CT_DRUG_CLASS",
+  "label": "Drug Class",
+  "description": "Pharmacological classification of therapeutic agents with hierarchical ontology",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "IMMUNOTHERAPY", "label": "Immunotherapy", "aliases": ["Immune Therapy", "Immuno-Oncology", "IO"]},
+    {"value": "CHECKPOINT_INHIBITOR", "label": "Checkpoint Inhibitor", "aliases": ["ICI", "Immune Checkpoint Inhibitor", "CPI"]},
+    {"value": "PD_L1_INHIBITOR", "label": "PD-L1 Inhibitor", "aliases": ["Anti-PD-L1", "PD-L1 Antibody"]},
+    {"value": "PD_1_INHIBITOR", "label": "PD-1 Inhibitor", "aliases": ["Anti-PD-1", "PD-1 Antibody"]},
+    {"value": "CTLA4_INHIBITOR", "label": "CTLA-4 Inhibitor", "aliases": ["Anti-CTLA-4", "CTLA-4 Antibody"]},
+    {"value": "CAR_T_THERAPY", "label": "CAR-T Therapy", "aliases": ["Chimeric Antigen Receptor T-cell", "CAR T-cell Therapy"]},
+    {"value": "BISPECIFIC_ANTIBODY", "label": "Bispecific Antibody", "aliases": ["BsAb", "Bispecific", "T-cell Engager"]},
+    {"value": "ADC", "label": "Antibody-Drug Conjugate", "aliases": ["Antibody Drug Conjugate", "Immunoconjugate"]},
+    {"value": "MONOCLONAL_ANTIBODY", "label": "Monoclonal Antibody", "aliases": ["mAb", "Monoclonal"]},
+    {"value": "SMALL_MOLECULE", "label": "Small Molecule", "aliases": ["Small Molecule Inhibitor", "Chemical Entity"]},
+    {"value": "KINASE_INHIBITOR", "label": "Kinase Inhibitor", "aliases": ["TKI", "Tyrosine Kinase Inhibitor"]},
+    {"value": "BTK_INHIBITOR", "label": "BTK Inhibitor", "aliases": ["Bruton's Tyrosine Kinase Inhibitor"]},
+    {"value": "VEGF_INHIBITOR", "label": "VEGF Inhibitor", "aliases": ["Anti-VEGF", "VEGF Antibody", "Anti-Angiogenic"]},
+    {"value": "HER2_TARGETED", "label": "HER2-Targeted", "aliases": ["Anti-HER2", "HER2 Antibody"]},
+    {"value": "CD20_TARGETED", "label": "CD20-Targeted", "aliases": ["Anti-CD20", "CD20 Antibody"]},
+    {"value": "GENE_THERAPY", "label": "Gene Therapy", "aliases": ["Gene Transfer", "Gene Replacement"]},
+    {"value": "CELL_THERAPY", "label": "Cell Therapy", "aliases": ["Cellular Therapy", "Cell-based Therapy"]},
+    {"value": "VACCINE", "label": "Vaccine", "aliases": ["Immunization", "Prophylactic Vaccine", "Therapeutic Vaccine"]},
+    {"value": "OLIGONUCLEOTIDE", "label": "Oligonucleotide", "aliases": ["ASO", "Antisense Oligonucleotide", "siRNA", "RNA Therapeutic"]},
+    {"value": "FUSION_PROTEIN", "label": "Fusion Protein", "aliases": ["Fc Fusion", "Receptor Fusion"]},
+    {"value": "HORMONE_THERAPY", "label": "Hormone Therapy", "aliases": ["Endocrine Therapy", "Hormonal Treatment"]},
+    {"value": "CHEMOTHERAPY", "label": "Chemotherapy", "aliases": ["Cytotoxic", "Chemo", "Cytotoxic Chemotherapy"]}
+  ],
+  "ontology": {
+    "relationships": [
+      {"source": "CHECKPOINT_INHIBITOR", "target": "IMMUNOTHERAPY", "type": "is_a"},
+      {"source": "PD_L1_INHIBITOR", "target": "CHECKPOINT_INHIBITOR", "type": "is_a"},
+      {"source": "PD_1_INHIBITOR", "target": "CHECKPOINT_INHIBITOR", "type": "is_a"},
+      {"source": "CTLA4_INHIBITOR", "target": "CHECKPOINT_INHIBITOR", "type": "is_a"},
+      {"source": "CAR_T_THERAPY", "target": "IMMUNOTHERAPY", "type": "is_a"},
+      {"source": "BISPECIFIC_ANTIBODY", "target": "IMMUNOTHERAPY", "type": "is_a"},
+      {"source": "ADC", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"},
+      {"source": "KINASE_INHIBITOR", "target": "SMALL_MOLECULE", "type": "is_a"},
+      {"source": "BTK_INHIBITOR", "target": "KINASE_INHIBITOR", "type": "is_a"},
+      {"source": "VEGF_INHIBITOR", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"},
+      {"source": "HER2_TARGETED", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"},
+      {"source": "CD20_TARGETED", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"}
+    ]
+  }
+}

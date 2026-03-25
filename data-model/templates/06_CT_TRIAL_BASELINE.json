@@ -1,0 +1,17 @@
+{
+  "value": "CT_TRIAL_BASELINE",
+  "label": "Trial Baseline Characteristic",
+  "description": "Baseline demographic and clinical characteristics of trial participants",
+  "namespace": "clintrial",
+  "identity_fields": ["nct_id", "measure_title"],
+  "fields": [
+    {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true},
+    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_template": "CT_TRIAL"},
+    {"name": "measure_title", "label": "Measure Title", "type": "string", "mandatory": true},
+    {"name": "param_type", "label": "Parameter Type", "type": "string", "mandatory": false},
+    {"name": "dispersion_type", "label": "Dispersion Type", "type": "string", "mandatory": false},
+    {"name": "unit_of_measure", "label": "Unit of Measure", "type": "string", "mandatory": false},
+    {"name": "categories", "label": "Categories", "type": "array", "mandatory": false, "items": {"type": "object"}}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}

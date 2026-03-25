@@ -1,0 +1,14 @@
+{
+  "value": "CT_PHASE",
+  "label": "Study Phase",
+  "description": "Clinical trial development phases from ClinicalTrials.gov",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "EARLY_PHASE1", "label": "Early Phase 1", "aliases": ["Phase 0", "Exploratory IND"]},
+    {"value": "PHASE1", "label": "Phase 1", "aliases": ["Phase I", "Ph1", "P1"]},
+    {"value": "PHASE2", "label": "Phase 2", "aliases": ["Phase II", "Ph2", "P2"]},
+    {"value": "PHASE3", "label": "Phase 3", "aliases": ["Phase III", "Ph3", "P3"]},
+    {"value": "PHASE4", "label": "Phase 4", "aliases": ["Phase IV", "Ph4", "P4", "Post-marketing"]},
+    {"value": "NA", "label": "Not Applicable", "aliases": ["N/A"]}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "value": "CT_STATUS",
+  "label": "Study Status",
+  "description": "Clinical trial recruitment and completion status values from ClinicalTrials.gov",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "NOT_YET_RECRUITING", "label": "Not Yet Recruiting", "aliases": []},
+    {"value": "RECRUITING", "label": "Recruiting", "aliases": []},
+    {"value": "ENROLLING_BY_INVITATION", "label": "Enrolling by Invitation", "aliases": []},
+    {"value": "ACTIVE_NOT_RECRUITING", "label": "Active, Not Recruiting", "aliases": []},
+    {"value": "COMPLETED", "label": "Completed", "aliases": []},
+    {"value": "SUSPENDED", "label": "Suspended", "aliases": []},
+    {"value": "TERMINATED", "label": "Terminated", "aliases": []},
+    {"value": "WITHDRAWN", "label": "Withdrawn", "aliases": []},
+    {"value": "AVAILABLE", "label": "Available", "aliases": []},
+    {"value": "NO_LONGER_AVAILABLE", "label": "No Longer Available", "aliases": []},
+    {"value": "TEMPORARILY_NOT_AVAILABLE", "label": "Temporarily Not Available", "aliases": []},
+    {"value": "APPROVED_FOR_MARKETING", "label": "Approved for Marketing", "aliases": []},
+    {"value": "WITHHELD", "label": "Withheld", "aliases": []},
+    {"value": "UNKNOWN", "label": "Unknown", "aliases": []}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "value": "CT_TRIAL_SITE",
+  "label": "Trial Site",
+  "description": "Clinical trial facility locations and their recruitment status",
+  "namespace": "clintrial",
+  "identity_fields": ["nct_id", "facility", "country"],
+  "fields": [
+    {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true},
+    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_template": "CT_TRIAL"},
+    {"name": "facility", "label": "Facility", "type": "string", "mandatory": true},
+    {"name": "city", "label": "City", "type": "string", "mandatory": false},
+    {"name": "state", "label": "State/Province", "type": "string", "mandatory": false},
+    {"name": "country", "label": "Country", "type": "term", "mandatory": true, "terminology_ref": "COUNTRY"},
+    {"name": "zip", "label": "Zip/Postal Code", "type": "string", "mandatory": false},
+    {"name": "site_status", "label": "Site Status", "type": "string", "mandatory": false}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}
