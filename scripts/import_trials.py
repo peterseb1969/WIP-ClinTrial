@@ -2,9 +2,11 @@
 """Import Roche/Genentech trials from ClinicalTrials.gov into WIP.
 
 Usage:
-    python import_trials.py              # Incremental: only trials changed since last sync
-    python import_trials.py --full       # Full: reimport everything (slow)
-    python import_trials.py --since 2025-01-01  # Only trials updated after this date
+    python import_trials.py                    # Incremental: only changed trials (default 50/sponsor)
+    python import_trials.py --full             # Full reimport (ignores sync state)
+    python import_trials.py --since 2025-01-01 # Only trials updated after this date
+    python import_trials.py --limit 250        # Max trials per sponsor (default 50, use 250+ for all)
+    python import_trials.py --full --limit 250 # Full baseline: all Roche/Genentech trials
 """
 
 import requests
@@ -961,9 +963,12 @@ def main():
     # Parse arguments
     full_mode = "--full" in sys.argv
     since_override = None
+    target_per_sponsor = 50
     for i, arg in enumerate(sys.argv):
         if arg == "--since" and i + 1 < len(sys.argv):
             since_override = sys.argv[i + 1]
+        if arg == "--limit" and i + 1 < len(sys.argv):
+            target_per_sponsor = int(sys.argv[i + 1])
 
     # Load sync state
     sync_state = load_sync_state()
@@ -995,13 +1000,11 @@ def main():
     print("=" * 70)
 
     # Step 1: Fetch trials from both sponsors
-    target_per_sponsor = 50
-
-    print(f"\nFetching Hoffmann-La Roche trials (target: {target_per_sponsor})...")
+    print(f"\nFetching Hoffmann-La Roche trials (limit: {target_per_sponsor}/sponsor)...")
     roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", page_size=200, since_date=since_date)
     print(f"  Found {len(roche_trials)} lead-sponsored Roche trials")
 
-    print(f"\nFetching Genentech, Inc. trials (target: {target_per_sponsor})...")
+    print(f"\nFetching Genentech, Inc. trials (limit: {target_per_sponsor}/sponsor)...")
     genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", page_size=200, since_date=since_date)
     print(f"  Found {len(genentech_trials)} lead-sponsored Genentech trials")
 
