@@ -2,11 +2,11 @@
 """Import Roche/Genentech trials from ClinicalTrials.gov into WIP.
 
 Usage:
-    python import_trials.py                    # Incremental: only changed trials (default 50/sponsor)
-    python import_trials.py --full             # Full reimport (ignores sync state)
+    python import_trials.py                    # Incremental: only changed trials since last sync
+    python import_trials.py --full             # Full reimport: all trials, ignores sync state
     python import_trials.py --since 2025-01-01 # Only trials updated after this date
-    python import_trials.py --limit 250        # Max trials per sponsor (default 50, use 250+ for all)
-    python import_trials.py --full --limit 250 # Full baseline: all Roche/Genentech trials
+    python import_trials.py --limit 100        # Cap at 100 trials per sponsor (for testing)
+    python import_trials.py --full --limit 50  # Quick test: 50/sponsor, full reimport
 """
 
 import requests
@@ -338,37 +338,55 @@ def resolve_molecules(interventions):
     return found
 
 
-def fetch_trials_for_sponsor(sponsor, page_size=10, since_date=None):
-    """Search ClinicalTrials.gov for trials by sponsor.
+def fetch_trials_for_sponsor(sponsor, max_results=None, since_date=None):
+    """Search ClinicalTrials.gov for trials where sponsor appears in any role.
+    Paginates through all results. If max_results is set, stops after that many.
     If since_date is set (YYYY-MM-DD), only returns trials updated after that date.
     Returns list of study dicts.
     """
     url = f"{CTGOV_BASE}/studies"
+    page_size = min(max_results or 1000, 1000)  # CT.gov max is 1000
     params = {
         "query.spons": sponsor,
         "pageSize": page_size,
         "fields": "protocolSection,hasResults",
     }
     if since_date:
-        # Only fetch trials updated after this date
         params["filter.advanced"] = f"AREA[LastUpdatePostDate]RANGE[{since_date},MAX]"
-    try:
-        resp = requests.get(url, params=params, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+
+    all_studies = []
+    page_token = None
+
+    while True:
+        if page_token:
+            params["pageToken"] = page_token
+
+        try:
+            resp = requests.get(url, params=params, timeout=60)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            print(f"  ERROR fetching page for {sponsor}: {e}")
+            break
+
         studies = data.get("studies", [])
-        # Filter to only lead-sponsored trials
-        result = []
-        for study in studies:
-            proto = study.get("protocolSection", {})
-            sponsor_mod = proto.get("sponsorCollaboratorsModule", {})
-            lead = sponsor_mod.get("leadSponsor", {}).get("name", "")
-            if lead == sponsor:
-                result.append(study)
-        return result
-    except Exception as e:
-        print(f"ERROR fetching trials for {sponsor}: {e}")
-        return []
+        if not studies:
+            break
+
+        all_studies.extend(studies)
+        print(f"    ... fetched {len(all_studies)} so far")
+
+        if max_results and len(all_studies) >= max_results:
+            all_studies = all_studies[:max_results]
+            break
+
+        page_token = data.get("nextPageToken")
+        if not page_token:
+            break
+
+        time.sleep(0.3)  # Be nice to CT.gov API
+
+    return all_studies
 
 
 def fetch_trial_detail(nct_id):
@@ -963,7 +981,7 @@ def main():
     # Parse arguments
     full_mode = "--full" in sys.argv
     since_override = None
-    target_per_sponsor = 50
+    target_per_sponsor = None  # None = no limit, fetch all
     for i, arg in enumerate(sys.argv):
         if arg == "--since" and i + 1 < len(sys.argv):
             since_override = sys.argv[i + 1]
@@ -999,20 +1017,21 @@ def main():
     print(f"Known trials in sync state: {len(known_trials)}")
     print("=" * 70)
 
-    # Step 1: Fetch trials from both sponsors
-    print(f"\nFetching Hoffmann-La Roche trials (limit: {target_per_sponsor}/sponsor)...")
-    roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", page_size=200, since_date=since_date)
-    print(f"  Found {len(roche_trials)} lead-sponsored Roche trials")
+    # Step 1: Fetch trials from both sponsors (lead or collaborator)
+    limit_label = str(target_per_sponsor) if target_per_sponsor else "all"
+    print(f"\nFetching Hoffmann-La Roche trials (limit: {limit_label})...")
+    roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", max_results=target_per_sponsor, since_date=since_date)
+    print(f"  Found {len(roche_trials)} Roche trials")
 
-    print(f"\nFetching Genentech, Inc. trials (limit: {target_per_sponsor}/sponsor)...")
-    genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", page_size=200, since_date=since_date)
-    print(f"  Found {len(genentech_trials)} lead-sponsored Genentech trials")
+    print(f"\nFetching Genentech, Inc. trials (limit: {limit_label})...")
+    genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", max_results=target_per_sponsor, since_date=since_date)
+    print(f"  Found {len(genentech_trials)} Genentech trials")
 
     # Step 2: Deduplicate and filter unchanged trials
     seen_ncts = set()
     selected = []
 
-    for study in roche_trials[:target_per_sponsor]:
+    for study in roche_trials:
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
         if nct and nct not in seen_ncts:
             seen_ncts.add(nct)
@@ -1024,7 +1043,7 @@ def main():
                 continue
             selected.append((study, "Roche", ct_update))
 
-    for study in genentech_trials[:target_per_sponsor]:
+    for study in genentech_trials:
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
         if nct and nct not in seen_ncts:
             seen_ncts.add(nct)
