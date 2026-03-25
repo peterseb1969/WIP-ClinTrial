@@ -296,7 +296,6 @@ def fetch_trials_for_sponsor(sponsor, page_size=10):
     params = {
         "query.spons": sponsor,
         "pageSize": page_size,
-        "filter.overallStatus": "RECRUITING|ACTIVE_NOT_RECRUITING",
         "fields": "protocolSection,hasResults",
     }
     try:
@@ -577,10 +576,11 @@ def import_trial(study):
     print(f"  Creating outcomes: {n_primary} primary, {n_secondary} secondary")
     create_outcomes(nct_id, trial_data["primary_outcomes"], trial_data["secondary_outcomes"])
 
-    # Step 3: Create sites (limit to 20 per trial)
+    # Step 3: Create sites (limit to 50 per trial)
     n_locations = len(trial_data.get("locations", []))
-    print(f"  Creating sites: {min(n_locations, 20)} of {n_locations} locations")
-    create_sites(nct_id, trial_data["locations"], max_sites=20)
+    max_s = 50
+    print(f"  Creating sites: {min(n_locations, max_s)} of {n_locations} locations")
+    create_sites(nct_id, trial_data["locations"], max_sites=max_s)
 
 
 def main():
@@ -589,27 +589,30 @@ def main():
     print("=" * 70)
 
     # Step 1: Fetch trials from both sponsors
-    print("\nFetching Hoffmann-La Roche trials...")
-    roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", page_size=10)
+    # Use larger page sizes and paginate to get enough lead-sponsored trials
+    target_per_sponsor = 50
+
+    print(f"\nFetching Hoffmann-La Roche trials (target: {target_per_sponsor})...")
+    roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", page_size=200)
     print(f"  Found {len(roche_trials)} lead-sponsored Roche trials")
 
-    print("\nFetching Genentech, Inc. trials...")
-    genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", page_size=10)
+    print(f"\nFetching Genentech, Inc. trials (target: {target_per_sponsor})...")
+    genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", page_size=200)
     print(f"  Found {len(genentech_trials)} lead-sponsored Genentech trials")
 
-    # Step 2: Deduplicate by NCT ID and take 5 from each
+    # Step 2: Deduplicate by NCT ID, take up to target_per_sponsor from each
     seen_ncts = set()
     selected = []
 
-    for study in roche_trials:
+    for study in roche_trials[:target_per_sponsor]:
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
-        if nct and nct not in seen_ncts and len([s for s in selected if s[1] == "Roche"]) < 5:
+        if nct and nct not in seen_ncts:
             seen_ncts.add(nct)
             selected.append((study, "Roche"))
 
-    for study in genentech_trials:
+    for study in genentech_trials[:target_per_sponsor]:
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
-        if nct and nct not in seen_ncts and len([s for s in selected if s[1] == "Genentech"]) < 5:
+        if nct and nct not in seen_ncts:
             seen_ncts.add(nct)
             selected.append((study, "Genentech"))
 
@@ -653,7 +656,7 @@ def main():
         else:
             # Fall back to search result data
             import_trial(study)
-        time.sleep(0.5)  # Be nice to both APIs
+        time.sleep(0.3)  # Brief pause between trials
 
     # Step 5: Print summary
     print("\n" + "=" * 70)
