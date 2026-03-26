@@ -40,7 +40,14 @@ function load(): Filters {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+    // Migrate old single-string values to arrays for multi-select keys
+    for (const key of MULTI_KEYS) {
+      if (key in parsed && typeof parsed[key] === 'string') {
+        parsed[key] = [parsed[key]]
+      }
+    }
+    return parsed
   } catch {
     return {}
   }
