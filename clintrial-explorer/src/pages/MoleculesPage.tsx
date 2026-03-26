@@ -1,15 +1,20 @@
 import { useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Check } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
+import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { useFilterNav } from '@/hooks/useFilterNav'
+import { cn } from '@/lib/utils'
 
 export function MoleculesPage() {
   const { trials: filtered, isLoading } = useFilteredTrials()
+  const { filters } = useTrialFilters()
   const addFilter = useFilterNav()
   const [search, setSearch] = useState('')
+
+  const activeMolecule = filters.molecule
 
   // Build molecule → trial count from the filtered set
   const molecules = useMemo(() => {
@@ -55,30 +60,54 @@ export function MoleculesPage() {
 
       {/* Molecule cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {searchFiltered.map((mol) => (
-          <Card key={mol.name} className="hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
+        {searchFiltered.map((mol) => {
+          const isSelected = activeMolecule === mol.name
+          const isDimmed = activeMolecule && !isSelected
+
+          return (
+            <Card
+              key={mol.name}
+              className={cn(
+                'transition-all',
+                isSelected && 'ring-2 ring-primary border-primary shadow-md',
+                isDimmed && 'opacity-50',
+                !isDimmed && 'hover:shadow-md',
+              )}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  {isSelected && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => addFilter('molecule', mol.name)}
+                    className={cn(
+                      'text-base font-semibold text-left hover:underline',
+                      isSelected ? 'text-primary' : isDimmed ? 'text-text-muted' : 'text-primary',
+                    )}
+                  >
+                    {mol.name}
+                  </button>
+                </div>
+                <Badge variant={isSelected ? 'primary' : 'accent'}>{mol.count} trials</Badge>
+              </div>
+
+              <div className="mt-3">
                 <button
                   onClick={() => addFilter('molecule', mol.name)}
-                  className="text-base font-semibold text-primary hover:underline text-left"
+                  className={cn(
+                    'text-xs hover:underline',
+                    isSelected ? 'text-primary font-medium' : 'text-primary',
+                  )}
                 >
-                  {mol.name}
+                  {isSelected ? 'Selected — click to filter further' : 'View all trials →'}
                 </button>
               </div>
-              <Badge variant="accent">{mol.count} trials</Badge>
-            </div>
-
-            <div className="mt-3">
-              <button
-                onClick={() => addFilter('molecule', mol.name)}
-                className="text-xs text-primary hover:underline"
-              >
-                View all trials →
-              </button>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          )
+        })}
       </div>
 
       {searchFiltered.length === 0 && (

@@ -3,7 +3,7 @@ import { Search, ArrowUpDown } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
-import { formatNumber } from '@/lib/utils'
+import { cn, formatNumber } from '@/lib/utils'
 import { reportQuery } from '@/lib/reporting'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
@@ -14,7 +14,8 @@ type SortKey = 'country' | 'trials' | 'sites'
 export function SitesPage() {
   const addFilter = useFilterNav()
   const { trials: filtered, isLoading: loadingTrials } = useFilteredTrials()
-  const { hasActive } = useTrialFilters()
+  const { filters, hasActive } = useTrialFilters()
+  const activeCountry = filters.country
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('trials')
   const [sortAsc, setSortAsc] = useState(false)
@@ -123,27 +124,43 @@ export function SitesPage() {
             </tr>
           </thead>
           <tbody>
-            {displayed.map((row) => (
-              <tr key={row.country} className="border-b border-gray-100 hover:bg-gray-50/50">
-                <td className="px-4 py-2.5">
-                  <button
-                    onClick={() => addFilter('country', row.country)}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {row.country}
-                  </button>
-                </td>
-                <td className="px-4 py-2.5 text-right tabular-nums">
-                  <button
-                    onClick={() => addFilter('country', row.country)}
-                    className="hover:underline"
-                  >
-                    {formatNumber(row.trialCount)}
-                  </button>
-                </td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{formatNumber(row.siteCount)}</td>
-              </tr>
-            ))}
+            {displayed.map((row) => {
+              const isSelected = activeCountry === row.country
+              const isDimmed = activeCountry && !isSelected
+
+              return (
+                <tr
+                  key={row.country}
+                  className={cn(
+                    'border-b border-gray-100',
+                    isSelected && 'bg-primary/5 font-medium',
+                    isDimmed && 'opacity-50',
+                    !isDimmed && 'hover:bg-gray-50/50',
+                  )}
+                >
+                  <td className="px-4 py-2.5">
+                    <button
+                      onClick={() => addFilter('country', row.country)}
+                      className={cn(
+                        'font-medium hover:underline',
+                        isSelected ? 'text-primary' : isDimmed ? 'text-text-muted' : 'text-primary',
+                      )}
+                    >
+                      {isSelected ? `\u2713 ${row.country}` : row.country}
+                    </button>
+                  </td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">
+                    <button
+                      onClick={() => addFilter('country', row.country)}
+                      className="hover:underline"
+                    >
+                      {formatNumber(row.trialCount)}
+                    </button>
+                  </td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{formatNumber(row.siteCount)}</td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </Card>
