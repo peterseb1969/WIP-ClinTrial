@@ -38,7 +38,7 @@ export function formatPhase(phase: string): string {
 export function normalizeCondition(raw: string): string {
   let s = raw.toLowerCase()
   // Remove common qualifier prefixes that create false splits
-  s = s.replace(/^(moderately to severely active|locally advanced or metastatic|advanced or metastatic|relapsed or refractory|recurrent|metastatic|advanced|refractory|extensive[ -]stage?|stage \w+)\s+/i, '')
+  s = s.replace(/^(moderately to severely active|locally advanced or metastatic|advanced or metastatic|relapsed or refractory|recurrent|metastatic|advanced|refractory|extensive[ -]stage?|stage \w+|severe|moderate|mild|acquired|concomitant \w+ and)\s+/i, '')
   s = s
     .replace(/\uff0c/g, ',')        // Unicode fullwidth comma → ASCII
     .replace(/['''\u2019]/g, '')     // Remove all apostrophe variants
@@ -47,7 +47,13 @@ export function normalizeCondition(raw: string): string {
     .replace(/\s+/g, ' ')          // Collapse whitespace
     .trim()
   // Remove trailing qualifiers
-  s = s.replace(/\s+(ajcc v\d+|american joint committee.*|patients?|recurrent|metastatic|stage \w+)$/i, '')
+  s = s.replace(/\s+(ajcc v\d+|american joint committee.*|patients?|recurrent|metastatic|stage \w+|with inhibitor|without inhibitor|acquired)$/i, '')
+  // British → American spelling
+  s = s.replace(/\bhaemophilia/g, 'hemophilia')
+  s = s.replace(/\btumour/g, 'tumor')
+  s = s.replace(/\bleukaemia/g, 'leukemia')
+  s = s.replace(/\banaemia/g, 'anemia')
+  s = s.replace(/\boesophag/g, 'esophag')
   // Normalize possessive-style variants: "crohn disease" → "crohns disease"
   s = s.replace(/\b(crohn|hodgkin|parkinson|alzheimer)\b(?!s)/g, '$1s')
   return s

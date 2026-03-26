@@ -283,18 +283,13 @@ function TreeNode({
           </button>
         </div>
 
-        {/* Expanded: show conditions */}
+        {/* Expanded: show conditions with show-all toggle */}
         {isExpanded && conditions.length > 0 && (
-          <div className="border-t border-gray-100 bg-gray-50/30 px-4 py-2">
-            <ConditionGrid
-              conditions={conditions.slice(0, 20)}
-              selectedConditions={[]}
-              toggleCondition={(c) => toggleFilter('condition', c)}
-            />
-            {conditions.length > 20 && (
-              <p className="mt-1 text-xs text-text-muted">+{conditions.length - 20} more</p>
-            )}
-          </div>
+          <ExpandableConditions
+            conditions={conditions}
+            selectedConditions={[]}
+            toggleCondition={(c) => toggleFilter('condition', c)}
+          />
         )}
       </Card>
 
@@ -346,6 +341,34 @@ function AreaCard({
         </div>
       )}
     </Card>
+  )
+}
+
+const INITIAL_CONDITION_LIMIT = 20
+
+function ExpandableConditions({
+  conditions, selectedConditions, toggleCondition,
+}: {
+  conditions: Array<{ name: string; count: number }>
+  selectedConditions: string[]
+  toggleCondition: (c: string) => void
+}) {
+  const [showAll, setShowAll] = useState(false)
+  const visible = showAll ? conditions : conditions.slice(0, INITIAL_CONDITION_LIMIT)
+  const hasMore = conditions.length > INITIAL_CONDITION_LIMIT
+
+  return (
+    <div className="border-t border-gray-100 bg-gray-50/30 px-4 py-2">
+      <ConditionGrid conditions={visible} selectedConditions={selectedConditions} toggleCondition={toggleCondition} />
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-2 text-xs font-medium text-primary hover:underline"
+        >
+          {showAll ? 'Show less' : `Show all ${conditions.length} conditions`}
+        </button>
+      )}
+    </div>
   )
 }
 
