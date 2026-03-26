@@ -38,7 +38,15 @@
 **Status:** Mostly fixed — switched to server-side SQL queries
 **Residual:** For trials with 1000+ AE records, the `data_json` parsing in the browser can take a moment. Consider paginating the AE tab or fetching only aggregate counts initially.
 
-## 3. File downloads untested
+## 3. No trial documents (PDFs) in WIP
 
 **Status:** Open
-**Impact:** The Documents tab on trial detail has download buttons that call `client.files.getDownloadUrl()`. This path hasn't been tested end-to-end since only 202 files exist and the download URL generation depends on MinIO pre-signed URL configuration.
+**Impact:** The Documents tab on trial detail exists but will always show "No documents attached." The 202 files in WIP's file store are from another project (D&D), not clinical trials. No trial documents have `file_references` linked.
+
+**Root cause:** The import script references PDF download capability but the files were never actually downloaded from ClinicalTrials.gov and uploaded to WIP. The `documents` field on CT_TRIAL supports `file_config: { accept: "application/pdf", multiple: true }` but no file upload step exists in the import pipeline.
+
+**To fix:** Add a step to `import_trials.py` that:
+1. Checks if a trial has associated documents via the ClinicalTrials.gov API
+2. Downloads the PDFs
+3. Uploads them to WIP via `client.files.uploadFile()`
+4. Links the file IDs to the trial document's `documents` field
