@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FlaskConical,
@@ -20,9 +21,10 @@ import {
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { useDashboardStats } from '@/hooks/useDashboardStats'
+import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useBookmarks } from '@/hooks/useBookmarks'
-import { formatStatus, formatPhase } from '@/lib/trial-utils'
+import { useTrialFilters } from '@/hooks/useTrialFilters'
+import { countBy, formatStatus, formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
 import { useFilterToggle } from '@/hooks/useFilterNav'
 
@@ -33,10 +35,25 @@ const PIE_COLORS = [
 ]
 
 export function DashboardPage() {
-  const { data: stats, isLoading, error, refetch } = useDashboardStats()
+  const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
   const { count: bookmarkCount } = useBookmarks()
+  const { hasActive } = useTrialFilters()
   const navigate = useNavigate()
   const toggleFilter = useFilterToggle()
+
+  const stats = useMemo(() => {
+    if (!filtered) return null
+    return {
+      total: filtered.length,
+      withResults: filtered.filter((t) => t.data.has_results).length,
+      recruiting: filtered.filter((t) => t.data.status === 'RECRUITING').length,
+      byStatus: countBy(filtered, (d) => d.status),
+      byPhase: countBy(filtered, (d) => d.phases),
+      byTherapeuticArea: countBy(filtered, (d) => d.therapeutic_areas).slice(0, 15),
+      byCondition: countBy(filtered, (d) => d.conditions).slice(0, 15),
+      byMolecule: countBy(filtered, (d) => d.interventions).slice(0, 15),
+    }
+  }, [filtered])
 
   if (isLoading) return <PageLoading message="Loading dashboard..." />
   if (error) return <ErrorMessage message={error.message} onRetry={() => refetch()} />
@@ -44,13 +61,20 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        {hasActive && (
+          <span className="text-sm text-primary font-medium">
+            Showing {formatNumber(stats.total)} of {formatNumber(allTrials?.length ?? 0)} trials
+          </span>
+        )}
+      </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <SummaryCard
           icon={FlaskConical}
-          label="Total Trials"
+          label="Trials"
           value={formatNumber(stats.total)}
           onClick={() => navigate('/trials')}
         />
@@ -157,35 +181,43 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {/* Charts row 2 */}
+      {/* Charts row 2: Therapeutic areas + molecules */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Top conditions */}
+        {/* Therapeutic areas */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Conditions</CardTitle>
+            <CardTitle>Top Therapeutic Areas</CardTitle>
           </CardHeader>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.byCondition} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={180}
-                  tick={{ fontSize: 11 }}
-                />
-                <Tooltip formatter={(value: number) => [value, 'Trials']} />
-                <Bar
-                  dataKey="count"
-                  fill="#5B9BD5"
-                  radius={[0, 4, 4, 0]}
-                  cursor="pointer"
-                  onClick={(entry) => toggleFilter('condition', entry.name)}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {stats.byTherapeuticArea.length > 0 ? (
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.byTherapeuticArea} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={180}
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(v: string) => v.replace(/_/g, ' ')}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [value, 'Trials']}
+                    labelFormatter={(v: string) => v.replace(/_/g, ' ')}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill="#2E8B57"
+                    radius={[0, 4, 4, 0]}
+                    cursor="pointer"
+                    onClick={(entry) => toggleFilter('therapeutic_area', entry.name)}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-text-muted">No therapeutic area data for filtered trials</p>
+          )}
         </Card>
 
         {/* Top molecules */}
@@ -217,6 +249,35 @@ export function DashboardPage() {
           </div>
         </Card>
       </div>
+
+      {/* Charts row 3: Conditions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Conditions</CardTitle>
+        </CardHeader>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={stats.byCondition} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+              <XAxis type="number" />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={220}
+                tick={{ fontSize: 11 }}
+              />
+              <Tooltip formatter={(value: number) => [value, 'Trials']} />
+              <Bar
+                dataKey="count"
+                fill="#5B9BD5"
+                radius={[0, 4, 4, 0]}
+                cursor="pointer"
+                onClick={(entry) => toggleFilter('condition', entry.name)}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
     </div>
   )
 }
