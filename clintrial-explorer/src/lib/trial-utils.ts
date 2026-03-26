@@ -32,18 +32,25 @@ export function formatPhase(phase: string): string {
 }
 
 /**
- * Normalize a condition string for grouping: lowercase, strip parenthetical
- * suffixes, collapse whitespace, remove hyphens and punctuation variants.
- * Returns [normalizedKey, displayForm].
+ * Normalize a condition string for grouping: lowercase, strip qualifiers,
+ * remove apostrophes/hyphens/punctuation, collapse whitespace.
  */
 export function normalizeCondition(raw: string): string {
-  return raw
-    .toLowerCase()
+  let s = raw.toLowerCase()
+  // Remove common qualifier prefixes that create false splits
+  s = s.replace(/^(moderately to severely active|locally advanced or metastatic|advanced or metastatic|relapsed or refractory|recurrent|metastatic|advanced|refractory|extensive[ -]stage?|stage \w+)\s+/i, '')
+  s = s
     .replace(/\uff0c/g, ',')        // Unicode fullwidth comma → ASCII
-    .replace(/[(),]/g, ' ')         // Remove parens/commas
+    .replace(/['''\u2019]/g, '')     // Remove all apostrophe variants
+    .replace(/[(),]/g, ' ')         // Parens/commas to spaces
     .replace(/-/g, ' ')             // Hyphens to spaces
-    .replace(/\s+/g, ' ')           // Collapse whitespace
+    .replace(/\s+/g, ' ')          // Collapse whitespace
     .trim()
+  // Remove trailing qualifiers
+  s = s.replace(/\s+(ajcc v\d+|american joint committee.*|patients?|recurrent|metastatic|stage \w+)$/i, '')
+  // Normalize possessive-style variants: "crohn disease" → "crohns disease"
+  s = s.replace(/\b(crohn|hodgkin|parkinson|alzheimer)\b(?!s)/g, '$1s')
+  return s
 }
 
 /**
