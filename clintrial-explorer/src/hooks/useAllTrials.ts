@@ -100,18 +100,22 @@ export function useAllTrials() {
   })
 }
 
-/** Fetch the set of NCT IDs that have sites in a given country */
-export function useTrialsByCountry(country: string | undefined) {
+/** Fetch the set of NCT IDs that have sites in any of the given countries */
+export function useTrialsByCountries(countries: string[] | undefined) {
+  const key = countries ? [...countries].sort().join(',') : ''
   return useQuery<Set<string>>({
-    queryKey: ['clintrial', 'trials-by-country', country],
+    queryKey: ['clintrial', 'trials-by-countries', key],
     queryFn: async () => {
+      if (!countries || countries.length === 0) return new Set<string>()
+      // Build parameterized IN clause: WHERE country IN ($1, $2, ...)
+      const placeholders = countries.map((_, i) => `$${i + 1}`).join(', ')
       const result = await reportQuery<{ nct_id: string }>(
-        `SELECT DISTINCT nct_id FROM doc_ct_trial_site WHERE country = $1`,
-        [country!],
+        `SELECT DISTINCT nct_id FROM doc_ct_trial_site WHERE country IN (${placeholders})`,
+        countries,
       )
       return new Set(result.rows.map((r) => r.nct_id))
     },
-    enabled: !!country,
+    enabled: !!countries && countries.length > 0,
     staleTime: 5 * 60 * 1000,
   })
 }

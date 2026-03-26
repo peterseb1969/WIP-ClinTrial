@@ -7,15 +7,15 @@ import { cn, formatNumber } from '@/lib/utils'
 import { reportQuery } from '@/lib/reporting'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
-import { useFilterNav } from '@/hooks/useFilterNav'
+import { useFilterToggle } from '@/hooks/useFilterNav'
 
 type SortKey = 'country' | 'trials' | 'sites'
 
 export function SitesPage() {
-  const addFilter = useFilterNav()
+  const toggleFilter = useFilterToggle()
   const { trials: filtered, isLoading: loadingTrials } = useFilteredTrials()
   const { filters, hasActive } = useTrialFilters()
-  const activeCountry = filters.country
+  const selectedCountries = filters.country ?? []
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('trials')
   const [sortAsc, setSortAsc] = useState(false)
@@ -125,8 +125,8 @@ export function SitesPage() {
           </thead>
           <tbody>
             {displayed.map((row) => {
-              const isSelected = activeCountry === row.country
-              const isDimmed = activeCountry && !isSelected
+              const isSelected = selectedCountries.includes(row.country)
+              const isDimmed = selectedCountries.length > 0 && !isSelected
 
               return (
                 <tr
@@ -140,7 +140,7 @@ export function SitesPage() {
                 >
                   <td className="px-4 py-2.5">
                     <button
-                      onClick={() => addFilter('country', row.country)}
+                      onClick={() => toggleFilter('country', row.country)}
                       className={cn(
                         'font-medium hover:underline',
                         isSelected ? 'text-primary' : isDimmed ? 'text-text-muted' : 'text-primary',
@@ -151,7 +151,7 @@ export function SitesPage() {
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums">
                     <button
-                      onClick={() => addFilter('country', row.country)}
+                      onClick={() => toggleFilter('country', row.country)}
                       className="hover:underline"
                     >
                       {formatNumber(row.trialCount)}

@@ -9,7 +9,7 @@ import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { type TrialDocument } from '@/hooks/useAllTrials'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
-import { useTrialFilters, type FilterKey } from '@/hooks/useTrialFilters'
+import { useTrialFilters, trialFilters, type SingleFilterKey } from '@/hooks/useTrialFilters'
 import { formatPhase } from '@/lib/trial-utils'
 import { cn, formatNumber } from '@/lib/utils'
 
@@ -26,8 +26,8 @@ export function TrialsPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  // Reset page when a filter changes via the local controls
-  const updateFilter = (key: FilterKey, value: string | null) => {
+  // For single-value filters (search, toggles)
+  const updateSingleFilter = (key: SingleFilterKey, value: string | null) => {
     setFilter(key, value)
     setPage(1)
   }
@@ -74,13 +74,13 @@ export function TrialsPage() {
             type="text"
             placeholder="Search NCT ID, title, conditions, molecules..."
             value={filters.search || ''}
-            onChange={(e) => updateFilter('search', e.target.value || null)}
+            onChange={(e) => updateSingleFilter('search', e.target.value || null)}
             className="w-full rounded-lg border border-gray-300 bg-surface py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 
         {/* Quick filters */}
-        <QuickFilters filters={filters} setFilter={updateFilter} trials={allTrials ?? []} />
+        <QuickFilters filters={filters} trials={allTrials ?? []} />
       </div>
 
       {/* Results table */}
@@ -201,11 +201,9 @@ export function TrialsPage() {
 /** Quick filter buttons extracted from the data */
 function QuickFilters({
   filters,
-  setFilter,
   trials,
 }: {
-  filters: Partial<Record<FilterKey, string>>
-  setFilter: (key: FilterKey, value: string | null) => void
+  filters: ReturnType<typeof useTrialFilters>['filters']
   trials: TrialDocument[]
 }) {
   // Collect unique values for dropdowns
@@ -231,25 +229,40 @@ function QuickFilters({
     <div className="flex flex-wrap gap-2">
       <FilterSelect
         label="Status"
-        value={filters.status}
+        value={filters.status?.join(', ')}
         options={statuses.map(([v, c]: [string, number]) => ({ value: v, label: `${v.replace(/_/g, ' ')} (${c})` }))}
-        onChange={(v) => setFilter('status', v)}
+        onChange={(v) => v ? trialFilters.toggle('status', v) : trialFilters.removeKey('status')}
       />
       <FilterSelect
         label="Phase"
-        value={filters.phase}
+        value={filters.phase?.join(', ')}
         options={phases.map(([v, c]: [string, number]) => ({ value: v, label: `${formatPhase(v)} (${c})` }))}
-        onChange={(v) => setFilter('phase', v)}
+        onChange={(v) => v ? trialFilters.toggle('phase', v) : trialFilters.removeKey('phase')}
       />
       <FilterToggle
         label="Has Results"
         active={filters.has_results === 'true'}
-        onClick={() => setFilter('has_results', filters.has_results === 'true' ? null : 'true')}
+        onClick={() => trialFilters.toggle('has_results', 'true')}
+      />
+      <FilterToggle
+        label="Has AE Data"
+        active={filters.has_ae_data === 'true'}
+        onClick={() => trialFilters.toggle('has_ae_data', 'true')}
+      />
+      <FilterToggle
+        label="Has Outcomes"
+        active={filters.has_outcomes === 'true'}
+        onClick={() => trialFilters.toggle('has_outcomes', 'true')}
+      />
+      <FilterToggle
+        label="Has Baseline"
+        active={filters.has_baseline === 'true'}
+        onClick={() => trialFilters.toggle('has_baseline', 'true')}
       />
       <FilterToggle
         label="Bookmarked"
         active={filters.bookmarked === 'true'}
-        onClick={() => setFilter('bookmarked', filters.bookmarked === 'true' ? null : 'true')}
+        onClick={() => trialFilters.toggle('bookmarked', 'true')}
       />
     </div>
   )

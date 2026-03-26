@@ -1,11 +1,10 @@
 import { cn } from '@/lib/utils'
-import { useFilterNav } from '@/hooks/useFilterNav'
-import type { FilterKey } from '@/hooks/useTrialFilters'
+import { useFilterToggle } from '@/hooks/useFilterNav'
+import { trialFilters, type FilterKey, type MultiFilterKey } from '@/hooks/useTrialFilters'
+import { Check } from 'lucide-react'
 
 interface ChipLinkProps {
-  /** Filter key to set when clicked */
   filterKey: FilterKey
-  /** Filter value */
   filterValue: string
   children: React.ReactNode
   variant?: 'default' | 'primary' | 'accent'
@@ -18,18 +17,26 @@ const variantClasses = {
   accent: 'bg-accent/10 text-accent hover:bg-accent/20',
 }
 
+const selectedClasses = 'bg-primary text-white hover:bg-primary/80'
+
+const MULTI_KEYS = new Set(['status', 'phase', 'study_type', 'therapeutic_area', 'molecule', 'condition', 'sponsor', 'country'])
+
 export function ChipLink({ filterKey, filterValue, children, variant = 'default', className }: ChipLinkProps) {
-  const addFilter = useFilterNav()
+  const toggle = useFilterToggle()
+  const isSelected = MULTI_KEYS.has(filterKey)
+    ? trialFilters.isSelected(filterKey as MultiFilterKey, filterValue)
+    : false
 
   return (
     <button
-      onClick={() => addFilter(filterKey, filterValue)}
+      onClick={() => toggle(filterKey, filterValue)}
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors cursor-pointer',
-        variantClasses[variant],
+        isSelected ? selectedClasses : variantClasses[variant],
         className,
       )}
     >
+      {isSelected && <Check className="h-3 w-3" />}
       {children}
     </button>
   )

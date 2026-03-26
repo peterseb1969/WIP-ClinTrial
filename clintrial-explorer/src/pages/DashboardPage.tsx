@@ -24,7 +24,7 @@ import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { formatStatus, formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
-import { useFilterNav } from '@/hooks/useFilterNav'
+import { useFilterToggle } from '@/hooks/useFilterNav'
 
 const PIE_COLORS = [
   '#2B579A', '#5B9BD5', '#ED7D31', '#2E8B57', '#DC3545',
@@ -36,7 +36,7 @@ export function DashboardPage() {
   const { data: stats, isLoading, error, refetch } = useDashboardStats()
   const { count: bookmarkCount } = useBookmarks()
   const navigate = useNavigate()
-  const addFilter = useFilterNav()
+  const toggleFilter = useFilterToggle()
 
   if (isLoading) return <PageLoading message="Loading dashboard..." />
   if (error) return <ErrorMessage message={error.message} onRetry={() => refetch()} />
@@ -64,13 +64,13 @@ export function DashboardPage() {
           icon={ClipboardCheck}
           label="With Results"
           value={formatNumber(stats.withResults)}
-          onClick={() => addFilter('has_results', 'true')}
+          onClick={() => toggleFilter('has_results', 'true')}
         />
         <SummaryCard
           icon={TrendingUp}
           label="Recruiting"
           value={formatNumber(stats.recruiting)}
-          onClick={() => addFilter('status', 'RECRUITING')}
+          onClick={() => toggleFilter('status', 'RECRUITING')}
         />
       </div>
 
@@ -94,7 +94,7 @@ export function DashboardPage() {
                   outerRadius={90}
                   paddingAngle={2}
                   cursor="pointer"
-                  onClick={(entry) => addFilter('status', entry.name)}
+                  onClick={(entry) => toggleFilter('status', entry.name)}
                 >
                   {stats.byStatus.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -110,7 +110,7 @@ export function DashboardPage() {
             {stats.byStatus.slice(0, 6).map((s, i) => (
               <button
                 key={s.name}
-                onClick={() => addFilter('status', s.name)}
+                onClick={() => toggleFilter('status', s.name)}
                 className="flex items-center gap-1 hover:underline"
               >
                 <span
@@ -149,7 +149,7 @@ export function DashboardPage() {
                   fill="#2B579A"
                   radius={[0, 4, 4, 0]}
                   cursor="pointer"
-                  onClick={(entry) => addFilter('phase', entry.name)}
+                  onClick={(entry) => toggleFilter('phase', entry.name)}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -181,7 +181,7 @@ export function DashboardPage() {
                   fill="#5B9BD5"
                   radius={[0, 4, 4, 0]}
                   cursor="pointer"
-                  onClick={(entry) => addFilter('condition', entry.name)}
+                  onClick={(entry) => toggleFilter('condition', entry.name)}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -210,7 +210,7 @@ export function DashboardPage() {
                   fill="#ED7D31"
                   radius={[0, 4, 4, 0]}
                   cursor="pointer"
-                  onClick={(entry) => addFilter('molecule', entry.name)}
+                  onClick={(entry) => toggleFilter('molecule', entry.name)}
                 />
               </BarChart>
             </ResponsiveContainer>

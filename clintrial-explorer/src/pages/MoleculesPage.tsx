@@ -5,16 +5,16 @@ import { Badge } from '@/components/Badge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
-import { useFilterNav } from '@/hooks/useFilterNav'
+import { useFilterToggle } from '@/hooks/useFilterNav'
 import { cn } from '@/lib/utils'
 
 export function MoleculesPage() {
   const { trials: filtered, isLoading } = useFilteredTrials()
   const { filters } = useTrialFilters()
-  const addFilter = useFilterNav()
+  const toggleFilter = useFilterToggle()
   const [search, setSearch] = useState('')
 
-  const activeMolecule = filters.molecule
+  const selectedMolecules = filters.molecule ?? []
 
   // Build molecule → trial count from the filtered set
   const molecules = useMemo(() => {
@@ -61,8 +61,8 @@ export function MoleculesPage() {
       {/* Molecule cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {searchFiltered.map((mol) => {
-          const isSelected = activeMolecule === mol.name
-          const isDimmed = activeMolecule && !isSelected
+          const isSelected = selectedMolecules.includes(mol.name)
+          const isDimmed = selectedMolecules.length > 0 && !isSelected
 
           return (
             <Card
@@ -82,7 +82,7 @@ export function MoleculesPage() {
                     </div>
                   )}
                   <button
-                    onClick={() => addFilter('molecule', mol.name)}
+                    onClick={() => toggleFilter('molecule', mol.name)}
                     className={cn(
                       'text-base font-semibold text-left hover:underline',
                       isSelected ? 'text-primary' : isDimmed ? 'text-text-muted' : 'text-primary',
@@ -96,7 +96,7 @@ export function MoleculesPage() {
 
               <div className="mt-3">
                 <button
-                  onClick={() => addFilter('molecule', mol.name)}
+                  onClick={() => toggleFilter('molecule', mol.name)}
                   className={cn(
                     'text-xs hover:underline',
                     isSelected ? 'text-primary font-medium' : 'text-primary',
