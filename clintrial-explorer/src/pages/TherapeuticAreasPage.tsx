@@ -60,12 +60,7 @@ export function TherapeuticAreasPage() {
     setExpanded(next)
   }
 
-  if (loadingTrials || loadingTree) return <PageLoading message="Loading therapeutic areas..." />
-
-  // If we have an ontology tree, render it; otherwise fall back to flat list
-  const roots = tree && tree.length > 0 ? tree : null
-
-  // Flat list of all areas with stats (for non-tree fallback or search)
+  // Flat list of all areas with stats (must be before any early return)
   const flatAreas = useMemo(() => {
     return [...areaStats.entries()]
       .map(([area, data]) => ({
@@ -84,6 +79,11 @@ export function TherapeuticAreasPage() {
     const q = search.toLowerCase()
     return value.toLowerCase().replace(/_/g, ' ').includes(q)
   }
+
+  if (loadingTrials || loadingTree) return <PageLoading message="Loading therapeutic areas..." />
+
+  // If we have an ontology tree, render it; otherwise fall back to flat list
+  const roots = tree && tree.length > 0 ? tree : null
 
   return (
     <div className="space-y-6">
