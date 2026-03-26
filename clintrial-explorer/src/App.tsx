@@ -8,6 +8,7 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { TrialsPage } from '@/pages/TrialsPage'
 import { TrialDetailPage } from '@/pages/TrialDetailPage'
 import { MoleculesPage } from '@/pages/MoleculesPage'
+import { MoleculeDetailPage } from '@/pages/MoleculeDetailPage'
 import { SitesPage } from '@/pages/SitesPage'
 import { BookmarksPage } from '@/pages/BookmarksPage'
 import { TherapeuticAreasPage } from '@/pages/TherapeuticAreasPage'
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="trials" element={<TrialsPage />} />
               <Route path="trials/:nctId" element={<TrialDetailPage />} />
               <Route path="molecules" element={<MoleculesPage />} />
+              <Route path="molecules/:name" element={<MoleculeDetailPage />} />
               <Route path="therapeutic-areas" element={<TherapeuticAreasPage />} />
               <Route path="sites" element={<SitesPage />} />
               <Route path="bookmarks" element={<BookmarksPage />} />

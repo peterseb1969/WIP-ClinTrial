@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Search, Check } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Search, Check, ArrowRight } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { PageLoading } from '@/components/LoadingSpinner'
@@ -76,34 +77,38 @@ export function MoleculesPage() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  {isSelected && (
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
-                  )}
                   <button
                     onClick={() => toggleFilter('molecule', mol.name)}
+                    className="flex-shrink-0"
+                    title={isSelected ? 'Remove from filter' : 'Add to filter'}
+                  >
+                    <div className={cn(
+                      'flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors',
+                      isSelected ? 'bg-primary border-primary' : 'border-gray-300 hover:border-primary',
+                    )}>
+                      {isSelected && <Check className="h-3 w-3 text-white" />}
+                    </div>
+                  </button>
+                  <Link
+                    to={`/molecules/${encodeURIComponent(mol.name)}`}
                     className={cn(
                       'text-base font-semibold text-left hover:underline',
-                      isSelected ? 'text-primary' : isDimmed ? 'text-text-muted' : 'text-primary',
+                      isDimmed ? 'text-text-muted' : 'text-primary',
                     )}
                   >
                     {mol.name}
-                  </button>
+                  </Link>
                 </div>
                 <Badge variant={isSelected ? 'primary' : 'accent'}>{mol.count} trials</Badge>
               </div>
 
-              <div className="mt-3">
-                <button
-                  onClick={() => toggleFilter('molecule', mol.name)}
-                  className={cn(
-                    'text-xs hover:underline',
-                    isSelected ? 'text-primary font-medium' : 'text-primary',
-                  )}
+              <div className="mt-3 flex items-center gap-3">
+                <Link
+                  to={`/molecules/${encodeURIComponent(mol.name)}`}
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                 >
-                  {isSelected ? 'Selected — click to filter further' : 'View all trials →'}
-                </button>
+                  Details <ArrowRight className="h-3 w-3" />
+                </Link>
               </div>
             </Card>
           )
