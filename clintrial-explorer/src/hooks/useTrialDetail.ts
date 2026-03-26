@@ -1,6 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { useWipClient } from '@wip/react'
-import type { Document } from '@wip/client'
 import type { TrialData } from './useAllTrials'
 import { reportQuery } from '@/lib/reporting'
 
@@ -70,29 +68,32 @@ export function useTrialBaselines(nctId: string) {
   return useTrialRelated('doc_ct_trial_baseline', nctId, 'baselines')
 }
 
-/** Fetch files linked to a trial document */
-export function useTrialFiles(trialDocId: string) {
-  const client = useWipClient()
+interface FileRef {
+  file_id: string
+  filename: string
+  content_type?: string
+  size_bytes?: number
+  description?: string
+}
 
-  return useQuery({
-    queryKey: ['clintrial', 'files', trialDocId],
+/** Fetch files linked to a trial by nct_id from the reporting DB */
+export function useTrialFiles(nctId: string) {
+  return useQuery<FileRef[]>({
+    queryKey: ['clintrial', 'files', nctId],
     queryFn: async () => {
-      const doc = await client.documents.getDocument(trialDocId)
-      const fileRefs = (doc as Document & { file_references?: Array<{ file_id: string }> }).file_references || []
-      if (fileRefs.length === 0) return []
-
-      const files = await Promise.all(
-        fileRefs.map(async (ref) => {
-          try {
-            return await client.files.getFile(ref.file_id)
-          } catch {
-            return null
-          }
-        }),
+      const result = await reportQuery<{ file_references_json: string }>(
+        `SELECT file_references_json FROM doc_ct_trial WHERE nct_id = $1`,
+        [nctId],
       )
-      return files.filter(Boolean)
+      if (result.rows.length === 0) return []
+
+      const raw = result.rows[0].file_references_json
+      if (!raw || raw === '[]') return []
+
+      const refs: FileRef[] = typeof raw === 'string' ? JSON.parse(raw) : raw
+      return refs
     },
-    enabled: !!trialDocId,
+    enabled: !!nctId,
     staleTime: 10 * 60 * 1000,
   })
 }

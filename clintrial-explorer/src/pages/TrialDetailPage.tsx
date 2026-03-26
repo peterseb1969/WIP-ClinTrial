@@ -134,7 +134,7 @@ export function TrialDetailPage() {
       {activeTab === 'sites' && <SitesTab nctId={d.nct_id} />}
       {activeTab === 'aes' && <AEsTab nctId={d.nct_id} />}
       {activeTab === 'baseline' && <BaselineTab nctId={d.nct_id} />}
-      {activeTab === 'documents' && <DocumentsTab trialDocId={trial.document_id} />}
+      {activeTab === 'documents' && <DocumentsTab nctId={d.nct_id} />}
     </div>
   )
 }
@@ -399,8 +399,8 @@ function BaselineTab({ nctId }: { nctId: string }) {
   )
 }
 
-function DocumentsTab({ trialDocId }: { trialDocId: string }) {
-  const { data: files, isLoading } = useTrialFiles(trialDocId)
+function DocumentsTab({ nctId }: { nctId: string }) {
+  const { data: files, isLoading } = useTrialFiles(nctId)
   const client = useWipClient()
 
   const handleDownload = async (fileId: string, filename: string) => {
