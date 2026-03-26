@@ -1,10 +1,21 @@
 # Improvement Roadmap
 
 Prioritized enhancement plan based on user feedback (2026-03-26).
+Updated after therapeutic area classification was completed (2,508 trials classified).
 
-## Core Problem
+## Core Problems
 
-The app is trial-centric: every interaction funnels to the Trials page. Entities like molecules, countries, and adverse events are treated as filter selectors, not as first-class objects. Single-select filters with forced page redirect make multi-criteria browsing tedious.
+1. **Trial-centric architecture** — every interaction funnels to the Trials page. Entities like molecules, countries, and adverse events are filter selectors, not first-class objects.
+2. **Single-select, forced redirect** — clicking a filter value selects one item and redirects to the Trials page. No multi-select, no stay-on-page.
+3. **Limited filter dimensions** — only basic filters exist (status, phase, molecule, country). Missing: has AE data, has protocol PDF, has SAP, therapeutic area, and other data-availability filters.
+
+## Completed
+
+- ~~Therapeutic area classifier~~ — Done (2026-03-26). 2,508 of 3,867 trials classified via keyword matching against 37 CT_THERAPEUTIC_AREA terms. Script: `scripts/classify_therapeutic_areas.py`.
+- ~~Global cumulative filters~~ — Done. Filters persist across pages via sessionStorage.
+- ~~Server-side SQL queries~~ — Done. Dashboard, trial detail, sites all use reporting layer.
+- ~~Filter-aware pages~~ — Done. Molecules and Sites reflect active filters.
+- ~~Selected item highlighting~~ — Done. Active molecule/country visually highlighted.
 
 ## Phase 1: Fix the Filter Model
 
@@ -24,23 +35,49 @@ Clicking a molecule/country/status toggles it in the global filter *without navi
 
 **Changes:** `useFilterNav` → `useFilterToggle`. ChipLink stays on current page. Molecules/Sites/Dashboard pages add a "View trials" action.
 
-## Phase 2: Quick Wins
-
-### 2a. Dashboard filter-awareness
-**Priority:** High — quick win after Phase 1
-**Effort:** Low (30 min)
-
-Dashboard charts currently always show the full dataset. After Phase 1, add WHERE clauses to the 7 SQL queries based on active filters. Dashboard becomes another lens on the filtered dataset.
-
-### 2b. Therapeutic area classifier in import script
-**Priority:** High — unblocks hierarchy view
+### 1c. Richer trial filters
+**Priority:** High — directly requested
 **Effort:** Medium
 
-Build keyword classifier that maps trial `conditions` to `CT_THERAPEUTIC_AREA` terms using term values, labels, and aliases. Re-import with `--full`. See KNOWN_ISSUES.md #1 for full implementation plan.
+Add data-availability filters to the Trials page and global filter bar:
 
-## Phase 3: Entity Detail Pages
+| Filter | Logic | Data source |
+|--------|-------|-------------|
+| Has AE data | Trial has rows in doc_ct_trial_ae | `SELECT DISTINCT nct_id FROM doc_ct_trial_ae` |
+| Has results/outcomes | Trial has rows in doc_ct_trial_outcome with result_groups | Reporting SQL |
+| Has baseline data | Trial has rows in doc_ct_trial_baseline | Reporting SQL |
+| Has protocol PDF | Trial has linked PDF file of type "protocol" | File references (once PDFs are imported) |
+| Has SAP PDF | Trial has linked PDF file of type "statistical analysis plan" | File references (once PDFs are imported) |
+| Therapeutic area | Now populated on 2,508 trials | Direct field filter (multi-select) |
+| Enrollment range | Min/max enrollment slider | Direct field filter |
+| Date range | Start date between X and Y | Direct field filter |
 
-### 3a. Molecule Detail Page (`/molecules/:name`)
+The "has PDF" filters depend on importing trial documents (KNOWN_ISSUES #3). The others can be implemented now.
+
+**Implementation:** Pre-compute the sets of NCT IDs that have AE/outcome/baseline data via SQL queries (similar to the existing `useTrialsByCountry` pattern). Cache with 5-min stale time. Filter client-side against the trial list.
+
+## Phase 2: Content Pages (unblocked by TA classification)
+
+### 2a. Therapeutic Area hierarchy view
+**Priority:** High — now unblocked
+**Effort:** Medium
+
+Each therapeutic area is a collapsible section that expands to show all trial conditions it covers. Clicking a condition filters trials. Shows the mapping between curated areas and raw ClinicalTrials.gov conditions.
+
+Could live on a dedicated page (`/therapeutic-areas`) or as an expandable panel on the Dashboard.
+
+Additionally shows:
+- Number of trials per area (and per condition within the area)
+- Unclassified conditions (the 35% of trials with no therapeutic area match)
+- Which keywords triggered the classification (transparency)
+
+### 2b. Dashboard filter-awareness
+**Priority:** High — quick win
+**Effort:** Low (30 min)
+
+Dashboard charts currently always show the full dataset. Add WHERE clauses to the 7 SQL queries based on active filters. Dashboard becomes another lens on the filtered dataset. Now that therapeutic areas are populated, add a therapeutic area chart.
+
+### 2c. Molecule Detail Page (`/molecules/:name`)
 **Priority:** High — leverages existing terminology data
 **Effort:** Medium
 
@@ -50,42 +87,13 @@ Build keyword classifier that maps trial `conditions` to `CT_THERAPEUTIC_AREA` t
 | Drug class | CT_DRUG_CLASS ontology relationships |
 | Molecular targets | CT_TARGET ontology relationships |
 | Trial summary (by phase, status) | Reporting SQL aggregation |
-| Conditions/therapeutic areas | Derived from trial conditions |
+| Therapeutic areas | From classified trials using this molecule |
 | Aggregate AE profile | Reporting SQL on doc_ct_trial_ae |
 | Trial list | Filtered trial list component |
 
-### 3b. Therapeutic Area hierarchy view
-**Priority:** Medium — depends on 2b (classifier)
-**Effort:** Medium
+## Phase 3: Advanced Exploration
 
-Each therapeutic area is a collapsible section that expands to show all trial conditions it covers. Clicking a condition filters trials. The hierarchy makes the relationship between the curated therapeutic areas and the raw ClinicalTrials.gov conditions visible and browsable.
-
-Could live on a dedicated page (`/therapeutic-areas`) or as an expandable section on the Dashboard.
-
-### 3c. Mapping rules transparency and configuration
-**Priority:** Medium-High
-**Effort:** Short-term Low, Long-term High
-
-The therapeutic area classifier, ontology relationships (drug class → molecule, molecule → target), and similar mapping rules are currently invisible to the user — they're baked into a Python script or WIP terminology metadata. Users need to see, understand, and eventually tune these rules.
-
-**Short-term: Read-only visibility**
-- A "Data Model" or "Configuration" page showing:
-  - Therapeutic area → condition keyword mapping (which keywords map to which area, how many trials each rule matched)
-  - Molecule → drug class relationships (from CT_DRUG_CLASS ontology)
-  - Molecule → target relationships (from CT_TARGET ontology)
-  - Unmatched conditions (trials with no therapeutic area — helps identify gaps in the rules)
-- This is a transparency feature: the user can see exactly why a trial is classified as "Lung Cancer" and spot misclassifications or missing rules.
-
-**Long-term: User-configurable rules**
-- Edit keyword mappings through the UI (add/remove keywords per therapeutic area)
-- Add new therapeutic area terms
-- Run re-classification from the UI (trigger the classifier script, show progress)
-- Preview changes before applying ("if I add this keyword, which trials would be reclassified?")
-- Audit trail: who changed which rule, when, and how it affected classification
-
-**Data source:** All mapping rules already live in WIP as terminology terms (with aliases) and ontology relationships. The short-term view is just reading what's already there. The long-term edit UI would use `@wip/client` mutation hooks to update terms/aliases/relationships.
-
-### 3d. Adverse Events Page (`/adverse-events`)
+### 3a. Adverse Events Page (`/adverse-events`)
 **Priority:** Medium-High — high value, high effort
 **Effort:** High
 
@@ -97,7 +105,30 @@ The therapeutic area classifier, ontology relationships (drug class → molecule
 | Cross-trial comparison | Heatmap: AE terms × trials (or molecules), cells = incidence |
 | Filter-aware | Respects global filters |
 
-Data source: Reporting SQL on `doc_ct_trial_ae` with GROUP BY aggregation. The 88K records are fast to aggregate server-side but the UI needs careful design to avoid overwhelming the user.
+Data source: Reporting SQL on `doc_ct_trial_ae` with GROUP BY aggregation.
+
+### 3b. Mapping rules transparency and configuration
+**Priority:** Medium-High
+**Effort:** Short-term Low, Long-term High
+
+The therapeutic area classifier, ontology relationships (drug class → molecule, molecule → target), and similar mapping rules are currently invisible to the user.
+
+**Short-term: Read-only visibility**
+- A "Data Model" or "Configuration" page showing:
+  - Therapeutic area → condition keyword mapping (which keywords map to which area, how many trials each rule matched)
+  - Molecule → drug class relationships (from CT_DRUG_CLASS ontology)
+  - Molecule → target relationships (from CT_TARGET ontology)
+  - Unmatched conditions (trials with no therapeutic area — helps identify gaps)
+- Transparency feature: user can see exactly why a trial is classified as "Lung Cancer" and spot misclassifications or missing rules.
+
+**Long-term: User-configurable rules**
+- Edit keyword mappings through the UI (add/remove keywords per therapeutic area)
+- Add new therapeutic area terms
+- Run re-classification from the UI (trigger the classifier script, show progress)
+- Preview changes before applying ("if I add this keyword, which trials would be reclassified?")
+- Audit trail: who changed which rule, when, and how it affected classification
+
+**Data source:** All mapping rules already live in WIP as terminology terms (with aliases) and ontology relationships. The short-term view reads what's there. The long-term edit UI writes back via `@wip/client`.
 
 ## Phase 4: Polish
 
@@ -105,16 +136,22 @@ Data source: Reporting SQL on `doc_ct_trial_ae` with GROUP BY aggregation. The 8
 **Priority:** Low — Sites page with filters covers most use cases
 **Effort:** Medium
 
-Summary stats, facility list, trial timeline for a country. Nice to have, not essential.
+Summary stats, facility list, trial timeline for a country.
 
 ### 4b. Bookmarks as WIP documents
 **Priority:** Low — current localStorage approach works for single-user
 **Effort:** Medium
 
-Create a CT_BOOKMARK template in WIP. Enables multi-device sync and sharing. Only worth doing if multi-user access is needed.
+Create a CT_BOOKMARK template in WIP. Enables multi-device sync and sharing.
+
+### 4c. Import trial PDFs from ClinicalTrials.gov
+**Priority:** Low — prerequisite for "Has protocol PDF" / "Has SAP" filters
+**Effort:** Medium
+
+Download protocol documents, SAPs, and other PDFs from ClinicalTrials.gov API. Upload to WIP file store. Link to trial documents. See KNOWN_ISSUES.md #3.
 
 ## Deferred
 
-- E2E tests with Playwright (Phase 4 of original build plan)
+- E2E tests with Playwright
 - Docker Compose integration with WIP ecosystem
 - Gateway registration and portal listing
