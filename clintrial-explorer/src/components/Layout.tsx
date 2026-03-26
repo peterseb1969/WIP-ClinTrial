@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   FlaskConical,
   Pill,
+  Dna,
   MapPin,
   Bookmark,
   RefreshCw,
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/trials', icon: FlaskConical, label: 'Trials' },
   { to: '/molecules', icon: Pill, label: 'Molecules' },
+  { to: '/therapeutic-areas', icon: Dna, label: 'Therapeutic Areas' },
   { to: '/sites', icon: MapPin, label: 'Sites' },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
   { to: '/sync', icon: RefreshCw, label: 'Sync' },
@@ -27,6 +29,7 @@ const navItems = [
 const breadcrumbLabels: Record<string, string> = {
   trials: 'Trials',
   molecules: 'Molecules',
+  'therapeutic-areas': 'Therapeutic Areas',
   sites: 'Sites',
   bookmarks: 'Bookmarks',
   sync: 'Sync Status',

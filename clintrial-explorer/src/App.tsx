@@ -10,6 +10,7 @@ import { TrialDetailPage } from '@/pages/TrialDetailPage'
 import { MoleculesPage } from '@/pages/MoleculesPage'
 import { SitesPage } from '@/pages/SitesPage'
 import { BookmarksPage } from '@/pages/BookmarksPage'
+import { TherapeuticAreasPage } from '@/pages/TherapeuticAreasPage'
 import { SyncPage } from '@/pages/SyncPage'
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ export default function App() {
               <Route path="trials" element={<TrialsPage />} />
               <Route path="trials/:nctId" element={<TrialDetailPage />} />
               <Route path="molecules" element={<MoleculesPage />} />
+              <Route path="therapeutic-areas" element={<TherapeuticAreasPage />} />
               <Route path="sites" element={<SitesPage />} />
               <Route path="bookmarks" element={<BookmarksPage />} />
               <Route path="sync" element={<SyncPage />} />
