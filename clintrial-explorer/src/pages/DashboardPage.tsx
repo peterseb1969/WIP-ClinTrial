@@ -24,7 +24,7 @@ import { ErrorMessage } from '@/components/ErrorMessage'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
-import { countBy, formatStatus, formatPhase } from '@/lib/trial-utils'
+import { countBy, deduplicateConditions, formatStatus, formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
 import { useFilterToggle } from '@/hooks/useFilterNav'
 
@@ -50,7 +50,7 @@ export function DashboardPage() {
       byStatus: countBy(filtered, (d) => d.status),
       byPhase: countBy(filtered, (d) => d.phases),
       byTherapeuticArea: countBy(filtered, (d) => d.therapeutic_areas).slice(0, 15),
-      byCondition: countBy(filtered, (d) => d.conditions).slice(0, 15),
+      byCondition: deduplicateConditions(countBy(filtered, (d) => d.conditions)).slice(0, 15),
       byMolecule: countBy(filtered, (d) => d.interventions).slice(0, 15),
     }
   }, [filtered])

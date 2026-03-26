@@ -91,6 +91,21 @@ Dashboard charts currently always show the full dataset. Add WHERE clauses to th
 | Aggregate AE profile | Reporting SQL on doc_ct_trial_ae |
 | Trial list | Filtered trial list component |
 
+### 2d. Condition normalization via CT_CONDITION terminology
+**Priority:** High — conditions are the most visible data quality issue
+**Effort:** High (data model change)
+
+ClinicalTrials.gov conditions are free text with rampant duplication: 79 distinct spellings for "lung cancer" variants alone ("Non-Small Cell Lung Cancer" vs "Non-small Cell Lung Cancer" vs "NSCLC" vs "Carcinoma, Non-Small-Cell Lung" vs Unicode-comma variants).
+
+**Implementation:**
+1. Create a `CT_CONDITION` terminology with curated canonical terms and aliases (like CT_MOLECULE)
+2. Build a condition resolver in the import script that maps free-text conditions to CT_CONDITION terms
+3. Store resolved condition term values on the trial document (alongside or replacing the raw conditions array)
+4. Unresolved conditions flagged for manual curation
+5. This is a Phase 2/3 data model change — new terminology, new/modified template field, re-import
+
+**Interim fix (done):** Display-time normalization groups condition strings by lowercase/stripped form while showing the most common spelling. Doesn't fix the data but makes charts and lists usable.
+
 ## Phase 3: Advanced Exploration
 
 ### 3a. Adverse Events Page (`/adverse-events`)

@@ -12,7 +12,7 @@ import { ChipLink } from '@/components/ChipLink'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useAllTrials } from '@/hooks/useAllTrials'
 import { reportQuery } from '@/lib/reporting'
-import { countBy, formatStatus, formatPhase } from '@/lib/trial-utils'
+import { countBy, deduplicateConditions, formatStatus, formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
 
 const PIE_COLORS = ['#2B579A', '#5B9BD5', '#ED7D31', '#2E8B57', '#DC3545', '#7C4DFF', '#00BCD4', '#FF9800']
@@ -48,7 +48,7 @@ export function MoleculeDetailPage() {
   // Derive stats
   const byStatus = useMemo(() => countBy(moleculeTrials, (d) => d.status), [moleculeTrials])
   const byPhase = useMemo(() => countBy(moleculeTrials, (d) => d.phases), [moleculeTrials])
-  const byCondition = useMemo(() => countBy(moleculeTrials, (d) => d.conditions).slice(0, 15), [moleculeTrials])
+  const byCondition = useMemo(() => deduplicateConditions(countBy(moleculeTrials, (d) => d.conditions)).slice(0, 15), [moleculeTrials])
   const byTherapeuticArea = useMemo(() => countBy(moleculeTrials, (d) => d.therapeutic_areas), [moleculeTrials])
 
   // Fetch top AEs for this molecule via SQL

@@ -31,6 +31,50 @@ export function formatPhase(phase: string): string {
   return phase.replace(/^PHASE(\d)$/, 'Phase $1')
 }
 
+/**
+ * Normalize a condition string for grouping: lowercase, strip parenthetical
+ * suffixes, collapse whitespace, remove hyphens and punctuation variants.
+ * Returns [normalizedKey, displayForm].
+ */
+export function normalizeCondition(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/\uff0c/g, ',')        // Unicode fullwidth comma → ASCII
+    .replace(/[(),]/g, ' ')         // Remove parens/commas
+    .replace(/-/g, ' ')             // Hyphens to spaces
+    .replace(/\s+/g, ' ')           // Collapse whitespace
+    .trim()
+}
+
+/**
+ * Group conditions by normalized form, returning the most common spelling
+ * as the display name with the combined count.
+ */
+export function deduplicateConditions(
+  conditions: Array<{ name: string; count: number }>,
+): Array<{ name: string; count: number }> {
+  const groups = new Map<string, { bestName: string; bestCount: number; totalCount: number }>()
+
+  for (const { name, count } of conditions) {
+    const key = normalizeCondition(name)
+    const existing = groups.get(key)
+    if (existing) {
+      existing.totalCount += count
+      // Keep the most common spelling as display name
+      if (count > existing.bestCount) {
+        existing.bestName = name
+        existing.bestCount = count
+      }
+    } else {
+      groups.set(key, { bestName: name, bestCount: count, totalCount: count })
+    }
+  }
+
+  return [...groups.values()]
+    .map(({ bestName, totalCount }) => ({ name: bestName, count: totalCount }))
+    .sort((a, b) => b.count - a.count)
+}
+
 /** Aggregate trial data by a field, returning counts sorted desc */
 export function countBy<T extends TrialData>(
   trials: { data: T }[],
