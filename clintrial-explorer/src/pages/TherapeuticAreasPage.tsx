@@ -6,6 +6,7 @@ import { PageLoading } from '@/components/LoadingSpinner'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters, type FilterKey } from '@/hooks/useTrialFilters'
 import { useTherapeuticAreaTree, type TANode } from '@/hooks/useTherapeuticAreaTree'
+import { useTherapeuticAreaTerms, buildKeywordMap, conditionMatchesArea } from '@/hooks/useTherapeuticAreaTerms'
 import { useFilterToggle } from '@/hooks/useFilterNav'
 import { deduplicateConditions } from '@/lib/trial-utils'
 import { cn, formatNumber } from '@/lib/utils'
@@ -14,13 +15,18 @@ export function TherapeuticAreasPage() {
   const { trials: filtered, isLoading: loadingTrials } = useFilteredTrials()
   const { filters } = useTrialFilters()
   const { data: tree, isLoading: loadingTree } = useTherapeuticAreaTree()
+  const { data: taTerms } = useTherapeuticAreaTerms()
   const toggleFilter = useFilterToggle()
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   const selectedAreas = filters.therapeutic_area ?? []
 
+  // Keyword map for filtering conditions to relevant area
+  const keywordMap = useMemo(() => buildKeywordMap(taTerms ?? []), [taTerms])
+
   // Build TA → {trialCount, conditions} from filtered trials
+  // Only include conditions that actually match the area's keywords
   const areaStats = useMemo(() => {
     const map = new Map<string, { trials: Set<string>; conditions: Map<string, number> }>()
     for (const t of filtered) {
@@ -29,12 +35,15 @@ export function TherapeuticAreasPage() {
         const entry = map.get(area)!
         entry.trials.add(t.data.nct_id)
         for (const cond of t.data.conditions ?? []) {
-          entry.conditions.set(cond, (entry.conditions.get(cond) || 0) + 1)
+          // Only include conditions that match this area's keywords
+          if (conditionMatchesArea(cond, area, keywordMap)) {
+            entry.conditions.set(cond, (entry.conditions.get(cond) || 0) + 1)
+          }
         }
       }
     }
     return map
-  }, [filtered])
+  }, [filtered, keywordMap])
 
   // Unclassified trials
   const unclassified = useMemo(() => {
