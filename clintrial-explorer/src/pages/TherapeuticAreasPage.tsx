@@ -50,7 +50,7 @@ export function TherapeuticAreasPage() {
     }
     return deduplicateConditions(
       [...counts.entries()].map(([name, count]) => ({ name, count })),
-    )
+    ).sort((a, b) => a.name.localeCompare(b.name))
   }, [unclassified])
 
   const toggleExpand = (area: string) => {
@@ -70,7 +70,7 @@ export function TherapeuticAreasPage() {
           [...data.conditions.entries()].map(([name, count]) => ({ name, count })),
         ),
       }))
-      .sort((a, b) => b.trialCount - a.trialCount)
+      .sort((a, b) => a.area.localeCompare(b.area))
   }, [areaStats])
 
   // Search filters
@@ -206,7 +206,7 @@ function TreeNode({
   const stats = areaStats.get(node.value)
   const trialCount = stats?.trials.size ?? 0
   const conditions = stats
-    ? deduplicateConditions([...stats.conditions.entries()].map(([name, count]) => ({ name, count })))
+    ? deduplicateConditions([...stats.conditions.entries()].map(([name, count]) => ({ name, count }))).sort((a, b) => a.name.localeCompare(b.name))
     : []
 
   // Include children's trial counts for parent display
