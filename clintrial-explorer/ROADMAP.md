@@ -62,7 +62,30 @@ Each therapeutic area is a collapsible section that expands to show all trial co
 
 Could live on a dedicated page (`/therapeutic-areas`) or as an expandable section on the Dashboard.
 
-### 3c. Adverse Events Page (`/adverse-events`)
+### 3c. Mapping rules transparency and configuration
+**Priority:** Medium-High
+**Effort:** Short-term Low, Long-term High
+
+The therapeutic area classifier, ontology relationships (drug class → molecule, molecule → target), and similar mapping rules are currently invisible to the user — they're baked into a Python script or WIP terminology metadata. Users need to see, understand, and eventually tune these rules.
+
+**Short-term: Read-only visibility**
+- A "Data Model" or "Configuration" page showing:
+  - Therapeutic area → condition keyword mapping (which keywords map to which area, how many trials each rule matched)
+  - Molecule → drug class relationships (from CT_DRUG_CLASS ontology)
+  - Molecule → target relationships (from CT_TARGET ontology)
+  - Unmatched conditions (trials with no therapeutic area — helps identify gaps in the rules)
+- This is a transparency feature: the user can see exactly why a trial is classified as "Lung Cancer" and spot misclassifications or missing rules.
+
+**Long-term: User-configurable rules**
+- Edit keyword mappings through the UI (add/remove keywords per therapeutic area)
+- Add new therapeutic area terms
+- Run re-classification from the UI (trigger the classifier script, show progress)
+- Preview changes before applying ("if I add this keyword, which trials would be reclassified?")
+- Audit trail: who changed which rule, when, and how it affected classification
+
+**Data source:** All mapping rules already live in WIP as terminology terms (with aliases) and ontology relationships. The short-term view is just reading what's already there. The long-term edit UI would use `@wip/client` mutation hooks to update terms/aliases/relationships.
+
+### 3d. Adverse Events Page (`/adverse-events`)
 **Priority:** Medium-High — high value, high effort
 **Effort:** High
 
