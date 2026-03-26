@@ -1,40 +1,48 @@
 import { RefreshCw, Database, Clock, FileText } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useWipClient } from '@wip/react'
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { formatNumber } from '@/lib/utils'
+import { reportQuery } from '@/lib/reporting'
 
 export function SyncPage() {
-  const client = useWipClient()
-
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['clintrial', 'namespace-stats'],
+  // Single SQL query for all template counts + totals
+  const { data, isLoading } = useQuery({
+    queryKey: ['clintrial', 'sync-stats'],
     queryFn: async () => {
-      const ns = await client.registry.getNamespaceStats('clintrial')
-      return ns
-    },
-    staleTime: 60 * 1000,
-  })
+      const [templateResult, totalResult] = await Promise.all([
+        reportQuery<{ table_name: string; cnt: number }>(
+          `SELECT 'CT_TRIAL' as table_name, COUNT(*) as cnt FROM doc_ct_trial
+           UNION ALL SELECT 'CT_ORGANIZATION', COUNT(*) FROM doc_ct_organization
+           UNION ALL SELECT 'CT_TRIAL_OUTCOME', COUNT(*) FROM doc_ct_trial_outcome
+           UNION ALL SELECT 'CT_TRIAL_SITE', COUNT(*) FROM doc_ct_trial_site
+           UNION ALL SELECT 'CT_TRIAL_AE', COUNT(*) FROM doc_ct_trial_ae
+           UNION ALL SELECT 'CT_TRIAL_BASELINE', COUNT(*) FROM doc_ct_trial_baseline`,
+        ),
+        reportQuery<{ cnt: number }>(
+          `SELECT COUNT(*) as cnt FROM doc_ct_trial
+           UNION ALL SELECT COUNT(*) FROM doc_ct_organization
+           UNION ALL SELECT COUNT(*) FROM doc_ct_trial_outcome
+           UNION ALL SELECT COUNT(*) FROM doc_ct_trial_site
+           UNION ALL SELECT COUNT(*) FROM doc_ct_trial_ae
+           UNION ALL SELECT COUNT(*) FROM doc_ct_trial_baseline`,
+        ),
+      ])
 
-  // Fetch document counts per template
-  const { data: templateCounts } = useQuery({
-    queryKey: ['clintrial', 'template-counts'],
-    queryFn: async () => {
-      const templates = ['CT_TRIAL', 'CT_ORGANIZATION', 'CT_TRIAL_OUTCOME', 'CT_TRIAL_SITE', 'CT_TRIAL_AE', 'CT_TRIAL_BASELINE']
-      const counts: Record<string, number> = {}
-      for (const tmpl of templates) {
-        const result = await client.documents.listDocuments({
-          template_value: tmpl,
-          status: 'active',
-          page_size: 1,
-        })
-        counts[tmpl] = result.total
+      const templateCounts: Record<string, number> = {}
+      for (const row of templateResult.rows) {
+        templateCounts[row.table_name] = Number(row.cnt)
       }
-      return counts
+
+      const totalDocs = totalResult.rows.reduce((sum, r) => sum + Number(r.cnt), 0)
+
+      return { templateCounts, totalDocs }
     },
     staleTime: 60 * 1000,
   })
+
+  const stats = data
+  const templateCounts = data?.templateCounts
 
   if (isLoading) return <PageLoading message="Loading sync status..." />
 
@@ -67,17 +75,15 @@ export function SyncPage() {
         </dl>
       </Card>
 
-      {/* Namespace stats */}
+      {/* Total stats */}
       <Card>
         <CardHeader>
           <CardTitle>Namespace: clintrial</CardTitle>
         </CardHeader>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          <StatBox label="Documents" value={formatNumber(stats?.entity_counts?.documents ?? 0)} />
-          <StatBox label="Templates" value={String(stats?.entity_counts?.templates ?? 0)} />
-          <StatBox label="Terminologies" value={String(stats?.entity_counts?.terminologies ?? 0)} />
-          <StatBox label="Terms" value={formatNumber(stats?.entity_counts?.terms ?? 0)} />
-          <StatBox label="Files" value={formatNumber(stats?.entity_counts?.files ?? 0)} />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <StatBox label="Total Documents" value={formatNumber(stats?.totalDocs ?? 0)} />
+          <StatBox label="Templates" value="6" />
+          <StatBox label="Terminologies" value="9" />
         </div>
       </Card>
 
