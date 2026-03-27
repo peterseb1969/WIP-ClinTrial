@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-03-27 — Namespace migration and documentation update
+
+### Changed
+- Migrated COUNTRY terminology from `seed` namespace into `clintrials` namespace (hard-deleted old, re-created with 50 ISO country terms)
+- Re-created all 6 templates to reference COUNTRY within `clintrials` namespace
+- Formally registered `clintrials` namespace via Registry API
+- Fixed SyncPage displaying "Namespace: clintrial" (now shows "clintrials")
+
+### Verified
+- All 101 ontology relationships intact (CT_THERAPEUTIC_AREA, CT_DRUG_CLASS, CT_MOLECULE, CT_TARGET hierarchies)
+- All 9 terminologies (149 terms) active in `clintrials` namespace
+
+### Docs
+- Updated WIP_DEPENDENCIES.md: corrected namespace from `clintrial` to `clintrials`, COUNTRY no longer listed as `wip` namespace
+
 ## 2026-03-26 — Initial build complete
 
 ### Added

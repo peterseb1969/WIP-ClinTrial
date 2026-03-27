@@ -35,6 +35,7 @@ const breadcrumbLabels: Record<string, string> = {
   sync: 'Sync Status',
 }
 
+/** App shell with sidebar navigation, top bar with breadcrumbs, and global filter bar */
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { count } = useBookmarks()

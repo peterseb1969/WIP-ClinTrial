@@ -78,7 +78,7 @@ export function SyncPage() {
       {/* Total stats */}
       <Card>
         <CardHeader>
-          <CardTitle>Namespace: clintrial</CardTitle>
+          <CardTitle>Namespace: clintrials</CardTitle>
         </CardHeader>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <StatBox label="Total Documents" value={formatNumber(stats?.totalDocs ?? 0)} />

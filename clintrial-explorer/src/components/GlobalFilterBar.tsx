@@ -5,6 +5,7 @@ import { trialFilters } from '@/hooks/useTrialFilters'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { formatNumber } from '@/lib/utils'
 
+/** Persistent bar showing active global filters with remove buttons, visible on all pages */
 export function GlobalFilterBar() {
   const { hasActive, activeEntries, clearAll } = useTrialFilters()
   const { trials } = useFilteredTrials()

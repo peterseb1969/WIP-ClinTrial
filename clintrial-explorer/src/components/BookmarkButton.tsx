@@ -8,6 +8,7 @@ interface BookmarkButtonProps {
   size?: 'sm' | 'md'
 }
 
+/** Star toggle button for bookmarking a trial by NCT ID */
 export function BookmarkButton({ nctId, className, size = 'md' }: BookmarkButtonProps) {
   const { toggle, has } = useBookmarks()
   const isBookmarked = has(nctId)

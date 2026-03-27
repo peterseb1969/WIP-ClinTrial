@@ -21,6 +21,7 @@ const selectedClasses = 'bg-primary text-white hover:bg-primary/80'
 
 const MULTI_KEYS = new Set(['status', 'phase', 'study_type', 'therapeutic_area', 'molecule', 'condition', 'sponsor', 'country'])
 
+/** Clickable chip that toggles a filter value in the global filter store */
 export function ChipLink({ filterKey, filterValue, children, variant = 'default', className }: ChipLinkProps) {
   const toggle = useFilterToggle()
   const isSelected = MULTI_KEYS.has(filterKey)

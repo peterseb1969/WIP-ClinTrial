@@ -6,6 +6,7 @@ interface CardProps {
   onClick?: () => void
 }
 
+/** Container card with border and shadow, optionally clickable */
 export function Card({ children, className, onClick }: CardProps) {
   return (
     <div
@@ -20,10 +21,12 @@ export function Card({ children, className, onClick }: CardProps) {
   )
 }
 
+/** Header section within a Card */
 export function CardHeader({ children, className }: CardProps) {
   return <div className={cn('mb-3', className)}>{children}</div>
 }
 
+/** Bold title text within a CardHeader */
 export function CardTitle({ children, className }: CardProps) {
   return <h3 className={cn('text-lg font-semibold text-text', className)}>{children}</h3>
 }

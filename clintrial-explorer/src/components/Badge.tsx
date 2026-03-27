@@ -17,6 +17,7 @@ interface BadgeProps {
   className?: string
 }
 
+/** Colored pill badge for categorizing or labeling content */
 export function Badge({ children, variant = 'default', className }: BadgeProps) {
   return (
     <span

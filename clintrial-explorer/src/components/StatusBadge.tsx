@@ -6,6 +6,7 @@ interface StatusBadgeProps {
   className?: string
 }
 
+/** Color-coded badge for CT_STATUS values (recruiting=green, completed=blue, etc.) */
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span

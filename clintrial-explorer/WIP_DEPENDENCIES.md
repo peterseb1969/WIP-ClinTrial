@@ -1,6 +1,6 @@
 # WIP Dependencies
 
-All entities are in the `clintrial` namespace unless noted.
+All entities are in the `clintrials` namespace.
 
 ## Terminologies
 
@@ -14,7 +14,7 @@ All entities are in the `clintrial` namespace unless noted.
 | `CT_DRUG_CLASS` | Drug Class | 22 | Not used in UI yet | Import script |
 | `CT_TARGET` | Molecular Targets | 30 | Not used in UI yet | Import script |
 | `CT_MOLECULE` | Molecules | 34 | Trial interventions, Molecules page | Import script |
-| `COUNTRY` (namespace: `wip`) | Countries | 50 | Site country codes, Sites page | Shared WIP terminology |
+| `COUNTRY` | Countries | 50 | Site country codes, Sites page | Import script |
 
 ## Templates
 

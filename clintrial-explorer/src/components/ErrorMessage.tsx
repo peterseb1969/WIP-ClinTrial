@@ -6,6 +6,7 @@ interface ErrorMessageProps {
   onRetry?: () => void
 }
 
+/** Error state display with optional retry button */
 export function ErrorMessage({ title = 'Something went wrong', message, onRetry }: ErrorMessageProps) {
   return (
     <div className="rounded-lg border border-danger/20 bg-danger/5 p-4">

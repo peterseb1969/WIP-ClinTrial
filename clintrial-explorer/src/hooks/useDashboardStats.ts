@@ -6,6 +6,7 @@ interface CountItem {
   count: number
 }
 
+/** Fetch aggregated dashboard statistics (status, phase, condition, molecule counts) via reporting SQL */
 export function useDashboardStats() {
   return useQuery({
     queryKey: ['clintrial', 'dashboard-stats'],

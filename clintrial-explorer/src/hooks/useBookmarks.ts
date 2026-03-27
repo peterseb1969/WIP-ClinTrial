@@ -1,6 +1,7 @@
 import { useSyncExternalStore, useCallback } from 'react'
 import { bookmarks } from '@/lib/bookmarks'
 
+/** Manage bookmarked trial NCT IDs backed by localStorage */
 export function useBookmarks() {
   const snap = useSyncExternalStore(
     bookmarks.subscribe,
