@@ -6,7 +6,7 @@
   "identity_fields": ["nct_id", "measure_title"],
   "fields": [
     {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true},
-    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_template": "CT_TRIAL"},
+    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_template": "CT_TRIAL", "reference_type": "document"},
     {"name": "measure_title", "label": "Measure Title", "type": "string", "mandatory": true},
     {"name": "param_type", "label": "Parameter Type", "type": "string", "mandatory": false},
     {"name": "dispersion_type", "label": "Dispersion Type", "type": "string", "mandatory": false},

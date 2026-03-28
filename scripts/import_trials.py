@@ -19,19 +19,23 @@ import urllib3
 from datetime import datetime, timezone
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-WIP_BASE = "https://localhost:8443"
-WIP_API_KEY = "dev_master_key_for_testing"
+WIP_BASE = os.environ.get("WIP_BASE", "https://localhost:8443")
+WIP_REGISTRY_BASE = os.environ.get("WIP_REGISTRY_BASE", "http://localhost:8001")
+WIP_API_KEY = os.environ.get("WIP_API_KEY", "dev_master_key_for_testing")
 CTGOV_BASE = "https://clinicaltrials.gov/api/v2"
 NAMESPACE = "clintrial"
 SYNC_STATE_FILE = os.path.join(os.path.dirname(__file__), "..", "data-model", "sync-state.json")
 
-# Template IDs
-TEMPLATES = {
-    "CT_ORGANIZATION": "019d25e4-ebd9-7f74-85fe-17e66762e138",
-    "CT_TRIAL": "019d25e5-345d-77a6-83c1-45ae615fe792",
-    "CT_TRIAL_OUTCOME": "019d25e6-4095-7531-a15b-3db36a919ddf",
-    "CT_TRIAL_SITE": "019d25e6-4097-7b70-8cd7-00e2747fa890",
-}
+# Template values — IDs are resolved at startup via Registry synonyms
+TEMPLATE_VALUES = [
+    "CT_ORGANIZATION",
+    "CT_TRIAL",
+    "CT_TRIAL_OUTCOME",
+    "CT_TRIAL_SITE",
+    "CT_TRIAL_AE",
+    "CT_TRIAL_BASELINE",
+]
+TEMPLATES = {}  # Populated by resolve_template_ids()
 
 # Known molecules in CT_MOLECULE terminology — canonical values and brand-name aliases
 KNOWN_MOLECULES = {
@@ -168,13 +172,39 @@ COUNTRY_MAP = {
     "American Samoa": "US",
 }
 
-# Additional template IDs for results data
-TEMPLATES_EXTRA = {
-    "CT_TRIAL_AE": "019d25e6-4097-7087-a661-5a1bd4827da8",
-    "CT_TRIAL_BASELINE": "019d25e6-4098-70bd-b345-76bb6e6b8640",
-}
-# Merge into TEMPLATES
-TEMPLATES.update(TEMPLATES_EXTRA)
+def resolve_template_ids():
+    """Resolve template IDs via Registry synonym lookup (installation-independent).
+
+    Each template has a stable composite key {ns, type, value} registered as a synonym.
+    This avoids hardcoding UUIDs that change across WIP instances.
+    """
+    url = f"{WIP_REGISTRY_BASE}/api/registry/entries/lookup/by-key"
+    lookups = [
+        {"namespace": NAMESPACE, "entity_type": "templates",
+         "composite_key": {"ns": NAMESPACE, "type": "template", "value": v}}
+        for v in TEMPLATE_VALUES
+    ]
+    try:
+        resp = requests.post(url, json=lookups, headers=wip_headers(), verify=False, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        results = data.get("results", data) if isinstance(data, dict) else data
+        for r in results:
+            if r.get("status") == "found":
+                value = r["matched_composite_key"].get("value")
+                if value:
+                    TEMPLATES[value] = r["entry_id"]
+        # Verify all resolved
+        missing = [v for v in TEMPLATE_VALUES if v not in TEMPLATES]
+        if missing:
+            print(f"FATAL: Could not resolve template IDs for: {missing}")
+            print("Run /bootstrap to create the data model first.")
+            sys.exit(1)
+        print(f"Resolved {len(TEMPLATES)} template IDs via Registry synonyms")
+    except Exception as e:
+        print(f"FATAL: Failed to resolve template IDs via Registry: {e}")
+        print("Ensure WIP is running and the data model has been bootstrapped.")
+        sys.exit(1)
 
 # Counters for summary
 COUNTS = {
@@ -977,16 +1007,37 @@ def import_trial(study):
             file_ids = download_and_upload_documents(nct_id, doc_section)
 
 
+def parse_args():
+    """Parse command-line arguments."""
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Import Roche/Genentech clinical trials from ClinicalTrials.gov into WIP.",
+        epilog="Examples:\n"
+               "  %(prog)s                        Incremental: only changed trials since last sync\n"
+               "  %(prog)s --full                  Full reimport: all trials, ignores sync state\n"
+               "  %(prog)s --since 2025-01-01      Only trials updated after this date\n"
+               "  %(prog)s --limit 100             Cap at 100 trials per sponsor (for testing)\n"
+               "  %(prog)s --full --limit 50       Quick test: 50/sponsor, full reimport\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("--full", action="store_true",
+                        help="Full reimport: fetch all trials, ignore sync state")
+    parser.add_argument("--since", metavar="DATE",
+                        help="Only import trials updated after DATE (YYYY-MM-DD)")
+    parser.add_argument("--limit", type=int, metavar="N",
+                        help="Cap at N trials per sponsor (useful for testing)")
+    return parser.parse_args()
+
+
 def main():
-    # Parse arguments
-    full_mode = "--full" in sys.argv
-    since_override = None
-    target_per_sponsor = None  # None = no limit, fetch all
-    for i, arg in enumerate(sys.argv):
-        if arg == "--since" and i + 1 < len(sys.argv):
-            since_override = sys.argv[i + 1]
-        if arg == "--limit" and i + 1 < len(sys.argv):
-            target_per_sponsor = int(sys.argv[i + 1])
+    args = parse_args()
+
+    # Resolve template IDs from Registry (no hardcoded UUIDs)
+    resolve_template_ids()
+
+    full_mode = args.full
+    since_override = args.since
+    target_per_sponsor = args.limit
 
     # Load sync state
     sync_state = load_sync_state()
