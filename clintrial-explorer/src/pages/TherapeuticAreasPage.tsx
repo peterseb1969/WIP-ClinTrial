@@ -8,6 +8,7 @@ import { useTrialFilters, type FilterKey } from '@/hooks/useTrialFilters'
 import { useTherapeuticAreaTree, type TANode } from '@/hooks/useTherapeuticAreaTree'
 import { useTherapeuticAreaTerms, buildKeywordMap, conditionMatchesArea } from '@/hooks/useTherapeuticAreaTerms'
 import { useFilterToggle } from '@/hooks/useFilterNav'
+import { useClassificationRules, applyRules } from '@/hooks/useClassificationRules'
 import { deduplicateConditions } from '@/lib/trial-utils'
 import { cn, formatNumber } from '@/lib/utils'
 
@@ -16,6 +17,7 @@ export function TherapeuticAreasPage() {
   const { filters } = useTrialFilters()
   const { data: tree, isLoading: loadingTree } = useTherapeuticAreaTree()
   const { data: taTerms } = useTherapeuticAreaTerms()
+  const { data: rules } = useClassificationRules()
   const toggleFilter = useFilterToggle()
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -26,8 +28,21 @@ export function TherapeuticAreasPage() {
   const keywordMap = useMemo(() => buildKeywordMap(taTerms ?? []), [taTerms])
 
   // Build TA → {trialCount, conditions} from filtered trials
-  // Only include conditions that actually match the area's keywords
+  // Include conditions that match keywords OR were mapped via classification rules
   const areaStats = useMemo(() => {
+    // Build a set of rule-mapped condition→TA pairs for fast lookup
+    const ruleMapped = new Set<string>() // "condition|TA" pairs
+    if (rules && rules.length > 0) {
+      for (const t of filtered) {
+        for (const cond of t.data.conditions ?? []) {
+          const { add } = applyRules([cond], rules, t.data.nct_id)
+          for (const ta of add) {
+            ruleMapped.add(`${cond}|${ta}`)
+          }
+        }
+      }
+    }
+
     const map = new Map<string, { trials: Set<string>; conditions: Map<string, number> }>()
     for (const t of filtered) {
       for (const area of t.data.therapeutic_areas ?? []) {
@@ -35,15 +50,14 @@ export function TherapeuticAreasPage() {
         const entry = map.get(area)!
         entry.trials.add(t.data.nct_id)
         for (const cond of t.data.conditions ?? []) {
-          // Only include conditions that match this area's keywords
-          if (conditionMatchesArea(cond, area, keywordMap)) {
+          if (conditionMatchesArea(cond, area, keywordMap) || ruleMapped.has(`${cond}|${area}`)) {
             entry.conditions.set(cond, (entry.conditions.get(cond) || 0) + 1)
           }
         }
       }
     }
     return map
-  }, [filtered, keywordMap])
+  }, [filtered, keywordMap, rules])
 
   // Unclassified trials
   const unclassified = useMemo(() => {
@@ -174,12 +188,17 @@ export function TherapeuticAreasPage() {
                   Trials with conditions that don't match any therapeutic area keyword.
                 </p>
                 <ConditionGrid
-                  conditions={unclassifiedConditions.slice(0, 30)}
+                  conditions={expanded.has('__unclassified_all__') ? unclassifiedConditions : unclassifiedConditions.slice(0, 30)}
                   selectedConditions={filters.condition ?? []}
                   toggleCondition={(c) => toggleFilter('condition', c)}
                 />
                 {unclassifiedConditions.length > 30 && (
-                  <p className="mt-2 text-xs text-text-muted">+{unclassifiedConditions.length - 30} more</p>
+                  <button
+                    onClick={() => toggleExpand('__unclassified_all__')}
+                    className="mt-2 text-xs font-medium text-primary hover:underline"
+                  >
+                    {expanded.has('__unclassified_all__') ? 'Show less' : `Show all ${unclassifiedConditions.length} conditions`}
+                  </button>
                 )}
               </div>
             )}

@@ -42,6 +42,8 @@ export function ClassificationRulesPage() {
     trial_nct_id: '',
   })
   const [testPattern, setTestPattern] = useState('')
+  const [showAllTest, setShowAllTest] = useState(false)
+  const [showAllUnclassified, setShowAllUnclassified] = useState(false)
 
   // Get all unique conditions with frequency
   const conditionStats = useMemo(() => {
@@ -142,6 +144,21 @@ export function ClassificationRulesPage() {
 
   if (loadingRules || loadingTrials) return <PageLoading message="Loading rules..." />
 
+  // Compute match counts for each rule
+  const ruleMatchCounts = useMemo(() => {
+    if (!rules || !conditionStats.length) return new Map<string, number>()
+    const counts = new Map<string, number>()
+    for (const rule of rules) {
+      let matches = 0
+      for (const c of conditionStats) {
+        const { add, remove } = applyRules([c.name], [rule])
+        if (add.size > 0 || remove.size > 0) matches += c.count
+      }
+      counts.set(rule.document_id, matches)
+    }
+    return counts
+  }, [rules, conditionStats])
+
   const filteredRules = rules?.filter((r) =>
     !search || r.pattern.toLowerCase().includes(search.toLowerCase()) ||
     r.target_ta.toLowerCase().includes(search.toLowerCase()),
@@ -156,7 +173,7 @@ export function ClassificationRulesPage() {
           <h1 className="text-2xl font-bold">Classification Rules</h1>
         </div>
         <span className="text-sm text-text-muted">
-          {rules?.length ?? 0} rules · {formatNumber(unclassified.length)} unclassified conditions
+          {rules?.length ?? 0} rules · {formatNumber(unclassified.length)} unclassified · {formatNumber(conditionStats.length)} total conditions
         </span>
       </div>
 
@@ -250,13 +267,18 @@ export function ClassificationRulesPage() {
                   Preview: {testResults.length} condition(s) would match
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {testResults.slice(0, 10).map((c) => (
+                  {(showAllTest ? testResults : testResults.slice(0, 10)).map((c) => (
                     <span key={c.name} className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-800">
                       {c.name} ({c.count})
                     </span>
                   ))}
                   {testResults.length > 10 && (
-                    <span className="text-[10px] text-blue-600">+{testResults.length - 10} more</span>
+                    <button
+                      onClick={() => setShowAllTest(!showAllTest)}
+                      className="text-[10px] font-medium text-blue-600 hover:underline"
+                    >
+                      {showAllTest ? 'Show less' : `Show all ${testResults.length}`}
+                    </button>
                   )}
                 </div>
               </div>
@@ -315,6 +337,7 @@ export function ClassificationRulesPage() {
                   <th className="pb-2 pr-3">Match</th>
                   <th className="pb-2 pr-3">Action</th>
                   <th className="pb-2 pr-3">Target TA</th>
+                  <th className="pb-2 pr-3 text-right">Hits</th>
                   <th className="pb-2 pr-3 text-right">Priority</th>
                   <th className="pb-2 pr-3">Scope</th>
                   <th className="pb-2 pr-3">Notes</th>
@@ -334,6 +357,9 @@ export function ClassificationRulesPage() {
                       </Badge>
                     </td>
                     <td className="py-1.5 pr-3 font-medium">{rule.target_ta.replace(/_/g, ' ')}</td>
+                    <td className="py-1.5 pr-3 text-right tabular-nums text-text-muted">
+                      {ruleMatchCounts.get(rule.document_id) ?? 0}
+                    </td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{rule.priority}</td>
                     <td className="py-1.5 pr-3 text-xs text-text-muted">
                       {rule.trial_nct_id || 'Global'}
@@ -375,7 +401,7 @@ export function ClassificationRulesPage() {
           Click to pre-fill a new rule.
         </p>
         <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
-          {unclassified.slice(0, 60).map((c) => (
+          {(showAllUnclassified ? unclassified : unclassified.slice(0, 60)).map((c) => (
             <button
               key={c.name}
               onClick={() => prefillFromCondition(c.name)}
@@ -387,7 +413,12 @@ export function ClassificationRulesPage() {
           ))}
         </div>
         {unclassified.length > 60 && (
-          <p className="mt-2 text-xs text-text-muted">+{unclassified.length - 60} more</p>
+          <button
+            onClick={() => setShowAllUnclassified(!showAllUnclassified)}
+            className="mt-2 text-xs font-medium text-primary hover:underline"
+          >
+            {showAllUnclassified ? 'Show less' : `Show all ${unclassified.length} conditions`}
+          </button>
         )}
       </Card>
     </div>

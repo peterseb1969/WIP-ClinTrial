@@ -57,8 +57,13 @@ export function useFilteredTrials() {
   // Enrich trials with rule-based TA classification
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
     if (!trials) return undefined
-    if (!rules || rules.length === 0) return trials
-    return trials.map((t) => {
+    if (!rules || rules.length === 0) {
+      console.log('[enrichment] No rules loaded, skipping enrichment. rules:', rules)
+      return trials
+    }
+    console.log(`[enrichment] Applying ${rules.length} rules to ${trials.length} trials`)
+    let enrichedCount = 0
+    const result = trials.map((t) => {
       const enrichedTAs = enrichTherapeuticAreas(
         t.data.therapeutic_areas,
         t.data.conditions,
@@ -69,8 +74,11 @@ export function useFilteredTrials() {
           enrichedTAs.every((ta, i) => ta === t.data.therapeutic_areas?.[i])) {
         return t // unchanged, avoid new object
       }
+      enrichedCount++
       return { ...t, data: { ...t.data, therapeutic_areas: enrichedTAs } }
     })
+    console.log(`[enrichment] Enriched ${enrichedCount} trials`)
+    return result
   }, [trials, rules])
 
   const filtered = useMemo(() => {

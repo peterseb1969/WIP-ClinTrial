@@ -9,6 +9,7 @@ import { formatNumber } from '@/lib/utils'
 type Category = 'ALL' | 'SERIOUS' | 'OTHER'
 type GroupBy = 'none' | 'molecule' | 'therapeutic_area'
 type SortKey = 'term' | 'organ_system' | 'trial_count' | 'report_count'
+const AE_PAGE_SIZE = 200
 
 export function AdverseEventsPage() {
   const [category, setCategory] = useState<Category>('ALL')
@@ -18,6 +19,7 @@ export function AdverseEventsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('trial_count')
   const [sortAsc, setSortAsc] = useState(false)
   const [expandedTerms, setExpandedTerms] = useState<Set<string>>(new Set())
+  const [showAllAEs, setShowAllAEs] = useState(false)
 
   const organSystems = useOrganSystems()
   const { data: flatData, isLoading: loadingFlat, trialCount } = useAEFrequency(category)
@@ -219,7 +221,7 @@ export function AdverseEventsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredFlat.slice(0, 200).map((ae) => {
+                {(showAllAEs ? filteredFlat : filteredFlat.slice(0, AE_PAGE_SIZE)).map((ae) => {
                   const key = `${ae.term}|${ae.organ_system}|${ae.ae_category}`
                   const expanded = expandedTerms.has(key)
                   return (
@@ -246,10 +248,13 @@ export function AdverseEventsPage() {
               </tbody>
             </table>
           </div>
-          {filteredFlat.length > 200 && (
-            <p className="mt-2 text-center text-xs text-text-muted">
-              Showing 200 of {formatNumber(filteredFlat.length)} terms
-            </p>
+          {filteredFlat.length > AE_PAGE_SIZE && (
+            <button
+              onClick={() => setShowAllAEs(!showAllAEs)}
+              className="mt-2 w-full text-center text-xs font-medium text-primary hover:underline"
+            >
+              {showAllAEs ? 'Show less' : `Show all ${formatNumber(filteredFlat.length)} terms`}
+            </button>
           )}
         </Card>
       ) : (

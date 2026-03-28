@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Pill, FlaskConical, AlertTriangle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -20,6 +20,7 @@ const PIE_COLORS = ['#2B579A', '#5B9BD5', '#ED7D31', '#2E8B57', '#DC3545', '#7C4
 export function MoleculeDetailPage() {
   const { name } = useParams<{ name: string }>()
   const moleculeName = name ? decodeURIComponent(name) : ''
+  const [showAllTrials, setShowAllTrials] = useState(false)
 
   // Fetch molecule term metadata from WIP API
   const { data: termData, isLoading: loadingTerm } = useQuery({
@@ -238,7 +239,7 @@ export function MoleculeDetailPage() {
           </CardTitle>
         </CardHeader>
         <div className="space-y-2">
-          {moleculeTrials.slice(0, 50).map((t) => (
+          {(showAllTrials ? moleculeTrials : moleculeTrials.slice(0, 50)).map((t) => (
             <Link
               key={t.document_id}
               to={`/trials/${t.data.nct_id}`}
@@ -259,7 +260,12 @@ export function MoleculeDetailPage() {
             </Link>
           ))}
           {moleculeTrials.length > 50 && (
-            <p className="text-center text-xs text-text-muted">Showing 50 of {moleculeTrials.length} trials</p>
+            <button
+              onClick={() => setShowAllTrials(!showAllTrials)}
+              className="w-full text-center text-xs font-medium text-primary hover:underline"
+            >
+              {showAllTrials ? 'Show less' : `Show all ${moleculeTrials.length} trials`}
+            </button>
           )}
         </div>
       </Card>
