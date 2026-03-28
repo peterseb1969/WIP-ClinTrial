@@ -12,17 +12,26 @@ export function useTherapeuticAreaTree() {
   return useQuery<TANode[]>({
     queryKey: ['clintrial', 'ta-tree'],
     queryFn: async () => {
+      // First resolve the CT_THERAPEUTIC_AREA terminology ID
+      const termResult = await reportQuery<{ terminology_id: string }>(
+        `SELECT DISTINCT terminology_id FROM terms
+         WHERE terminology_value = 'CT_THERAPEUTIC_AREA' AND status = 'active'
+         LIMIT 1`,
+      )
+      const taTerminologyId = termResult.rows[0]?.terminology_id
+      if (!taTerminologyId) return []
+
       // Only fetch is_a relationships within the CT_THERAPEUTIC_AREA terminology
-      // (same source and target terminology ID, filtering out molecule→drug class etc.)
       const result = await reportQuery<{
         source: string
         target: string
       }>(
-        `SELECT source_term_value as source, target_term_value as target
+        `SELECT DISTINCT source_term_value as source, target_term_value as target
          FROM term_relationships
          WHERE relationship_type = 'is_a'
          AND source_terminology_id = target_terminology_id
-         AND source_terminology_id = '019d25e0-c2d2-7ab4-9a00-a318b4646bff'`,
+         AND source_terminology_id = $1`,
+        [taTerminologyId],
       )
 
       // Build adjacency: parent → children

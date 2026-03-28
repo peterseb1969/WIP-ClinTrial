@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: parseInt(env.VITE_APP_PORT || '3001'),
+      allowedHosts: true,
       proxy: {
         '/api': {
           target: env.VITE_WIP_HOST || 'https://localhost:8443',

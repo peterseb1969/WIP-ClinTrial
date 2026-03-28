@@ -11,8 +11,18 @@ export function useTherapeuticAreaTerms() {
   return useQuery<TATerm[]>({
     queryKey: ['clintrial', 'ta-terms'],
     queryFn: async () => {
+      // Resolve terminology ID by value
+      const lookupRes = await fetch(
+        '/api/def-store/terminologies/by-value/CT_THERAPEUTIC_AREA?namespace=clintrial',
+        { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
+      )
+      if (!lookupRes.ok) return []
+      const terminology = await lookupRes.json()
+      const terminologyId = terminology.terminology_id
+      if (!terminologyId) return []
+
       const res = await fetch(
-        '/api/def-store/terminologies/019d25e0-c2d2-7ab4-9a00-a318b4646bff/terms?page_size=100',
+        `/api/def-store/terminologies/${terminologyId}/terms?page_size=100`,
         { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
       )
       if (!res.ok) return []

@@ -172,6 +172,16 @@ COUNTRY_MAP = {
     "American Samoa": "US",
 }
 
+def check_wip_available():
+    """Check if WIP is reachable. Returns True if it is, False otherwise."""
+    try:
+        resp = requests.get(f"{WIP_REGISTRY_BASE}/api/registry/namespaces",
+                            headers=wip_headers(), verify=False, timeout=5)
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+
 def resolve_template_ids():
     """Resolve template IDs via Registry synonym lookup (installation-independent).
 
@@ -197,14 +207,15 @@ def resolve_template_ids():
         # Verify all resolved
         missing = [v for v in TEMPLATE_VALUES if v not in TEMPLATES]
         if missing:
-            print(f"FATAL: Could not resolve template IDs for: {missing}")
-            print("Run /bootstrap to create the data model first.")
-            sys.exit(1)
+            print(f"ERROR: Could not resolve template IDs for: {missing}")
+            print("The data model has not been bootstrapped yet.")
+            print("Run /bootstrap in Claude Code to create terminologies and templates.\n")
+            return False
         print(f"Resolved {len(TEMPLATES)} template IDs via Registry synonyms")
+        return True
     except Exception as e:
-        print(f"FATAL: Failed to resolve template IDs via Registry: {e}")
-        print("Ensure WIP is running and the data model has been bootstrapped.")
-        sys.exit(1)
+        print(f"ERROR: Failed to connect to WIP Registry: {e}\n")
+        return False
 
 # Counters for summary
 COUNTS = {
@@ -224,6 +235,55 @@ COUNTS = {
     "skipped": 0,
     "errors": 0,
 }
+
+
+# ── Therapeutic Area classifier ──────────────────────────────────────
+# Built from CT_THERAPEUTIC_AREA seed file: value + label + aliases → keywords
+def _build_ta_classifier():
+    """Build a condition→therapeutic_areas classifier from the seed file."""
+    seed_path = os.path.join(os.path.dirname(__file__), "..", "data-model", "terminologies", "CT_THERAPEUTIC_AREA.json")
+    if not os.path.exists(seed_path):
+        return {}
+    with open(seed_path) as f:
+        data = json.load(f)
+    # Map: TA value → set of lowercase keywords
+    ta_keywords = {}
+    for term in data.get("terms", []):
+        value = term["value"]
+        keywords = set()
+        keywords.add(value.replace("_", " ").lower())
+        keywords.add(term.get("label", "").lower())
+        for alias in term.get("aliases", []):
+            keywords.add(alias.lower())
+        # Remove very short keywords that cause false positives
+        keywords = {k for k in keywords if len(k) > 2}
+        ta_keywords[value] = keywords
+    return ta_keywords
+
+TA_KEYWORDS = _build_ta_classifier()
+
+
+def classify_therapeutic_areas(conditions):
+    """Classify a list of condition strings into therapeutic area values.
+    Returns a deduplicated sorted list of TA values.
+    """
+    if not conditions or not TA_KEYWORDS:
+        return []
+    matched = set()
+    for condition in conditions:
+        cond_lower = condition.lower()
+        for ta_value, keywords in TA_KEYWORDS.items():
+            for keyword in keywords:
+                if len(keyword) <= 4:
+                    # Word boundary match for short keywords
+                    if re.search(r'\b' + re.escape(keyword) + r'\b', cond_lower):
+                        matched.add(ta_value)
+                        break
+                else:
+                    if keyword in cond_lower:
+                        matched.add(ta_value)
+                        break
+    return sorted(matched)
 
 
 def load_sync_state():
@@ -260,56 +320,61 @@ def wip_headers():
 
 
 def wip_create_document(template_key, data):
-    """Create a document in WIP (bulk-first API: wrap in array, unwrap response).
-    Returns response dict for the single item, or None on error.
+    """Create a single document in WIP. For bulk operations, use wip_create_documents_bulk."""
+    results = wip_create_documents_bulk(template_key, [data])
+    return results[0] if results else None
+
+
+def wip_create_documents_bulk(template_key, data_list, batch_size=100):
+    """Create multiple documents in WIP via bulk API. Returns list of result dicts.
+    Splits into batches of batch_size to avoid oversized requests.
     """
+    if not data_list:
+        return []
+
     url = f"{WIP_BASE}/api/document-store/documents"
-    item = {
-        "template_id": TEMPLATES[template_key],
-        "template_version": 1,
-        "namespace": NAMESPACE,
-        "data": data,
-        "created_by": "clintrial-import",
-    }
-    # WIP bulk-first: body must be an array
-    body = [item]
-    try:
-        resp = requests.post(url, json=body, headers=wip_headers(), verify=False, timeout=30)
-        result = resp.json()
-        # Response is always 200 with per-item status
-        if resp.status_code == 200:
-            # Result is an array; unwrap single item
-            if isinstance(result, list):
-                if len(result) == 0:
-                    print(f"    ERROR [{template_key}]: Empty response array")
-                    COUNTS["errors"] += 1
-                    return None
-                item_result = result[0]
+    all_results = []
+
+    for i in range(0, len(data_list), batch_size):
+        chunk = data_list[i:i + batch_size]
+        body = [
+            {
+                "template_id": TEMPLATES[template_key],
+                "template_version": 1,
+                "namespace": NAMESPACE,
+                "data": d,
+                "created_by": "clintrial-import",
+            }
+            for d in chunk
+        ]
+        try:
+            resp = requests.post(url, json=body, headers=wip_headers(), verify=False, timeout=120)
+            if resp.status_code == 200:
+                result = resp.json()
+                items = result.get("results", result) if isinstance(result, dict) else result
+                if not isinstance(items, list):
+                    items = [items]
+                for item_result in items:
+                    status = item_result.get("status") or item_result.get("result", "")
+                    if status == "error":
+                        err_msg = item_result.get("error", item_result.get("message", "Unknown error"))
+                        print(f"    ERROR [{template_key}]: {err_msg}")
+                        COUNTS["errors"] += 1
+                        all_results.append(None)
+                    else:
+                        doc_version = item_result.get("version", 1)
+                        item_result["_import_status"] = "updated" if doc_version > 1 else "created"
+                        all_results.append(item_result)
             else:
-                item_result = result
-            # Check for error status (may be "status" or "result" depending on WIP version)
-            status = item_result.get("status") or item_result.get("result", "")
-            if status == "error":
-                err_msg = item_result.get("error", item_result.get("message", "Unknown error"))
-                print(f"    ERROR [{template_key}]: {err_msg}")
-                COUNTS["errors"] += 1
-                return None
-            # Determine created vs updated from response
-            # WIP may return document_id for created, or version > 1 for updated
-            doc_version = item_result.get("version", 1)
-            if doc_version > 1:
-                item_result["_import_status"] = "updated"
-            else:
-                item_result["_import_status"] = "created"
-            return item_result
-        else:
-            print(f"    ERROR [{template_key}] HTTP {resp.status_code}: {resp.text[:300]}")
-            COUNTS["errors"] += 1
-            return None
-    except Exception as e:
-        print(f"    ERROR [{template_key}]: {e}")
-        COUNTS["errors"] += 1
-        return None
+                print(f"    ERROR [{template_key}] HTTP {resp.status_code}: {resp.text[:300]}")
+                COUNTS["errors"] += len(chunk)
+                all_results.extend([None] * len(chunk))
+        except Exception as e:
+            print(f"    ERROR [{template_key}]: {e}")
+            COUNTS["errors"] += len(chunk)
+            all_results.extend([None] * len(chunk))
+
+    return all_results
 
 
 def normalize_date(date_str):
@@ -497,20 +562,35 @@ def extract_trial_data(study):
 
 
 def create_organization(org_name, org_type="Sponsor"):
-    """Create or update an organization document in WIP."""
-    data = {"org_name": org_name}
-    if org_type:
-        data["org_type"] = org_type
-    print(f"  Creating org: {org_name}")
-    result = wip_create_document("CT_ORGANIZATION", data)
-    if result:
-        status = result.get("_import_status", "created")
-        if status == "created":
-            COUNTS["orgs_created"] += 1
-        else:
-            COUNTS["orgs_updated"] += 1
-        print(f"    -> {status}")
-    return result
+    """Create or update a single organization document in WIP."""
+    results = create_organizations_bulk([org_name], org_type)
+    return results[0] if results else None
+
+
+def create_organizations_bulk(org_names, org_type="Sponsor"):
+    """Create or update organization documents in WIP (bulk)."""
+    if not org_names:
+        return []
+
+    data_list = []
+    for name in org_names:
+        data = {"org_name": name}
+        if org_type:
+            data["org_type"] = org_type
+        data_list.append(data)
+
+    print(f"  Creating {len(data_list)} organizations (bulk)...")
+    results = wip_create_documents_bulk("CT_ORGANIZATION", data_list)
+    for r in results:
+        if r:
+            if r.get("_import_status") == "created":
+                COUNTS["orgs_created"] += 1
+            else:
+                COUNTS["orgs_updated"] += 1
+    created = sum(1 for r in results if r and r.get("_import_status") == "created")
+    updated = sum(1 for r in results if r and r.get("_import_status") == "updated")
+    print(f"    -> {created} created, {updated} updated")
+    return results
 
 
 def create_trial(trial_data):
@@ -570,7 +650,10 @@ def create_trial(trial_data):
     if trial_data.get("url"):
         data["ctgov_url"] = trial_data["url"]
 
-    # Don't auto-populate therapeutic_areas — requires curated mapping, not raw conditions
+    # Auto-classify therapeutic areas from conditions
+    therapeutic_areas = classify_therapeutic_areas(trial_data.get("conditions", []))
+    if therapeutic_areas:
+        data["therapeutic_areas"] = therapeutic_areas
 
     print(f"  Creating trial: {trial_data['nct_id']} - {trial_data['title'][:60]}...")
     result = wip_create_document("CT_TRIAL", data)
@@ -585,34 +668,39 @@ def create_trial(trial_data):
 
 
 def create_outcomes(nct_id, primary_outcomes, secondary_outcomes):
-    """Create outcome documents for a trial."""
+    """Create outcome documents for a trial (bulk)."""
     all_outcomes = []
     for i, outcome in enumerate(primary_outcomes):
         all_outcomes.append(("PRIMARY", i + 1, outcome))
     for i, outcome in enumerate(secondary_outcomes):
         all_outcomes.append(("SECONDARY", i + 1, outcome))
 
-    created = 0
+    data_list = []
     for outcome_type, seq, outcome in all_outcomes:
+        measure = outcome.get("measure", "")
+        if not measure:
+            continue
         data = {
             "nct_id": nct_id,
-            "trial": nct_id,  # WIP resolves via identity field on CT_TRIAL
+            "trial": nct_id,
             "outcome_type": outcome_type,
             "sequence": seq,
-            "measure": outcome.get("measure", ""),
+            "measure": measure,
         }
-        if not data["measure"]:
-            continue
-
         if outcome.get("timeFrame"):
             data["time_frame"] = outcome["timeFrame"]
         if outcome.get("description"):
             data["description"] = outcome["description"]
+        data_list.append(data)
 
-        result = wip_create_document("CT_TRIAL_OUTCOME", data)
-        if result:
-            status = result.get("_import_status", "created")
-            if status == "created":
+    if not data_list:
+        return 0
+
+    created = 0
+    results = wip_create_documents_bulk("CT_TRIAL_OUTCOME", data_list)
+    for r in results:
+        if r:
+            if r.get("_import_status") == "created":
                 COUNTS["outcomes_created"] += 1
             else:
                 COUNTS["outcomes_updated"] += 1
@@ -622,8 +710,8 @@ def create_outcomes(nct_id, primary_outcomes, secondary_outcomes):
 
 
 def create_sites(nct_id, locations, max_sites=20):
-    """Create site documents for a trial. Limit to max_sites to avoid flooding."""
-    created = 0
+    """Create site documents for a trial (bulk). Limit to max_sites to avoid flooding."""
+    data_list = []
     for loc in locations[:max_sites]:
         facility = loc.get("facility")
         if not facility:
@@ -634,7 +722,7 @@ def create_sites(nct_id, locations, max_sites=20):
 
         data = {
             "nct_id": nct_id,
-            "trial": nct_id,  # WIP resolves via identity field on CT_TRIAL
+            "trial": nct_id,
             "facility": facility,
         }
 
@@ -648,11 +736,16 @@ def create_sites(nct_id, locations, max_sites=20):
             data["zip"] = loc["zip"]
         if loc.get("status"):
             data["site_status"] = loc["status"]
+        data_list.append(data)
 
-        result = wip_create_document("CT_TRIAL_SITE", data)
-        if result:
-            status = result.get("_import_status", "created")
-            if status == "created":
+    if not data_list:
+        return 0
+
+    created = 0
+    results = wip_create_documents_bulk("CT_TRIAL_SITE", data_list)
+    for r in results:
+        if r:
+            if r.get("_import_status") == "created":
                 COUNTS["sites_created"] += 1
             else:
                 COUNTS["sites_updated"] += 1
@@ -662,15 +755,14 @@ def create_sites(nct_id, locations, max_sites=20):
 
 
 def create_adverse_events(nct_id, ae_module):
-    """Create CT_TRIAL_AE documents from the adverseEventsModule."""
+    """Create CT_TRIAL_AE documents from the adverseEventsModule (bulk)."""
     if not ae_module:
         return 0
 
-    created = 0
     event_groups = ae_module.get("eventGroups", [])
-    # Build group lookup for titles
     group_titles = {g.get("id"): g.get("title", "") for g in event_groups}
 
+    data_list = []
     for category, events_key in [("SERIOUS", "seriousEvents"), ("OTHER", "otherEvents")]:
         events = ae_module.get(events_key, [])
         for event in events:
@@ -701,25 +793,31 @@ def create_adverse_events(nct_id, ae_module):
                 data["organ_system"] = event["organSystem"]
             if event.get("sourceVocabulary"):
                 data["source_vocabulary"] = event["sourceVocabulary"]
+            data_list.append(data)
 
-            result = wip_create_document("CT_TRIAL_AE", data)
-            if result:
-                s = result.get("_import_status", "created")
-                COUNTS["aes_created" if s == "created" else "aes_updated"] += 1
-                created += 1
+    if not data_list:
+        return 0
+
+    created = 0
+    results = wip_create_documents_bulk("CT_TRIAL_AE", data_list)
+    for r in results:
+        if r:
+            s = r.get("_import_status", "created")
+            COUNTS["aes_created" if s == "created" else "aes_updated"] += 1
+            created += 1
 
     return created
 
 
 def create_baselines(nct_id, baseline_module):
-    """Create CT_TRIAL_BASELINE documents from baselineCharacteristicsModule."""
+    """Create CT_TRIAL_BASELINE documents from baselineCharacteristicsModule (bulk)."""
     if not baseline_module:
         return 0
 
-    created = 0
     groups = baseline_module.get("groups", [])
     group_titles = {g.get("id"): g.get("title", "") for g in groups}
 
+    data_list = []
     for measure in baseline_module.get("measures", []):
         title = measure.get("title", "")
         if not title:
@@ -737,7 +835,6 @@ def create_baselines(nct_id, baseline_module):
         if measure.get("unitOfMeasure"):
             data["unit_of_measure"] = measure["unitOfMeasure"]
 
-        # Build categories with measurements
         categories = []
         for cls in measure.get("classes", []):
             for cat in cls.get("categories", []):
@@ -762,10 +859,16 @@ def create_baselines(nct_id, baseline_module):
 
         if categories:
             data["categories"] = categories
+        data_list.append(data)
 
-        result = wip_create_document("CT_TRIAL_BASELINE", data)
-        if result:
-            s = result.get("_import_status", "created")
+    if not data_list:
+        return 0
+
+    created = 0
+    results = wip_create_documents_bulk("CT_TRIAL_BASELINE", data_list)
+    for r in results:
+        if r:
+            s = r.get("_import_status", "created")
             COUNTS["baselines_created" if s == "created" else "baselines_updated"] += 1
             created += 1
 
@@ -773,17 +876,16 @@ def create_baselines(nct_id, baseline_module):
 
 
 def update_outcome_with_results(nct_id, results_outcomes):
-    """Update existing CT_TRIAL_OUTCOME documents with numeric result data."""
+    """Update existing CT_TRIAL_OUTCOME documents with numeric result data (bulk)."""
     if not results_outcomes:
         return 0
 
-    updated = 0
+    data_list = []
     for om in results_outcomes:
         otype = om.get("type", "").upper()
         if otype not in ("PRIMARY", "SECONDARY"):
             otype = "OTHER"
 
-        # Build result groups from the classes/categories/measurements
         result_groups = []
         groups = om.get("groups", [])
         group_titles = {g.get("id"): g.get("title", "") for g in groups}
@@ -805,7 +907,6 @@ def update_outcome_with_results(nct_id, results_outcomes):
                         rg["num_subjects"] = str(m["numSubjects"])
                     result_groups.append(rg)
 
-        # Build analyses
         analyses = []
         for a in om.get("analyses", []):
             analysis = {}
@@ -820,14 +921,10 @@ def update_outcome_with_results(nct_id, results_outcomes):
             if analysis:
                 analyses.append(analysis)
 
-        # We need to find the matching outcome by measure text (approximate)
-        # For now, create/update outcomes with result data using the same identity
-        # This relies on WIP's identity dedup: same nct_id+type+sequence = update
         measure = om.get("title", "")
         if not measure:
             continue
 
-        # Determine sequence among same-type outcomes
         same_type = [o for o in results_outcomes if (o.get("type", "").upper() or "OTHER") == otype]
         seq = next((i + 1 for i, o in enumerate(same_type) if o is om), 1)
 
@@ -852,13 +949,108 @@ def update_outcome_with_results(nct_id, results_outcomes):
             data["result_groups"] = result_groups
         if analyses:
             data["analyses"] = analyses
+        data_list.append(data)
 
-        result = wip_create_document("CT_TRIAL_OUTCOME", data)
-        if result:
+    if not data_list:
+        return 0
+
+    updated = 0
+    results = wip_create_documents_bulk("CT_TRIAL_OUTCOME", data_list)
+    for r in results:
+        if r:
             COUNTS["outcomes_updated"] += 1
             updated += 1
 
     return updated
+
+
+def download_pdfs_to_disk(nct_id, doc_section, raw_dir):
+    """Download protocol/SAP PDFs from CT.gov to local disk. Skips existing files."""
+    if not doc_section or not raw_dir:
+        return 0
+
+    large_docs = doc_section.get("largeDocumentModule", {}).get("largeDocs", [])
+    if not large_docs:
+        return 0
+
+    nct_num = nct_id.replace("NCT", "")
+    last2 = nct_num[-2:]
+    pdf_dir = os.path.join(raw_dir, nct_id)
+    downloaded = 0
+
+    for doc in large_docs:
+        filename = doc.get("filename", "")
+        if not filename:
+            continue
+        type_abbrev = doc.get("typeAbbrev", "")
+        if not any(t in type_abbrev for t in ["Prot", "SAP", "ICF"]):
+            continue
+
+        local_path = os.path.join(pdf_dir, filename)
+        if os.path.exists(local_path):
+            continue  # Already downloaded
+
+        download_url = f"https://cdn.clinicaltrials.gov/large-docs/{last2}/{nct_id}/{filename}"
+        try:
+            resp = requests.get(download_url, timeout=60)
+            if resp.status_code != 200:
+                print(f"    WARN: Failed to download {filename} (HTTP {resp.status_code})")
+                continue
+            os.makedirs(pdf_dir, exist_ok=True)
+            with open(local_path, "wb") as f:
+                f.write(resp.content)
+            size_kb = len(resp.content) // 1024
+            print(f"    PDF: {filename} ({size_kb}KB)")
+            downloaded += 1
+        except Exception as e:
+            print(f"    WARN: Error downloading {filename}: {e}")
+
+    return downloaded
+
+
+def upload_pdfs_from_disk(nct_id, raw_dir):
+    """Upload PDFs from local disk to WIP file storage."""
+    pdf_dir = os.path.join(raw_dir, nct_id)
+    if not os.path.isdir(pdf_dir):
+        return []
+
+    file_ids = []
+    for filename in sorted(os.listdir(pdf_dir)):
+        if not filename.lower().endswith(".pdf"):
+            continue
+        local_path = os.path.join(pdf_dir, filename)
+        try:
+            with open(local_path, "rb") as f:
+                content = f.read()
+            upload_url = f"{WIP_BASE}/api/document-store/files"
+            files_payload = {"file": (filename, content, "application/pdf")}
+            form_data = {"namespace": NAMESPACE}
+            upload_resp = requests.post(
+                upload_url,
+                files=files_payload,
+                data=form_data,
+                headers={"X-API-Key": WIP_API_KEY},
+                verify=False,
+                timeout=60,
+            )
+            if upload_resp.status_code == 200:
+                upload_result = upload_resp.json()
+                fid = None
+                if isinstance(upload_result, list) and upload_result:
+                    fid = upload_result[0].get("file_id") or upload_result[0].get("id")
+                elif isinstance(upload_result, dict):
+                    fid = upload_result.get("file_id") or upload_result.get("id")
+                if fid:
+                    file_ids.append(fid)
+                    COUNTS["files_uploaded"] += 1
+                    size_kb = len(content) // 1024
+                    print(f"    Uploaded {filename} ({size_kb}KB) -> {fid}")
+            else:
+                print(f"    WARN: Upload failed for {filename} (HTTP {upload_resp.status_code})")
+        except Exception as e:
+            print(f"    WARN: Error uploading {filename}: {e}")
+
+    return file_ids
 
 
 def download_and_upload_documents(nct_id, doc_section):
@@ -925,7 +1117,7 @@ def download_and_upload_documents(nct_id, doc_section):
     return file_ids
 
 
-def import_trial(study):
+def import_trial(study, save_raw_dir=None):
     """Import a single trial with all child documents.
     Assumes organization already exists.
     """
@@ -967,6 +1159,10 @@ def import_trial(study):
     if has_results:
         print(f"  Fetching results and documents for {nct_id}...")
         extra = fetch_trial_results_and_docs(nct_id)
+        if save_raw_dir and extra:
+            results_path = os.path.join(save_raw_dir, f"{nct_id}_results.json")
+            with open(results_path, "w") as f:
+                json.dump(extra, f, indent=2)
         results_section = extra.get("resultsSection", {})
 
         # 4a: Adverse events
@@ -1000,6 +1196,10 @@ def import_trial(study):
     else:
         # Even trials without results might have documents
         extra = fetch_trial_results_and_docs(nct_id)
+        if save_raw_dir and extra:
+            results_path = os.path.join(save_raw_dir, f"{nct_id}_results.json")
+            with open(results_path, "w") as f:
+                json.dump(extra, f, indent=2)
         doc_section = extra.get("documentSection", {})
         n_docs = len(doc_section.get("largeDocumentModule", {}).get("largeDocs", []))
         if n_docs:
@@ -1017,7 +1217,12 @@ def parse_args():
                "  %(prog)s --full                  Full reimport: all trials, ignores sync state\n"
                "  %(prog)s --since 2025-01-01      Only trials updated after this date\n"
                "  %(prog)s --limit 100             Cap at 100 trials per sponsor (for testing)\n"
-               "  %(prog)s --full --limit 50       Quick test: 50/sponsor, full reimport\n",
+               "  %(prog)s --full --limit 50       Quick test: 50/sponsor, full reimport\n"
+               "  %(prog)s --download-only --full       Download JSON + PDFs from CT.gov (no WIP)\n"
+               "  %(prog)s --download-pdfs-only        Download missing PDFs for existing dump\n"
+               "  %(prog)s --from-raw data/raw         Import from saved JSON + PDFs into WIP\n"
+               "  %(prog)s --nct NCT01702571           Fetch a specific trial by NCT ID\n"
+               "  %(prog)s --download-only --nct NCT01702571 NCT00308516\n",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--full", action="store_true",
@@ -1026,33 +1231,330 @@ def parse_args():
                         help="Only import trials updated after DATE (YYYY-MM-DD)")
     parser.add_argument("--limit", type=int, metavar="N",
                         help="Cap at N trials per sponsor (useful for testing)")
+    parser.add_argument("--save-raw", metavar="DIR", nargs="?", const="data/raw",
+                        help="Save raw CT.gov JSON responses to DIR (default: data/raw)")
+    parser.add_argument("--download-only", action="store_true",
+                        help="Download from CT.gov and save raw JSON + PDFs — do not load into WIP. Implies --save-raw")
+    parser.add_argument("--download-pdfs-only", metavar="DIR", nargs="?", const="data/raw",
+                        help="Download only missing PDFs for existing raw dump in DIR (default: data/raw)")
+    parser.add_argument("--from-raw", metavar="DIR",
+                        help="Import from previously saved raw JSON files + PDFs instead of fetching from CT.gov")
+    parser.add_argument("--nct", nargs="+", metavar="NCT_ID",
+                        help="Fetch specific trial(s) by NCT ID instead of searching by sponsor")
     return parser.parse_args()
+
+
+def _print_summary(elapsed_total):
+    """Print the import summary with document counts."""
+    mins = int(elapsed_total // 60)
+    secs = int(elapsed_total % 60)
+    print("\n" + "=" * 70)
+    print(f"IMPORT SUMMARY  ({mins}m{secs:02d}s elapsed)")
+    print("=" * 70)
+    print(f"  Organizations:  {COUNTS['orgs_created']} created, {COUNTS['orgs_updated']} updated")
+    print(f"  Trials:         {COUNTS['trials_created']} created, {COUNTS['trials_updated']} updated")
+    print(f"  Outcomes:       {COUNTS['outcomes_created']} created, {COUNTS['outcomes_updated']} updated")
+    print(f"  Sites:          {COUNTS['sites_created']} created, {COUNTS['sites_updated']} updated")
+    print(f"  Adverse Events: {COUNTS['aes_created']} created, {COUNTS['aes_updated']} updated")
+    print(f"  Baselines:      {COUNTS['baselines_created']} created, {COUNTS['baselines_updated']} updated")
+    print(f"  Files uploaded: {COUNTS['files_uploaded']}")
+    print(f"  Skipped:        {COUNTS['skipped']} (unchanged)")
+    print(f"  Errors:         {COUNTS['errors']}")
+    print()
+    total = sum(v for k, v in COUNTS.items() if k not in ("errors", "skipped"))
+    print(f"  Total documents: {total}")
+
+
+def get_wip_nct_ids():
+    """Query WIP for all NCT IDs currently in the database. Returns a set."""
+    url = f"{WIP_BASE}/api/reporting-sync/query"
+    try:
+        resp = requests.post(url, json={
+            "sql": "SELECT DISTINCT nct_id FROM doc_ct_trial",
+            "params": [],
+            "max_rows": 50000,
+        }, headers=wip_headers(), verify=False, timeout=30)
+        if resp.status_code == 200:
+            data = resp.json()
+            return set(row["nct_id"] for row in data.get("rows", []))
+    except Exception:
+        pass
+    return set()
+
+
+def resolve_raw_dir(raw_dir):
+    """Resolve a raw directory path relative to the project root."""
+    return os.path.normpath(os.path.join(os.path.dirname(__file__), "..", raw_dir))
+
+
+def load_from_raw_dir(raw_dir, nct_filter=None):
+    """Load trial studies from previously saved raw JSON files.
+    If nct_filter is set, only load those specific NCT IDs.
+    Returns list of (study, source, ct_update, nct_id) tuples.
+    """
+    raw_dir = resolve_raw_dir(raw_dir)
+    if not os.path.isdir(raw_dir):
+        print(f"FATAL: Raw directory does not exist: {raw_dir}")
+        sys.exit(1)
+
+    if nct_filter:
+        # Only load specific NCT IDs
+        filter_set = set(nct_filter)
+        files = sorted(f"{nct}.json" for nct in filter_set
+                        if os.path.exists(os.path.join(raw_dir, f"{nct}.json")))
+        missing = filter_set - {f.replace(".json", "") for f in files}
+        if missing:
+            print(f"  WARN: {len(missing)} NCT ID(s) not found in {raw_dir}: {', '.join(sorted(missing)[:5])}")
+    else:
+        files = sorted(f for f in os.listdir(raw_dir)
+                        if f.startswith("NCT") and not f.endswith("_results.json") and f.endswith(".json"))
+
+    print(f"Found {len(files)} raw study files in {raw_dir}")
+
+    selected = []
+    for fname in files:
+        with open(os.path.join(raw_dir, fname)) as f:
+            study = json.load(f)
+        nct_id = fname.replace(".json", "")
+        ct_update = get_last_update_date(study)
+        selected.append((study, "raw", ct_update, nct_id))
+
+    return selected
 
 
 def main():
     args = parse_args()
 
-    # Resolve template IDs from Registry (no hardcoded UUIDs)
-    resolve_template_ids()
+    # ── Validate flag combinations ───────────────────────────────────────
+    if args.download_pdfs_only:
+        ignored = []
+        if args.full: ignored.append("--full")
+        if args.since: ignored.append("--since")
+        if args.limit: ignored.append("--limit")
+        if args.save_raw: ignored.append("--save-raw")
+        if args.download_only: ignored.append("--download-only")
+        if args.from_raw: ignored.append("--from-raw")
+        if args.nct: ignored.append("--nct")
+        if ignored:
+            print(f"ERROR: --download-pdfs-only cannot be combined with: {', '.join(ignored)}")
+            print(f"\nUsage: python scripts/import_trials.py --download-pdfs-only [DIR]")
+            print(f"  DIR defaults to data/raw if not specified.")
+            sys.exit(1)
+
+    if args.download_only and args.from_raw:
+        print("ERROR: --download-only and --from-raw cannot be combined.")
+        print("  --download-only fetches from CT.gov and saves to disk.")
+        print("  --from-raw loads from disk into WIP.")
+        sys.exit(1)
+
+    # ── Mode: Download only missing PDFs ─────────────────────────────────
+    if args.download_pdfs_only:
+        raw_dir = resolve_raw_dir(args.download_pdfs_only)
+        if not os.path.isdir(raw_dir):
+            print(f"FATAL: Directory does not exist: {raw_dir}")
+            sys.exit(1)
+
+        results_files = sorted(f for f in os.listdir(raw_dir) if f.endswith("_results.json"))
+        print("=" * 70)
+        print(f"Downloading missing PDFs for {len(results_files)} trials")
+        print(f"Source: {raw_dir}")
+        print("=" * 70)
+
+        total_pdfs = 0
+        for idx, fname in enumerate(results_files, 1):
+            nct_id = fname.replace("_results.json", "")
+            with open(os.path.join(raw_dir, fname)) as f:
+                extra = json.load(f)
+            doc_section = extra.get("documentSection", {})
+            n_docs = len(doc_section.get("largeDocumentModule", {}).get("largeDocs", []))
+            if n_docs == 0:
+                continue
+            print(f"  [{idx}/{len(results_files)}] {nct_id}: {n_docs} document(s)")
+            total_pdfs += download_pdfs_to_disk(nct_id, doc_section, raw_dir)
+            time.sleep(0.2)
+
+        print(f"\nDone. Downloaded {total_pdfs} PDF(s).")
+        return
+
+    # ── Normal / download-only / from-raw modes ─────────────────────────
+    download_only = args.download_only
+    from_raw = args.from_raw
+
+    # --download-only implies --save-raw
+    save_raw_dir = args.save_raw
+    if download_only and not save_raw_dir:
+        save_raw_dir = "data/raw"
+    if save_raw_dir:
+        save_raw_dir = resolve_raw_dir(save_raw_dir)
+        os.makedirs(save_raw_dir, exist_ok=True)
+        print(f"Saving raw CT.gov responses to: {save_raw_dir}")
+
+    # Determine if WIP is needed and available
+    needs_wip = not download_only
+    wip_ready = False
+
+    if needs_wip:
+        wip_available = check_wip_available()
+        if not wip_available:
+            print("=" * 70)
+            print("WIP is not reachable.")
+            print("=" * 70)
+            print()
+            print("You can still use this script without WIP:")
+            print()
+            print("  Download trials from ClinicalTrials.gov (no WIP needed):")
+            print("    python scripts/import_trials.py --download-only --full --limit 100")
+            print()
+            print("To import into WIP, ensure WIP is running and bootstrapped:")
+            print("  1. Start WIP services")
+            print("  2. Run /bootstrap in Claude Code to create the data model")
+            print("  3. Then run this script (or use --from-raw to import saved data)")
+            print()
+            sys.exit(1)
+
+        wip_ready = resolve_template_ids()
+        if not wip_ready:
+            print("=" * 70)
+            print("WIP is running but the data model is not bootstrapped.")
+            print("=" * 70)
+            print()
+            print("Options:")
+            print()
+            print("  1. Bootstrap the data model first, then import:")
+            print("     Run /bootstrap in Claude Code, then re-run this script")
+            print()
+            print("  2. Download trials offline (no WIP needed):")
+            print("     python scripts/import_trials.py --download-only --full --limit 100")
+            print()
+            print("  3. Import from a previous download after bootstrapping:")
+            print("     python scripts/import_trials.py --from-raw data/raw")
+            print()
+            sys.exit(1)
 
     full_mode = args.full
     since_override = args.since
     target_per_sponsor = args.limit
 
-    # Load sync state
+    # ── Mode: Import from raw files ──────────────────────────────────────
+    if from_raw:
+        raw_entries = load_from_raw_dir(from_raw, nct_filter=args.nct)
+
+        # Filter unchanged trials (unless --full)
+        sync_state = load_sync_state()
+        known_trials = sync_state.get("trials", {})
+        if not full_mode:
+            # Primary check: what's actually in WIP
+            wip_ncts = get_wip_nct_ids()
+            if wip_ncts:
+                print(f"WIP has {len(wip_ncts)} existing trials")
+            # Fast path: sync state for lastUpdatePostDate comparison
+            filtered = []
+            for entry in raw_entries:
+                study, source, ct_update, nct_id = entry
+                # If in WIP AND sync state says unchanged → skip
+                if nct_id in wip_ncts:
+                    prev = known_trials.get(nct_id, {})
+                    if prev.get("last_update") == ct_update and ct_update:
+                        COUNTS["skipped"] += 1
+                        continue
+                    # In WIP but sync state differs or missing → re-import (update)
+                filtered.append(entry)
+            raw_entries = filtered
+            if COUNTS["skipped"]:
+                print(f"Skipped {COUNTS['skipped']} unchanged trials (use --full to reimport all)")
+
+        if target_per_sponsor:
+            raw_entries = raw_entries[:target_per_sponsor]
+
+        print("=" * 70)
+        print(f"Clinical Trials Import: from raw files ({from_raw})")
+        print(f"Trials to import: {len(raw_entries)}" +
+              (f" ({COUNTS['skipped']} skipped, unchanged)" if COUNTS['skipped'] else ""))
+        print("=" * 70)
+
+        # Create organizations
+        print("\n" + "=" * 70)
+        print("Phase 1: Creating Organizations")
+        print("=" * 70)
+        orgs_to_create = set()
+        for study, _, _, _ in raw_entries:
+            proto = study.get("protocolSection", {})
+            sponsor_mod = proto.get("sponsorCollaboratorsModule", {})
+            lead = sponsor_mod.get("leadSponsor", {}).get("name")
+            if lead:
+                orgs_to_create.add(lead)
+            for collab in sponsor_mod.get("collaborators", []):
+                name = collab.get("name")
+                if name:
+                    orgs_to_create.add(name)
+        create_organizations_bulk(sorted(orgs_to_create))
+
+        # Import trials
+        print("\n" + "=" * 70)
+        print("Phase 2: Importing Trials")
+        print("=" * 70)
+        raw_dir_resolved = resolve_raw_dir(from_raw)
+        total = len(raw_entries)
+        import_start = time.time()
+
+        for idx, (study, source, ct_update, nct_id) in enumerate(raw_entries, 1):
+            elapsed = time.time() - import_start
+            eta = ""
+            if idx > 1:
+                rate = (idx - 1) / elapsed
+                remaining = (total - idx + 1) / rate
+                eta = f"  ETA {int(remaining // 60)}m{int(remaining % 60):02d}s"
+            print(f"\n[{idx}/{total}]{eta}")
+
+            # Check if results file exists alongside the study file
+            results_path = os.path.join(raw_dir_resolved, f"{nct_id}_results.json")
+            results_data = None
+            if os.path.exists(results_path):
+                with open(results_path) as f:
+                    results_data = json.load(f)
+                # Merge results into the study so import_trial can find them
+                if results_data.get("resultsSection"):
+                    study["resultsSection"] = results_data["resultsSection"]
+                if results_data.get("documentSection"):
+                    study["documentSection"] = results_data["documentSection"]
+
+            import_trial(study)
+
+            # Upload PDFs from disk if they exist
+            upload_pdfs_from_disk(nct_id, raw_dir_resolved)
+
+            # Record in sync state
+            sync_state["trials"][nct_id] = {
+                "last_update": ct_update,
+                "synced_at": datetime.now(timezone.utc).isoformat(),
+                "source": source,
+            }
+            if idx % 50 == 0:
+                save_sync_state(sync_state)
+                print(f"  [checkpoint: sync state saved at {idx}/{total}]")
+
+            time.sleep(0.1)
+
+        save_sync_state(sync_state)
+        _print_summary(time.time() - import_start)
+        return
+
+    # ── Mode: Fetch from CT.gov ──────────────────────────────────────────
     sync_state = load_sync_state()
     last_sync = sync_state.get("last_sync")
     known_trials = sync_state.get("trials", {})
+    nct_ids = args.nct
 
-    # Determine the "since" date for incremental mode
-    if full_mode:
+    if nct_ids:
+        mode_label = f"SPECIFIC ({len(nct_ids)} trial(s))"
+        since_date = None
+    elif full_mode:
         since_date = None
         mode_label = "FULL (reimporting everything)"
     elif since_override:
         since_date = since_override
         mode_label = f"INCREMENTAL (since {since_date}, user-specified)"
     elif last_sync:
-        # Use last sync date, back off by 1 day for safety
         from datetime import timedelta
         last_dt = datetime.fromisoformat(last_sync.replace("Z", "+00:00"))
         safe_date = (last_dt - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1062,50 +1564,74 @@ def main():
         since_date = None
         mode_label = "FULL (first run, no sync state)"
 
+    if download_only:
+        mode_label += " [DOWNLOAD ONLY — no WIP loading]"
+
     print("=" * 70)
     print("Clinical Trials Import: Roche/Genentech -> WIP")
     print(f"Mode: {mode_label}")
     print(f"Known trials in sync state: {len(known_trials)}")
     print("=" * 70)
 
-    # Step 1: Fetch trials from both sponsors (lead or collaborator)
-    limit_label = str(target_per_sponsor) if target_per_sponsor else "all"
-    print(f"\nFetching Hoffmann-La Roche trials (limit: {limit_label})...")
-    roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", max_results=target_per_sponsor, since_date=since_date)
-    print(f"  Found {len(roche_trials)} Roche trials")
-
-    print(f"\nFetching Genentech, Inc. trials (limit: {limit_label})...")
-    genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", max_results=target_per_sponsor, since_date=since_date)
-    print(f"  Found {len(genentech_trials)} Genentech trials")
-
-    # Step 2: Deduplicate and filter unchanged trials
-    seen_ncts = set()
     selected = []
 
-    for study in roche_trials:
-        nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
-        if nct and nct not in seen_ncts:
-            seen_ncts.add(nct)
-            # Check if already synced with same lastUpdatePostDate
-            ct_update = get_last_update_date(study)
-            prev = known_trials.get(nct, {})
-            if not full_mode and prev.get("last_update") == ct_update and ct_update:
-                COUNTS["skipped"] += 1
-                continue
-            selected.append((study, "Roche", ct_update))
+    if nct_ids:
+        # Fetch specific trials by NCT ID
+        print(f"\nFetching {len(nct_ids)} specific trial(s)...")
+        for nct_id in nct_ids:
+            study = fetch_trial_detail(nct_id)
+            if study:
+                ct_update = get_last_update_date(study)
+                selected.append((study, "specific", ct_update))
+                print(f"  {nct_id}: OK")
+            else:
+                print(f"  {nct_id}: NOT FOUND")
+    else:
+        # Fetch trials from both sponsors
+        limit_label = str(target_per_sponsor) if target_per_sponsor else "all"
+        print(f"\nFetching Hoffmann-La Roche trials (limit: {limit_label})...")
+        roche_trials = fetch_trials_for_sponsor("Hoffmann-La Roche", max_results=target_per_sponsor, since_date=since_date)
+        print(f"  Found {len(roche_trials)} Roche trials")
 
-    for study in genentech_trials:
-        nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
-        if nct and nct not in seen_ncts:
-            seen_ncts.add(nct)
-            ct_update = get_last_update_date(study)
-            prev = known_trials.get(nct, {})
-            if not full_mode and prev.get("last_update") == ct_update and ct_update:
-                COUNTS["skipped"] += 1
-                continue
-            selected.append((study, "Genentech", ct_update))
+        print(f"\nFetching Genentech, Inc. trials (limit: {limit_label})...")
+        genentech_trials = fetch_trials_for_sponsor("Genentech, Inc.", max_results=target_per_sponsor, since_date=since_date)
+        print(f"  Found {len(genentech_trials)} Genentech trials")
 
-    print(f"\nSelected {len(selected)} trials to import ({COUNTS['skipped']} skipped, unchanged):")
+        # Deduplicate and filter unchanged trials
+        # Primary check: what's actually in WIP
+        wip_ncts = set()
+        if not full_mode and not download_only:
+            wip_ncts = get_wip_nct_ids()
+            if wip_ncts:
+                print(f"WIP has {len(wip_ncts)} existing trials")
+
+        seen_ncts = set()
+
+        for study in roche_trials:
+            nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
+            if nct and nct not in seen_ncts:
+                seen_ncts.add(nct)
+                ct_update = get_last_update_date(study)
+                if not full_mode and nct in wip_ncts:
+                    prev = known_trials.get(nct, {})
+                    if prev.get("last_update") == ct_update and ct_update:
+                        COUNTS["skipped"] += 1
+                        continue
+                selected.append((study, "Roche", ct_update))
+
+        for study in genentech_trials:
+            nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
+            if nct and nct not in seen_ncts:
+                seen_ncts.add(nct)
+                ct_update = get_last_update_date(study)
+                if not full_mode and nct in wip_ncts:
+                    prev = known_trials.get(nct, {})
+                    if prev.get("last_update") == ct_update and ct_update:
+                        COUNTS["skipped"] += 1
+                        continue
+                selected.append((study, "Genentech", ct_update))
+
+    print(f"\nSelected {len(selected)} trials to {'download' if download_only else 'import'} ({COUNTS['skipped']} skipped, unchanged):")
     for study, source, _ in selected[:20]:
         nct = study.get("protocolSection", {}).get("identificationModule", {}).get("nctId")
         title = study.get("protocolSection", {}).get("identificationModule", {}).get("briefTitle", "")
@@ -1118,29 +1644,31 @@ def main():
         save_sync_state(sync_state)
         return
 
-    # Step 3: Create organizations FIRST
-    print("\n" + "=" * 70)
-    print("Phase 1: Creating Organizations")
-    print("=" * 70)
-    orgs_to_create = set()
-    for study, _, _ in selected:
-        proto = study.get("protocolSection", {})
-        sponsor_mod = proto.get("sponsorCollaboratorsModule", {})
-        lead = sponsor_mod.get("leadSponsor", {}).get("name")
-        if lead:
-            orgs_to_create.add(lead)
-        for collab in sponsor_mod.get("collaborators", []):
-            name = collab.get("name")
-            if name:
-                orgs_to_create.add(name)
+    if not download_only:
+        # Step 3: Create organizations FIRST
+        print("\n" + "=" * 70)
+        print("Phase 1: Creating Organizations")
+        print("=" * 70)
+        orgs_to_create = set()
+        for study, _, _ in selected:
+            proto = study.get("protocolSection", {})
+            sponsor_mod = proto.get("sponsorCollaboratorsModule", {})
+            lead = sponsor_mod.get("leadSponsor", {}).get("name")
+            if lead:
+                orgs_to_create.add(lead)
+            for collab in sponsor_mod.get("collaborators", []):
+                name = collab.get("name")
+                if name:
+                    orgs_to_create.add(name)
 
-    for org_name in sorted(orgs_to_create):
-        create_organization(org_name)
-        time.sleep(0.1)
+        create_organizations_bulk(sorted(orgs_to_create))
 
-    # Step 4: Fetch full details and import trials
+    # Step 4: Fetch full details and import/save trials
     print("\n" + "=" * 70)
-    print("Phase 2: Importing Trials (with outcomes, sites, results, AEs, PDFs)")
+    if download_only:
+        print("Downloading trial details...")
+    else:
+        print("Phase 2: Importing Trials (with outcomes, sites, results, AEs, PDFs)")
     print("=" * 70)
 
     total_selected = len(selected)
@@ -1162,14 +1690,33 @@ def main():
 
         print(f"\n[{idx}/{total_selected}]{eta}")
 
-        # Fetch full detail (search results may have limited fields)
+        # Fetch full detail
         full_study = fetch_trial_detail(nct_id)
-        if full_study:
-            import_trial(full_study)
-        else:
-            import_trial(study)
+        if save_raw_dir and full_study:
+            raw_path = os.path.join(save_raw_dir, f"{nct_id}.json")
+            with open(raw_path, "w") as f:
+                json.dump(full_study, f, indent=2)
 
-        # Record in sync state (and save periodically so progress isn't lost on crash)
+        if download_only:
+            # Also fetch and save results/docs
+            extra = fetch_trial_results_and_docs(nct_id)
+            if save_raw_dir and extra:
+                results_path = os.path.join(save_raw_dir, f"{nct_id}_results.json")
+                with open(results_path, "w") as f:
+                    json.dump(extra, f, indent=2)
+            # Download PDFs to disk
+            n_pdfs = 0
+            if extra:
+                doc_section = extra.get("documentSection", {})
+                n_pdfs = download_pdfs_to_disk(nct_id, doc_section, save_raw_dir)
+            print(f"  Saved {nct_id}" + (f" + {n_pdfs} PDF(s)" if n_pdfs else ""))
+        else:
+            if full_study:
+                import_trial(full_study, save_raw_dir=save_raw_dir)
+            else:
+                import_trial(study, save_raw_dir=save_raw_dir)
+
+        # Record in sync state
         sync_state["trials"][nct_id] = {
             "last_update": ct_update or get_last_update_date(full_study or study),
             "synced_at": datetime.now(timezone.utc).isoformat(),
@@ -1183,26 +1730,20 @@ def main():
 
     # Step 5: Save sync state and print summary
     save_sync_state(sync_state)
-    elapsed_total = time.time() - import_start
-    mins = int(elapsed_total // 60)
-    secs = int(elapsed_total % 60)
 
-    print("\n" + "=" * 70)
-    print(f"IMPORT SUMMARY  ({mins}m{secs:02d}s elapsed)")
-    print("=" * 70)
-    print(f"  Organizations:  {COUNTS['orgs_created']} created, {COUNTS['orgs_updated']} updated")
-    print(f"  Trials:         {COUNTS['trials_created']} created, {COUNTS['trials_updated']} updated")
-    print(f"  Outcomes:       {COUNTS['outcomes_created']} created, {COUNTS['outcomes_updated']} updated")
-    print(f"  Sites:          {COUNTS['sites_created']} created, {COUNTS['sites_updated']} updated")
-    print(f"  Adverse Events: {COUNTS['aes_created']} created, {COUNTS['aes_updated']} updated")
-    print(f"  Baselines:      {COUNTS['baselines_created']} created, {COUNTS['baselines_updated']} updated")
-    print(f"  Files uploaded: {COUNTS['files_uploaded']}")
-    print(f"  Skipped:        {COUNTS['skipped']} (unchanged)")
-    print(f"  Errors:         {COUNTS['errors']}")
-    print()
-    total = sum(v for k, v in COUNTS.items() if k not in ("errors", "skipped"))
-    print(f"  Total documents: {total}")
-    print(f"  Sync state: {len(sync_state['trials'])} trials tracked")
+    if download_only:
+        elapsed_total = time.time() - import_start
+        mins = int(elapsed_total // 60)
+        secs = int(elapsed_total % 60)
+        print("\n" + "=" * 70)
+        print(f"DOWNLOAD COMPLETE  ({mins}m{secs:02d}s elapsed)")
+        print("=" * 70)
+        print(f"  Trials downloaded: {total_selected}")
+        print(f"  Raw files saved to: {save_raw_dir}")
+        print(f"  Sync state: {len(sync_state['trials'])} trials tracked")
+    else:
+        _print_summary(time.time() - import_start)
+        print(f"  Sync state: {len(sync_state['trials'])} trials tracked")
 
 
 if __name__ == "__main__":

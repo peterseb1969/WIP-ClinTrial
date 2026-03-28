@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Check, ArrowRight } from 'lucide-react'
+import { Search, Check, ArrowRight, GitCompare } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { useFilterToggle } from '@/hooks/useFilterNav'
-import { cn } from '@/lib/utils'
+import { useMoleculeStats } from '@/hooks/useMoleculeStats'
+import { cn, formatNumber } from '@/lib/utils'
 
 export function MoleculesPage() {
   const { trials: filtered, isLoading } = useFilteredTrials()
@@ -16,6 +17,7 @@ export function MoleculesPage() {
   const [search, setSearch] = useState('')
 
   const selectedMolecules = filters.molecule ?? []
+  const stats = useMoleculeStats(filtered)
 
   // Build molecule → trial count from the filtered set
   const molecules = useMemo(() => {
@@ -47,7 +49,17 @@ export function MoleculesPage() {
         </span>
       </div>
 
-      {/* Search */}
+      {/* Compare button + Search */}
+      {selectedMolecules.length >= 2 && (
+        <Link
+          to="/molecules/compare"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+        >
+          <GitCompare className="h-4 w-4" />
+          Compare {selectedMolecules.length} molecules
+        </Link>
+      )}
+
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
         <input
@@ -101,6 +113,30 @@ export function MoleculesPage() {
                 </div>
                 <Badge variant={isSelected ? 'primary' : 'accent'}>{mol.count} trials</Badge>
               </div>
+
+              {/* Inline stats */}
+              {(() => {
+                const s = stats.get(mol.name)
+                if (!s) return null
+                return (
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex items-center gap-2 text-xs text-text-muted">
+                      {s.recruiting > 0 && <span className="text-green-600">{s.recruiting} recruiting</span>}
+                      {s.completed > 0 && <span>{s.completed} completed</span>}
+                      {s.totalEnrollment > 0 && <span>n={formatNumber(s.totalEnrollment)}</span>}
+                    </div>
+                    {s.topTAs.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {s.topTAs.map((ta) => (
+                          <span key={ta} className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] text-blue-700">
+                            {ta}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               <div className="mt-3 flex items-center gap-3">
                 <Link

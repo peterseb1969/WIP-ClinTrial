@@ -13,6 +13,8 @@ import { SitesPage } from '@/pages/SitesPage'
 import { BookmarksPage } from '@/pages/BookmarksPage'
 import { TherapeuticAreasPage } from '@/pages/TherapeuticAreasPage'
 import { SyncPage } from '@/pages/SyncPage'
+import { AdverseEventsPage } from '@/pages/AdverseEventsPage'
+import { MoleculeComparePage } from '@/pages/MoleculeComparePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,8 +36,10 @@ export default function App() {
               <Route path="trials" element={<TrialsPage />} />
               <Route path="trials/:nctId" element={<TrialDetailPage />} />
               <Route path="molecules" element={<MoleculesPage />} />
+              <Route path="molecules/compare" element={<MoleculeComparePage />} />
               <Route path="molecules/:name" element={<MoleculeDetailPage />} />
               <Route path="therapeutic-areas" element={<TherapeuticAreasPage />} />
+              <Route path="adverse-events" element={<AdverseEventsPage />} />
               <Route path="sites" element={<SitesPage />} />
               <Route path="bookmarks" element={<BookmarksPage />} />
               <Route path="sync" element={<SyncPage />} />

@@ -25,13 +25,22 @@ export function MoleculeDetailPage() {
   const { data: termData, isLoading: loadingTerm } = useQuery({
     queryKey: ['clintrial', 'molecule-term', moleculeName],
     queryFn: async () => {
+      // Resolve terminology ID by value
+      const lookupRes = await fetch(
+        '/api/def-store/terminologies/by-value/CT_MOLECULE?namespace=clintrial',
+        { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
+      )
+      if (!lookupRes.ok) return null
+      const terminology = await lookupRes.json()
+      const terminologyId = terminology.terminology_id
+      if (!terminologyId) return null
+
       const res = await fetch(
-        `/api/def-store/terminologies/019d25e0-c2e8-7cd8-b604-fc9bec59bc25/terms?search=${encodeURIComponent(moleculeName)}&page_size=50`,
+        `/api/def-store/terminologies/${terminologyId}/terms?search=${encodeURIComponent(moleculeName)}&page_size=50`,
         { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
       )
       if (!res.ok) return null
       const data = await res.json()
-      // Find exact match by value
       return data.items?.find((t: Record<string, unknown>) => t.value === moleculeName) ?? null
     },
     enabled: !!moleculeName,

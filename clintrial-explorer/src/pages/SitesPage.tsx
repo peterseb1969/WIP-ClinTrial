@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Search, ArrowUpDown } from 'lucide-react'
+import { Search, ArrowUpDown, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
@@ -9,7 +10,7 @@ import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { useFilterToggle } from '@/hooks/useFilterNav'
 
-type SortKey = 'country' | 'trials' | 'sites'
+type SortKey = 'country' | 'trials' | 'sites' | 'enrollment'
 
 export function SitesPage() {
   const toggleFilter = useFilterToggle()
@@ -42,28 +43,41 @@ export function SitesPage() {
     staleTime: 5 * 60 * 1000,
   })
 
+  // Build enrollment lookup by NCT ID
+  const enrollmentByNct = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const t of filtered) {
+      if (t.data.enrollment) map.set(t.data.nct_id, t.data.enrollment)
+    }
+    return map
+  }, [filtered])
+
   // Aggregate site stats, scoped to filtered trials
   const siteStats = useMemo(() => {
     if (!allSiteStats) return []
-    const countryMap = new Map<string, { trials: number; sites: number }>()
+    const countryMap = new Map<string, { trials: Set<string>; sites: number; enrollment: number }>()
 
     for (const row of allSiteStats) {
       // If filters are active (other than country), only count sites for matching trials
       if (hasActive && !filteredNctIds.has(row.nct_id)) continue
 
       const country = row.country || 'Unknown'
-      const entry = countryMap.get(country) ?? { trials: 0, sites: 0 }
-      entry.trials++
+      const entry = countryMap.get(country) ?? { trials: new Set<string>(), sites: 0, enrollment: 0 }
+      if (!entry.trials.has(row.nct_id)) {
+        entry.enrollment += enrollmentByNct.get(row.nct_id) || 0
+      }
+      entry.trials.add(row.nct_id)
       entry.sites += Number(row.site_count)
       countryMap.set(country, entry)
     }
 
     return [...countryMap.entries()].map(([country, data]) => ({
       country,
-      trialCount: data.trials,
+      trialCount: data.trials.size,
       siteCount: data.sites,
+      enrollment: data.enrollment,
     }))
-  }, [allSiteStats, filteredNctIds, hasActive])
+  }, [allSiteStats, filteredNctIds, hasActive, enrollmentByNct])
 
   const displayed = useMemo(() => {
     let result = siteStats
@@ -75,6 +89,7 @@ export function SitesPage() {
       let cmp = 0
       if (sortKey === 'country') cmp = a.country.localeCompare(b.country)
       else if (sortKey === 'trials') cmp = a.trialCount - b.trialCount
+      else if (sortKey === 'enrollment') cmp = a.enrollment - b.enrollment
       else cmp = a.siteCount - b.siteCount
       return sortAsc ? cmp : -cmp
     })
@@ -121,6 +136,11 @@ export function SitesPage() {
                 if (sortKey === k) setSortAsc(!sortAsc)
                 else { setSortKey(k); setSortAsc(false) }
               }} align="right" />
+              <SortHeader label="Enrollment" sortKey="enrollment" current={sortKey} asc={sortAsc} onSort={(k) => {
+                if (sortKey === k) setSortAsc(!sortAsc)
+                else { setSortKey(k); setSortAsc(false) }
+              }} align="right" />
+              <th className="px-4 py-2.5 font-medium text-text-muted text-right w-10" />
             </tr>
           </thead>
           <tbody>
@@ -158,6 +178,24 @@ export function SitesPage() {
                     </button>
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{formatNumber(row.siteCount)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-text-muted">
+                    {row.enrollment > 0 ? formatNumber(row.enrollment) : '-'}
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <Link
+                      to={`/trials`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!selectedCountries.includes(row.country)) {
+                          toggleFilter('country', row.country)
+                        }
+                      }}
+                      className="text-text-muted hover:text-primary"
+                      title={`View trials in ${row.country}`}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Link>
+                  </td>
                 </tr>
               )
             })}
