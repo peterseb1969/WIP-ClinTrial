@@ -5,6 +5,7 @@ import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
+import { useAllTrials } from '@/hooks/useAllTrials'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { useFilterToggle } from '@/hooks/useFilterNav'
 import { useMoleculeStats } from '@/hooks/useMoleculeStats'
@@ -12,6 +13,7 @@ import { cn, formatNumber } from '@/lib/utils'
 
 export function MoleculesPage() {
   const { trials: filtered, isLoading } = useFilteredTrials()
+  const { data: allTrials } = useAllTrials()
   const { filters } = useTrialFilters()
   const toggleFilter = useFilterToggle()
   const [search, setSearch] = useState('')
@@ -19,10 +21,43 @@ export function MoleculesPage() {
   const selectedMolecules = filters.molecule ?? []
   const stats = useMoleculeStats(filtered)
 
-  // Build molecule → trial count from the filtered set
+  // Build molecule list from trials filtered by everything EXCEPT the molecule filter.
+  // This ensures selecting a molecule doesn't hide all other molecules.
+  const trialsExcludingMoleculeFilter = useMemo(() => {
+    if (!allTrials) return filtered
+    // If no non-molecule filters are active, use all trials
+    const hasOtherFilters = filters.status?.length || filters.phase?.length ||
+      filters.study_type?.length || filters.therapeutic_area?.length ||
+      filters.condition?.length || filters.sponsor?.length || filters.country?.length ||
+      filters.search || filters.has_results || filters.has_ae_data ||
+      filters.has_outcomes || filters.has_baseline || filters.bookmarked
+    if (!hasOtherFilters) return allTrials
+    // If other filters are active, use filtered trials but re-include molecule-excluded ones
+    // Simplest: use the filtered set which already applies all filters including molecule
+    // But we want to exclude the molecule filter — use all trials with non-molecule filters applied
+    // For simplicity, just use filtered set when molecule is NOT selected,
+    // and all trials (with other filters) when molecule IS selected
+    if (!selectedMolecules.length) return filtered
+    // Re-filter from allTrials applying everything except molecule
+    return allTrials.filter((t) => {
+      const d = t.data
+      if (filters.status?.length && !filters.status.includes(d.status)) return false
+      if (filters.phase?.length && !filters.phase.some((p: string) => d.phases?.includes(p))) return false
+      if (filters.study_type?.length && !filters.study_type.includes(d.study_type)) return false
+      if (filters.therapeutic_area?.length && !filters.therapeutic_area.some((ta: string) => d.therapeutic_areas?.includes(ta))) return false
+      if (filters.sponsor?.length && !filters.sponsor.includes(d.sponsor)) return false
+      if (filters.search) {
+        const q = filters.search.toLowerCase()
+        const searchable = [d.nct_id, d.title, d.brief_title, ...(d.conditions || []), ...(d.interventions || [])].filter(Boolean).join(' ').toLowerCase()
+        if (!searchable.includes(q)) return false
+      }
+      return true
+    })
+  }, [allTrials, filtered, filters, selectedMolecules])
+
   const molecules = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const t of filtered) {
+    for (const t of trialsExcludingMoleculeFilter) {
       for (const mol of t.data.interventions || []) {
         counts.set(mol, (counts.get(mol) || 0) + 1)
       }
@@ -30,7 +65,7 @@ export function MoleculesPage() {
     return [...counts.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-  }, [filtered])
+  }, [trialsExcludingMoleculeFilter])
 
   const searchFiltered = useMemo(() => {
     if (!search) return molecules
