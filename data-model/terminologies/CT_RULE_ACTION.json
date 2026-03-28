@@ -1,0 +1,10 @@
+{
+  "value": "CT_RULE_ACTION",
+  "label": "Rule Action",
+  "description": "What a classification rule does when it matches",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "ADD", "label": "Add", "aliases": [], "description": "Add the target classification when the pattern matches"},
+    {"value": "REMOVE", "label": "Remove", "aliases": [], "description": "Remove the target classification when the pattern matches"}
+  ]
+}

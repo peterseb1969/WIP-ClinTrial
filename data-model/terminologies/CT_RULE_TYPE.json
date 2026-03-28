@@ -1,0 +1,9 @@
+{
+  "value": "CT_RULE_TYPE",
+  "label": "Rule Type",
+  "description": "Types of classification rules",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "CONDITION_TO_TA", "label": "Condition to Therapeutic Area", "aliases": [], "description": "Map a trial condition to a therapeutic area"}
+  ]
+}

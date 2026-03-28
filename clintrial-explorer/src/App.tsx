@@ -15,6 +15,7 @@ import { TherapeuticAreasPage } from '@/pages/TherapeuticAreasPage'
 import { SyncPage } from '@/pages/SyncPage'
 import { AdverseEventsPage } from '@/pages/AdverseEventsPage'
 import { MoleculeComparePage } from '@/pages/MoleculeComparePage'
+import { ClassificationRulesPage } from '@/pages/ClassificationRulesPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="adverse-events" element={<AdverseEventsPage />} />
               <Route path="sites" element={<SitesPage />} />
               <Route path="bookmarks" element={<BookmarksPage />} />
+              <Route path="settings/rules" element={<ClassificationRulesPage />} />
               <Route path="sync" element={<SyncPage />} />
             </Route>
           </Routes>

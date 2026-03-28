@@ -9,6 +9,7 @@ import {
   MapPin,
   Bookmark,
   RefreshCw,
+  Settings,
   Menu,
   Home,
   ChevronRight,
@@ -25,6 +26,7 @@ const navItems = [
   { to: '/adverse-events', icon: AlertTriangle, label: 'Adverse Events' },
   { to: '/sites', icon: MapPin, label: 'Sites' },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
+  { to: '/settings/rules', icon: Settings, label: 'Rules' },
   { to: '/sync', icon: RefreshCw, label: 'Sync' },
 ] as const
 
@@ -35,6 +37,8 @@ const breadcrumbLabels: Record<string, string> = {
   'adverse-events': 'Adverse Events',
   sites: 'Sites',
   bookmarks: 'Bookmarks',
+  settings: 'Settings',
+  rules: 'Classification Rules',
   sync: 'Sync Status',
 }
 

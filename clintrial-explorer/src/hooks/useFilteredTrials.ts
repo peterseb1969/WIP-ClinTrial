@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useAllTrials, useTrialsByCountries } from './useAllTrials'
+import { useAllTrials, useTrialsByCountries, type TrialDocument } from './useAllTrials'
 import { useTrialFilters } from './useTrialFilters'
 import { useBookmarks } from './useBookmarks'
+import { useClassificationRules, enrichTherapeuticAreas } from './useClassificationRules'
 import { reportQuery } from '@/lib/reporting'
 
 /** Pre-compute sets of NCT IDs that have related data (AE, outcomes, baselines) */
@@ -43,19 +44,40 @@ function useDataAvailability() {
   return { aeNctIds, outcomeNctIds, baselineNctIds }
 }
 
-/** Returns all trials filtered by the current global filter state. */
+/** Returns all trials with therapeutic areas enriched by classification rules,
+ * then filtered by the current global filter state. */
 export function useFilteredTrials() {
   const { data: trials, isLoading, error, refetch } = useAllTrials()
+  const { data: rules } = useClassificationRules()
   const { filters } = useTrialFilters()
   const { has: isBookmarked } = useBookmarks()
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
   const { aeNctIds, outcomeNctIds, baselineNctIds } = useDataAvailability()
 
+  // Enrich trials with rule-based TA classification
+  const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
+    if (!trials) return undefined
+    if (!rules || rules.length === 0) return trials
+    return trials.map((t) => {
+      const enrichedTAs = enrichTherapeuticAreas(
+        t.data.therapeutic_areas,
+        t.data.conditions,
+        rules,
+        t.data.nct_id,
+      )
+      if (enrichedTAs.length === (t.data.therapeutic_areas?.length ?? 0) &&
+          enrichedTAs.every((ta, i) => ta === t.data.therapeutic_areas?.[i])) {
+        return t // unchanged, avoid new object
+      }
+      return { ...t, data: { ...t.data, therapeutic_areas: enrichedTAs } }
+    })
+  }, [trials, rules])
+
   const filtered = useMemo(() => {
-    if (!trials) return []
+    if (!enrichedTrials) return []
     if (filters.country && filters.country.length > 0 && !countryNctIds) return []
 
-    return trials.filter((t) => {
+    return enrichedTrials.filter((t) => {
       const d = t.data
 
       // Multi-select filters: trial must match at least one selected value
@@ -89,7 +111,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [trials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds])
 
-  return { trials: filtered, allTrials: trials, isLoading, error, refetch }
+  return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
 }

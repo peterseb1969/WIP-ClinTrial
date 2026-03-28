@@ -1,0 +1,12 @@
+{
+  "value": "CT_MATCH_TYPE",
+  "label": "Match Type",
+  "description": "Pattern matching strategies for classification rules",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "EXACT", "label": "Exact Match", "aliases": [], "description": "Case-insensitive exact string match"},
+    {"value": "CONTAINS", "label": "Contains", "aliases": [], "description": "Case-insensitive substring match"},
+    {"value": "WORD_BOUNDARY", "label": "Word Boundary", "aliases": [], "description": "Match at word boundaries to avoid partial matches"},
+    {"value": "REGEX", "label": "Regular Expression", "aliases": [], "description": "Full regex pattern match (advanced)"}
+  ]
+}
