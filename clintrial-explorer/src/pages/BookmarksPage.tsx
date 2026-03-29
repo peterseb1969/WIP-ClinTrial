@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Download, Upload } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
 import { StatusBadge } from '@/components/StatusBadge'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { PageLoading } from '@/components/LoadingSpinner'
@@ -57,13 +58,25 @@ export function BookmarksPage() {
 
       {/* Actions */}
       <div className="flex gap-3">
+        <CsvDownloadButton
+          getData={() => ({
+            columns: ['NCT ID', 'Title', 'Status', 'Phase'],
+            rows: bookmarkedTrials.map((t) => [
+              t.data.nct_id,
+              t.data.brief_title || t.data.title,
+              t.data.status,
+              (t.data.phases || []).join(';'),
+            ]),
+          })}
+          filenamePrefix="bookmarked-trials"
+        />
         <button
           onClick={handleExport}
           disabled={bookmarkedIds.size === 0}
           className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-text-muted hover:bg-gray-50 disabled:opacity-40"
         >
           <Download className="h-3.5 w-3.5" />
-          Export
+          Export JSON
         </button>
         <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-text-muted hover:bg-gray-50">
           <Upload className="h-3.5 w-3.5" />

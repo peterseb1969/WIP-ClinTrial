@@ -655,6 +655,13 @@ def create_trial(trial_data):
     if therapeutic_areas:
         data["therapeutic_areas"] = therapeutic_areas
 
+    # Include file references: use passed-in IDs, or preserve existing ones
+    file_ids = trial_data.get("_file_ids")
+    if not file_ids:
+        file_ids = _get_trial_file_ids(trial_data["nct_id"])
+    if file_ids:
+        data["documents"] = file_ids
+
     print(f"  Creating trial: {trial_data['nct_id']} - {trial_data['title'][:60]}...")
     result = wip_create_document("CT_TRIAL", data)
     if result:
@@ -1008,23 +1015,61 @@ def download_pdfs_to_disk(nct_id, doc_section, raw_dir):
     return downloaded
 
 
+def classify_pdf(filename):
+    """Classify a PDF filename into category and human-readable type."""
+    fn = filename.lower()
+    if fn.startswith("prot_sap") or fn.startswith("protsap"):
+        return "protocol_sap", "Protocol & SAP"
+    elif fn.startswith("prot"):
+        return "protocol", "Protocol"
+    elif fn.startswith("sap"):
+        return "sap", "Statistical Analysis Plan"
+    elif fn.startswith("icf"):
+        return "icf", "Informed Consent Form"
+    else:
+        return "other", "Document"
+
+
 def upload_pdfs_from_disk(nct_id, raw_dir):
-    """Upload PDFs from local disk to WIP file storage."""
+    """Upload PDFs from local disk to WIP file storage with proper metadata.
+    Returns list of file_ids. Skips entirely if trial already has files linked.
+    """
     pdf_dir = os.path.join(raw_dir, nct_id)
     if not os.path.isdir(pdf_dir):
         return []
 
-    file_ids = []
-    for filename in sorted(os.listdir(pdf_dir)):
-        if not filename.lower().endswith(".pdf"):
-            continue
+    pdf_files = sorted(f for f in os.listdir(pdf_dir) if f.lower().endswith(".pdf"))
+    if not pdf_files:
+        return []
+
+    # Check if trial already has files linked (idempotency)
+    existing_file_ids = _get_trial_file_ids(nct_id)
+    if existing_file_ids and len(existing_file_ids) >= len(pdf_files):
+        print(f"    Trial {nct_id} already has {len(existing_file_ids)} file(s) linked, skipping upload")
+        return existing_file_ids
+
+    file_ids = list(existing_file_ids) if existing_file_ids else []
+    for filename in pdf_files:
         local_path = os.path.join(pdf_dir, filename)
+        category, doc_type = classify_pdf(filename)
+
+        # Build a tagged filename: NCT00130533_Prot_000.pdf
+        tagged_filename = f"{nct_id}_{filename}" if not filename.startswith(nct_id) else filename
+
         try:
             with open(local_path, "rb") as f:
                 content = f.read()
+            size_kb = len(content) // 1024
+
             upload_url = f"{WIP_BASE}/api/document-store/files"
-            files_payload = {"file": (filename, content, "application/pdf")}
-            form_data = {"namespace": NAMESPACE}
+            files_payload = {"file": (tagged_filename, content, "application/pdf")}
+            form_data = {
+                "namespace": NAMESPACE,
+                "description": f"{doc_type} for {nct_id}",
+                "tags": f"{category},{nct_id}",
+                "category": category,
+                "allowed_templates": "CT_TRIAL",
+            }
             upload_resp = requests.post(
                 upload_url,
                 files=files_payload,
@@ -1043,14 +1088,133 @@ def upload_pdfs_from_disk(nct_id, raw_dir):
                 if fid:
                     file_ids.append(fid)
                     COUNTS["files_uploaded"] += 1
-                    size_kb = len(content) // 1024
-                    print(f"    Uploaded {filename} ({size_kb}KB) -> {fid}")
+                    print(f"    Uploaded {tagged_filename} ({size_kb}KB) -> {fid}")
             else:
                 print(f"    WARN: Upload failed for {filename} (HTTP {upload_resp.status_code})")
         except Exception as e:
             print(f"    WARN: Error uploading {filename}: {e}")
 
     return file_ids
+
+
+def _get_trial_file_ids(nct_id):
+    """Get file IDs already linked to a trial's documents field. Returns list or None."""
+    try:
+        resp = requests.post(
+            f"{WIP_BASE}/api/reporting-sync/query",
+            json={
+                "sql": "SELECT documents FROM doc_ct_trial WHERE nct_id = $1",
+                "params": [nct_id],
+                "max_rows": 1,
+            },
+            headers=wip_headers(),
+            verify=False,
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            rows = resp.json().get("rows", [])
+            if rows and rows[0].get("documents"):
+                docs = rows[0]["documents"]
+                if isinstance(docs, str):
+                    docs = json.loads(docs)
+                if isinstance(docs, list) and docs:
+                    ids = []
+                    for ref in docs:
+                        if isinstance(ref, str):
+                            ids.append(ref)
+                        elif isinstance(ref, dict):
+                            fid = ref.get("file_id", ref.get("id"))
+                            if fid:
+                                ids.append(fid)
+                    return ids if ids else None
+    except Exception:
+        pass
+    return None
+
+
+def link_files_to_trial(nct_id, file_ids):
+    """Update a trial document to reference the given file IDs in its documents field.
+    Fetches the existing document data and re-submits with files added.
+    """
+    if not file_ids:
+        return
+
+    # Fetch existing trial data (mandatory fields needed for upsert)
+    try:
+        resp = requests.post(
+            f"{WIP_BASE}/api/reporting-sync/query",
+            json={
+                "sql": "SELECT title, data_status, study_type, sponsor, documents FROM doc_ct_trial WHERE nct_id = $1",
+                "params": [nct_id],
+                "max_rows": 1,
+            },
+            headers=wip_headers(),
+            verify=False,
+            timeout=10,
+        )
+        if resp.status_code != 200 or not resp.json().get("rows"):
+            print(f"    WARN: Cannot fetch trial {nct_id} for file linking")
+            return
+        row = resp.json()["rows"][0]
+    except Exception as e:
+        print(f"    WARN: Error fetching trial {nct_id}: {e}")
+        return
+
+    # Check if files already linked
+    existing_docs = row.get("documents")
+    if existing_docs:
+        if isinstance(existing_docs, str):
+            existing_docs = json.loads(existing_docs)
+        existing_ids = set()
+        if isinstance(existing_docs, list):
+            for ref in existing_docs:
+                if isinstance(ref, str):
+                    existing_ids.add(ref)
+                elif isinstance(ref, dict):
+                    existing_ids.add(ref.get("file_id", ref.get("id", "")))
+        if set(file_ids).issubset(existing_ids):
+            print(f"    Files already linked to {nct_id}, skipping")
+            return
+        # Merge: add new file_ids to existing ones
+        file_ids = list(existing_ids | set(file_ids))
+
+    # Re-submit with mandatory fields + documents
+    data = {
+        "nct_id": nct_id,
+        "title": row["title"],
+        "status": row["data_status"],
+        "study_type": row["study_type"],
+        "sponsor": row["sponsor"],
+        "documents": file_ids,
+    }
+    body = [{
+        "template_id": TEMPLATES["CT_TRIAL"],
+        "template_version": 1,
+        "namespace": NAMESPACE,
+        "data": data,
+        "created_by": "clintrial-import",
+    }]
+    try:
+        resp = requests.post(
+            f"{WIP_BASE}/api/document-store/documents",
+            json=body,
+            headers=wip_headers(),
+            verify=False,
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            result = resp.json()
+            items = result.get("results", result) if isinstance(result, dict) else result
+            if isinstance(items, list) and items:
+                item = items[0]
+                if item.get("status") == "error":
+                    print(f"    WARN: Failed to link files to {nct_id}: {item.get('error', 'unknown')}")
+                else:
+                    print(f"    Linked {len(file_ids)} file(s) to {nct_id}")
+        else:
+            print(f"    WARN: Failed to link files to {nct_id} (HTTP {resp.status_code})")
+    except Exception as e:
+        print(f"    WARN: Error linking files to {nct_id}: {e}")
 
 
 def download_and_upload_documents(nct_id, doc_section):
@@ -1117,11 +1281,20 @@ def download_and_upload_documents(nct_id, doc_section):
     return file_ids
 
 
-def import_trial(study, save_raw_dir=None):
+def import_trial(study, save_raw_dir=None, extra_data=None, file_ids=None):
     """Import a single trial with all child documents.
     Assumes organization already exists.
+
+    Args:
+        study: The CT.gov study dict (protocolSection etc.)
+        save_raw_dir: If set, save raw results/docs JSON to this directory
+        extra_data: Pre-loaded results/documents data (from disk). If provided,
+                    skip fetching from CT.gov.
+        file_ids: Pre-uploaded file IDs to attach to the trial document.
     """
     trial_data = extract_trial_data(study)
+    if file_ids:
+        trial_data["_file_ids"] = file_ids
     nct_id = trial_data["nct_id"]
 
     if not nct_id:
@@ -1132,7 +1305,7 @@ def import_trial(study, save_raw_dir=None):
     print(f"Importing {nct_id}: {trial_data['title'][:70]}")
     print(f"{'='*70}")
 
-    # Step 1: Create the trial (may need to update with file IDs later)
+    # Step 1: Create the trial
     trial_result = create_trial(trial_data)
     if not trial_result:
         print(f"  FAILED to create trial {nct_id}, skipping child documents")
@@ -1154,15 +1327,20 @@ def import_trial(study, save_raw_dir=None):
     create_sites(nct_id, trial_data["locations"], max_sites=max_s)
 
     # Step 4: Wave 2 — Results, AEs, Baselines, PDFs
-    # Fetch results and document sections (separate API call with specific fields)
+    # Use pre-loaded data if available, otherwise fetch from CT.gov
     has_results = trial_data.get("has_results", False)
-    if has_results:
-        print(f"  Fetching results and documents for {nct_id}...")
+    extra = extra_data  # May be None or pre-loaded from disk
+
+    if extra is None and (has_results or save_raw_dir):
+        # Only fetch from CT.gov when NOT using pre-loaded data
+        print(f"  Fetching results and documents for {nct_id} from CT.gov...")
         extra = fetch_trial_results_and_docs(nct_id)
         if save_raw_dir and extra:
             results_path = os.path.join(save_raw_dir, f"{nct_id}_results.json")
             with open(results_path, "w") as f:
                 json.dump(extra, f, indent=2)
+
+    if extra:
         results_section = extra.get("resultsSection", {})
 
         # 4a: Adverse events
@@ -1186,25 +1364,15 @@ def import_trial(study, save_raw_dir=None):
             print(f"  Updating outcomes with results: {len(outcome_measures)} measures")
             update_outcome_with_results(nct_id, outcome_measures)
 
-        # 4d: Download protocol/SAP PDFs
-        doc_section = extra.get("documentSection", {})
-        n_docs = len(doc_section.get("largeDocumentModule", {}).get("largeDocs", []))
-        if n_docs:
-            print(f"  Downloading {n_docs} document(s)...")
-            file_ids = download_and_upload_documents(nct_id, doc_section)
-            # TODO: update trial document with file IDs once file linking is tested
-    else:
-        # Even trials without results might have documents
-        extra = fetch_trial_results_and_docs(nct_id)
-        if save_raw_dir and extra:
-            results_path = os.path.join(save_raw_dir, f"{nct_id}_results.json")
-            with open(results_path, "w") as f:
-                json.dump(extra, f, indent=2)
-        doc_section = extra.get("documentSection", {})
-        n_docs = len(doc_section.get("largeDocumentModule", {}).get("largeDocs", []))
-        if n_docs:
-            print(f"  Downloading {n_docs} document(s)...")
-            file_ids = download_and_upload_documents(nct_id, doc_section)
+        # 4d: Download protocol/SAP PDFs (only when fetching from CT.gov, not from disk)
+        if extra_data is None:
+            doc_section = extra.get("documentSection", {})
+            n_docs = len(doc_section.get("largeDocumentModule", {}).get("largeDocs", []))
+            if n_docs:
+                print(f"  Downloading {n_docs} document(s) from CT.gov...")
+                file_ids = download_and_upload_documents(nct_id, doc_section)
+                if file_ids:
+                    link_files_to_trial(nct_id, file_ids)
 
 
 def parse_args():
@@ -1506,22 +1674,20 @@ def main():
                 eta = f"  ETA {int(remaining // 60)}m{int(remaining % 60):02d}s"
             print(f"\n[{idx}/{total}]{eta}")
 
-            # Check if results file exists alongside the study file
+            # Load pre-saved results/documents from disk (no network needed)
             results_path = os.path.join(raw_dir_resolved, f"{nct_id}_results.json")
-            results_data = None
+            extra_data = None
             if os.path.exists(results_path):
                 with open(results_path) as f:
-                    results_data = json.load(f)
-                # Merge results into the study so import_trial can find them
-                if results_data.get("resultsSection"):
-                    study["resultsSection"] = results_data["resultsSection"]
-                if results_data.get("documentSection"):
-                    study["documentSection"] = results_data["documentSection"]
+                    extra_data = json.load(f)
+                # Also merge into study for extract_trial_data compatibility
+                if extra_data.get("resultsSection"):
+                    study["resultsSection"] = extra_data["resultsSection"]
 
-            import_trial(study)
+            # Upload PDFs first so import_trial can include them in the document
+            pdf_file_ids = upload_pdfs_from_disk(nct_id, raw_dir_resolved)
 
-            # Upload PDFs from disk if they exist
-            upload_pdfs_from_disk(nct_id, raw_dir_resolved)
+            import_trial(study, extra_data=extra_data, file_ids=pdf_file_ids)
 
             # Record in sync state
             sync_state["trials"][nct_id] = {

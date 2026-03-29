@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Search, Check, ArrowRight, GitCompare } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useAllTrials } from '@/hooks/useAllTrials'
@@ -79,9 +80,18 @@ export function MoleculesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Molecules</h1>
-        <span className="text-sm text-text-muted">
-          {molecules.length} molecules across {filtered.length} trials
-        </span>
+        <div className="flex items-center gap-3">
+          <CsvDownloadButton
+            getData={() => ({
+              columns: ['Molecule', 'Trial Count'],
+              rows: searchFiltered.map((m) => [m.name, String(m.count)]),
+            })}
+            filenamePrefix="molecules"
+          />
+          <span className="text-sm text-text-muted">
+            {molecules.length} molecules across {filtered.length} trials
+          </span>
+        </div>
       </div>
 
       {/* Compare button + Search */}

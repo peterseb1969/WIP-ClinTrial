@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Pill, FlaskConical, AlertTriangle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -9,6 +9,8 @@ import {
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { ChipLink } from '@/components/ChipLink'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
+import { SqlInspector, type SqlQuery } from '@/components/SqlInspector'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useAllTrials } from '@/hooks/useAllTrials'
 import { reportQuery } from '@/lib/reporting'
@@ -62,27 +64,48 @@ export function MoleculeDetailPage() {
   const byTherapeuticArea = useMemo(() => countBy(moleculeTrials, (d) => d.therapeutic_areas), [moleculeTrials])
 
   // Fetch top AEs for this molecule via SQL
-  const { data: topAEs } = useQuery({
-    queryKey: ['clintrial', 'molecule-aes', moleculeName],
-    queryFn: async () => {
-      // Get NCT IDs for this molecule first
-      const nctIds = moleculeTrials.map((t) => t.data.nct_id)
-      if (nctIds.length === 0) return []
-      const placeholders = nctIds.map((_, i) => `$${i + 1}`).join(', ')
-      const result = await reportQuery<{ term: string; organ_system: string; cnt: number }>(
-        `SELECT term, organ_system, COUNT(*) as cnt
+  const moleculeNctIds = useMemo(() => moleculeTrials.map((t) => t.data.nct_id), [moleculeTrials])
+  const aeSql = useMemo(() => {
+    if (moleculeNctIds.length === 0) return ''
+    const placeholders = moleculeNctIds.map((_, i) => `$${i + 1}`).join(', ')
+    return `SELECT term, organ_system, COUNT(*) as cnt
          FROM doc_ct_trial_ae
          WHERE nct_id IN (${placeholders})
          GROUP BY term, organ_system
          ORDER BY cnt DESC
-         LIMIT 20`,
-        nctIds,
+         LIMIT 20`
+  }, [moleculeNctIds])
+
+  const { data: topAEs } = useQuery({
+    queryKey: ['clintrial', 'molecule-aes', moleculeName],
+    queryFn: async () => {
+      if (moleculeNctIds.length === 0) return []
+      const result = await reportQuery<{ term: string; organ_system: string; cnt: number }>(
+        aeSql, moleculeNctIds,
       )
       return result.rows
     },
     enabled: moleculeTrials.length > 0,
     staleTime: 5 * 60 * 1000,
   })
+
+  const sqlQueries: SqlQuery[] = aeSql ? [{ label: 'Top AEs', sql: aeSql, params: moleculeNctIds }] : []
+
+  const getTrialCsvData = useCallback(() => ({
+    columns: ['NCT ID', 'Title', 'Status', 'Phase', 'Enrollment'],
+    rows: moleculeTrials.map((t) => [
+      t.data.nct_id,
+      t.data.brief_title || t.data.title,
+      t.data.status,
+      (t.data.phases || []).join(';'),
+      String(t.data.enrollment || ''),
+    ]),
+  }), [moleculeTrials])
+
+  const getAeCsvData = useCallback(() => ({
+    columns: ['Term', 'Organ System', 'Reports'],
+    rows: (topAEs || []).map((ae) => [ae.term, ae.organ_system, String(Number(ae.cnt))]),
+  }), [topAEs])
 
   if (loadingTerm || loadingTrials) return <PageLoading message={`Loading ${moleculeName}...`} />
 
@@ -123,6 +146,8 @@ export function MoleculeDetailPage() {
           )}
         </div>
       </div>
+
+      {sqlQueries.length > 0 && <SqlInspector queries={sqlQueries} />}
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -202,10 +227,13 @@ export function MoleculeDetailPage() {
       {topAEs && topAEs.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              <AlertTriangle className="mr-2 inline h-4 w-4" />
-              Top Adverse Events (across {moleculeTrials.length} trials)
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                <AlertTriangle className="mr-2 inline h-4 w-4" />
+                Top Adverse Events (across {moleculeTrials.length} trials)
+              </CardTitle>
+              <CsvDownloadButton getData={getAeCsvData} filenamePrefix={`${moleculeName}-aes`} label="CSV" />
+            </div>
           </CardHeader>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -233,10 +261,13 @@ export function MoleculeDetailPage() {
       {/* Trial list */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            <FlaskConical className="mr-2 inline h-4 w-4" />
-            All Trials ({moleculeTrials.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              <FlaskConical className="mr-2 inline h-4 w-4" />
+              All Trials ({moleculeTrials.length})
+            </CardTitle>
+            <CsvDownloadButton getData={getTrialCsvData} filenamePrefix={`${moleculeName}-trials`} label="CSV" />
+          </div>
         </CardHeader>
         <div className="space-y-2">
           {(showAllTrials ? moleculeTrials : moleculeTrials.slice(0, 50)).map((t) => (

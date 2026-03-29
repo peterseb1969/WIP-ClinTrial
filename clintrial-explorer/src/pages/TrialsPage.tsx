@@ -1,15 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Search, ChevronDown, ChevronUp, Download } from 'lucide-react'
+import { Search, ChevronDown, ChevronRight } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
+import { SqlInspector } from '@/components/SqlInspector'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { type TrialDocument } from '@/hooks/useAllTrials'
+import { type TrialDocument, allTrialsQueries } from '@/hooks/useAllTrials'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters, trialFilters, type SingleFilterKey } from '@/hooks/useTrialFilters'
+import { reportQuery } from '@/lib/reporting'
 import { formatPhase } from '@/lib/trial-utils'
 import { cn, formatNumber } from '@/lib/utils'
 
@@ -32,27 +36,19 @@ export function TrialsPage() {
     setPage(1)
   }
 
-  const exportCsv = () => {
-    const header = ['NCT ID', 'Brief Title', 'Status', 'Phase', 'Sponsor', 'Enrollment', 'Start Date', 'Has Results']
-    const rows = filtered.map((t) => [
+  const getCsvData = useCallback(() => ({
+    columns: ['NCT ID', 'Brief Title', 'Status', 'Phase', 'Sponsor', 'Enrollment', 'Start Date', 'Has Results'],
+    rows: filtered.map((t) => [
       t.data.nct_id,
-      `"${(t.data.brief_title || t.data.title).replace(/"/g, '""')}"`,
+      t.data.brief_title || t.data.title,
       t.data.status,
       (t.data.phases || []).join(';'),
       t.data.sponsor,
       String(t.data.enrollment || ''),
       t.data.start_date || '',
       String(t.data.has_results),
-    ])
-    const csv = [header.join(','), ...rows.map((r) => r.join(','))].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `trials-export-${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    ]),
+  }), [filtered])
 
   if (isLoading) return <PageLoading message="Loading trials..." />
   if (error) return <ErrorMessage message={error.message} onRetry={() => refetch()} />
@@ -81,6 +77,16 @@ export function TrialsPage() {
 
         {/* Quick filters */}
         <QuickFilters filters={filters} trials={allTrials ?? []} />
+      </div>
+
+      {/* Aggregate summary (collapsed by default, at top for visibility) */}
+      {filtered.length > 0 && (
+        <AggregatePanel trials={filtered} open={aggregateOpen} onToggle={() => setAggregateOpen(!aggregateOpen)} />
+      )}
+
+      {/* Actions bar */}
+      <div className="flex items-center gap-3">
+        <CsvDownloadButton getData={getCsvData} filenamePrefix="trials-export" />
       </div>
 
       {/* Results table */}
@@ -171,29 +177,7 @@ export function TrialsPage() {
         )}
       </Card>
 
-      {/* Actions bar */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={exportCsv}
-          className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-text-muted hover:bg-gray-50"
-        >
-          <Download className="h-3.5 w-3.5" />
-          Export CSV
-        </button>
-
-        {filtered.length > 0 && (
-          <button
-            onClick={() => setAggregateOpen(!aggregateOpen)}
-            className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-text-muted hover:bg-gray-50"
-          >
-            {aggregateOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            Aggregate View ({filtered.length} trials)
-          </button>
-        )}
-      </div>
-
-      {/* Aggregate panel */}
-      {aggregateOpen && <AggregatePanel trials={filtered} />}
+      <SqlInspector queries={allTrialsQueries} />
     </div>
   )
 }
@@ -260,6 +244,11 @@ function QuickFilters({
         onClick={() => trialFilters.toggle('has_baseline', 'true')}
       />
       <FilterToggle
+        label="Has Protocol"
+        active={filters.has_protocol === 'true'}
+        onClick={() => trialFilters.toggle('has_protocol', 'true')}
+      />
+      <FilterToggle
         label="Bookmarked"
         active={filters.bookmarked === 'true'}
         onClick={() => trialFilters.toggle('bookmarked', 'true')}
@@ -322,81 +311,175 @@ function FilterToggle({
   )
 }
 
-/** Aggregate summary panel for filtered trials */
-function AggregatePanel({ trials }: { trials: TrialDocument[] }) {
-  // Simple aggregations from the trial data itself
-  const totalEnrollment = trials.reduce((sum, t) => sum + (t.data.enrollment || 0), 0)
-  const withResults = trials.filter((t) => t.data.has_results).length
+/** Collapsible aggregate summary panel with enhanced stats */
+function AggregatePanel({ trials, open, onToggle }: { trials: TrialDocument[]; open: boolean; onToggle: () => void }) {
+  const totalEnrollment = useMemo(() => trials.reduce((sum, t) => sum + (t.data.enrollment || 0), 0), [trials])
+  const withResults = useMemo(() => trials.filter((t) => t.data.has_results).length, [trials])
 
-  const topConditions = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const t of trials) {
-      for (const c of t.data.conditions || []) {
-        counts.set(c, (counts.get(c) || 0) + 1)
-      }
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
-  }, [trials])
+  const nctIds = useMemo(() => trials.map((t) => t.data.nct_id), [trials])
 
-  const topMolecules = useMemo(() => {
+  // Site/country stats from reporting (lazy, only when expanded)
+  const { data: siteStats } = useQuery({
+    queryKey: ['clintrial', 'aggregate-sites', nctIds.sort().join(',')],
+    queryFn: async () => {
+      if (nctIds.length === 0) return { countries: 0, sites: 0 }
+      const result = await reportQuery<{ countries: number; sites: number }>(
+        `SELECT COUNT(DISTINCT country) as countries, COUNT(*) as sites
+         FROM doc_ct_trial_site
+         WHERE nct_id = ANY($1)`,
+        [nctIds],
+      )
+      const row = result.rows[0]
+      return { countries: Number(row?.countries ?? 0), sites: Number(row?.sites ?? 0) }
+    },
+    enabled: open && nctIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const moleculeStats = useMemo(() => {
     const counts = new Map<string, number>()
     for (const t of trials) {
       for (const m of t.data.interventions || []) {
         counts.set(m, (counts.get(m) || 0) + 1)
       }
     }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])
   }, [trials])
 
+  const taStats = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const t of trials) {
+      for (const ta of t.data.therapeutic_areas || []) {
+        counts.set(ta, (counts.get(ta) || 0) + 1)
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])
+  }, [trials])
+
+  const conditionStats = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const t of trials) {
+      for (const c of t.data.conditions || []) {
+        counts.set(c, (counts.get(c) || 0) + 1)
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])
+  }, [trials])
+
+  const sponsorStats = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const t of trials) {
+      if (t.data.sponsor) counts.set(t.data.sponsor, (counts.get(t.data.sponsor) || 0) + 1)
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])
+  }, [trials])
+
+  // Collapsed: compact summary strip
   return (
-    <Card>
-      <h3 className="mb-4 text-lg font-semibold">Aggregate Summary</h3>
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Stats */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-text-muted">Overview</h4>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-text-muted">Trials</dt>
-              <dd className="font-medium">{formatNumber(trials.length)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-text-muted">Total enrollment</dt>
-              <dd className="font-medium">{formatNumber(totalEnrollment)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-text-muted">With results</dt>
-              <dd className="font-medium">{withResults} ({Math.round((withResults / trials.length) * 100)}%)</dd>
-            </div>
-          </dl>
+    <Card className="p-0 overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-4 py-2.5 hover:bg-gray-50"
+      >
+        <div className="flex items-center gap-2">
+          {open
+            ? <ChevronDown className="h-4 w-4 text-text-muted" />
+            : <ChevronRight className="h-4 w-4 text-text-muted" />}
+          <span className="text-sm font-semibold">Summary</span>
         </div>
+        {/* Always-visible compact stats */}
+        <div className="flex items-center gap-4 text-xs text-text-muted">
+          <span><strong className="text-text">{formatNumber(trials.length)}</strong> trials</span>
+          <span><strong className="text-text">{formatNumber(totalEnrollment)}</strong> enrolled</span>
+          <span><strong className="text-text">{moleculeStats.length}</strong> molecules</span>
+          <span><strong className="text-text">{taStats.length}</strong> TAs</span>
+          {siteStats && <span><strong className="text-text">{siteStats.countries}</strong> countries</span>}
+        </div>
+      </button>
 
-        {/* Top conditions */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-text-muted">Top Conditions</h4>
-          <ul className="space-y-1 text-sm">
-            {topConditions.map(([name, count]: [string, number]) => (
-              <li key={name} className="flex justify-between">
-                <span className="truncate pr-2">{name}</span>
-                <span className="flex-shrink-0 text-text-muted">{count}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {open && (
+        <div className="border-t px-4 py-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* Overview */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Overview</h4>
+              <dl className="space-y-1.5 text-sm">
+                <StatRow label="Trials" value={formatNumber(trials.length)} />
+                <StatRow label="Total enrollment" value={formatNumber(totalEnrollment)} />
+                <StatRow label="With results" value={`${withResults} (${trials.length > 0 ? Math.round((withResults / trials.length) * 100) : 0}%)`} />
+                <StatRow label="Sponsors" value={formatNumber(sponsorStats.length)} />
+                {siteStats && (
+                  <>
+                    <StatRow label="Countries" value={formatNumber(siteStats.countries)} />
+                    <StatRow label="Sites" value={formatNumber(siteStats.sites)} />
+                  </>
+                )}
+              </dl>
+            </div>
 
-        {/* Top molecules */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-text-muted">Top Molecules</h4>
-          <ul className="space-y-1 text-sm">
-            {topMolecules.map(([name, count]: [string, number]) => (
-              <li key={name} className="flex justify-between">
-                <span className="truncate pr-2">{name}</span>
-                <span className="flex-shrink-0 text-text-muted">{count}</span>
-              </li>
-            ))}
-          </ul>
+            {/* Therapeutic Areas */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Therapeutic Areas ({taStats.length})
+              </h4>
+              <TopList items={taStats} limit={8} formatName={(n) => n.replace(/_/g, ' ')} />
+            </div>
+
+            {/* Molecules */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Molecules ({moleculeStats.length})
+              </h4>
+              <TopList items={moleculeStats} limit={8} />
+            </div>
+
+            {/* Conditions */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Conditions ({conditionStats.length})
+              </h4>
+              <TopList items={conditionStats} limit={8} />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </Card>
+  )
+}
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <dt className="text-text-muted">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
+  )
+}
+
+function TopList({ items, limit, formatName }: {
+  items: Array<[string, number]>; limit: number; formatName?: (n: string) => string
+}) {
+  const [showAll, setShowAll] = useState(false)
+  const visible = showAll ? items : items.slice(0, limit)
+
+  return (
+    <>
+      <ul className="space-y-1 text-sm">
+        {visible.map(([name, count]) => (
+          <li key={name} className="flex justify-between">
+            <span className="truncate pr-2">{formatName ? formatName(name) : name}</span>
+            <span className="flex-shrink-0 text-text-muted tabular-nums text-xs">{count}</span>
+          </li>
+        ))}
+      </ul>
+      {items.length > limit && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="text-xs font-medium text-primary hover:underline"
+        >
+          {showAll ? 'Show less' : `Show all ${items.length}`}
+        </button>
+      )}
+    </>
   )
 }

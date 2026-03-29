@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Pill, X } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/Card'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
+import { SqlInspector } from '@/components/SqlInspector'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useAllTrials, type TrialDocument } from '@/hooks/useAllTrials'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
@@ -15,7 +17,7 @@ export function MoleculeComparePage() {
   const toggleFilter = useFilterToggle()
   const selectedMolecules = filters.molecule ?? []
   const { data: allTrials, isLoading: loadingTrials } = useAllTrials()
-  const { data: aeData, isLoading: loadingAEs } = useMoleculeComparisonAEs(selectedMolecules)
+  const { data: aeData, isLoading: loadingAEs, queries: aeQueries } = useMoleculeComparisonAEs(selectedMolecules)
 
   // Per-molecule trial stats
   const moleculeStats = useMemo(() => {
@@ -100,7 +102,28 @@ export function MoleculeComparePage() {
 
       {/* Header with removable molecule chips */}
       <div>
-        <h1 className="text-2xl font-bold">Molecule Comparison</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Molecule Comparison</h1>
+          <CsvDownloadButton
+            getData={() => {
+              const cols = ['Molecule', 'Trials', 'Recruiting', 'Completed', 'Enrollment', 'With Results']
+              const rows = selectedMolecules.map((mol) => {
+                const trials = moleculeStats.get(mol) || []
+                const byStatus = countBy(trials, (d) => d.status)
+                return [
+                  mol, String(trials.length),
+                  String(byStatus.find((s) => s.name === 'RECRUITING')?.count || 0),
+                  String(byStatus.find((s) => s.name === 'COMPLETED')?.count || 0),
+                  String(trials.reduce((s, t) => s + (t.data.enrollment || 0), 0)),
+                  String(trials.filter((t) => t.data.has_results).length),
+                ]
+              })
+              return { columns: cols, rows }
+            }}
+            filenamePrefix="molecule-comparison"
+          />
+        </div>
+        {aeQueries.length > 0 && <SqlInspector queries={aeQueries} />}
         <div className="mt-2 flex flex-wrap gap-2">
           {selectedMolecules.map((mol) => (
             <button

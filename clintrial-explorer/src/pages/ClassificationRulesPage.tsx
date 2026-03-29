@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Settings, Plus, Trash2, Search, Lightbulb, Check, X } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { Badge } from '@/components/Badge'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
 import { PageLoading } from '@/components/LoadingSpinner'
 import {
   useClassificationRules,
@@ -11,6 +12,7 @@ import {
   type ClassificationRule,
 } from '@/hooks/useClassificationRules'
 import { useAllTrials } from '@/hooks/useAllTrials'
+import { useTherapeuticAreaTerms } from '@/hooks/useTherapeuticAreaTerms'
 import { formatNumber } from '@/lib/utils'
 
 const MATCH_TYPES = [
@@ -105,18 +107,20 @@ export function ClassificationRulesPage() {
     return matching
   }, [testPattern, newRule.match_type, newRule.action, newRule.target_ta, conditionStats])
 
-  // Get unique TA values for dropdown
+  // Get ALL TA values from the terminology (every level of hierarchy)
+  const { data: taTerms } = useTherapeuticAreaTerms()
   const taValues = useMemo(() => {
-    if (!allTrials) return []
-    const tas = new Set<string>()
-    for (const t of allTrials) {
-      for (const ta of t.data.therapeutic_areas || []) {
-        tas.add(ta)
+    if (!taTerms || taTerms.length === 0) {
+      // Fallback: extract from trial data
+      if (!allTrials) return []
+      const tas = new Set<string>()
+      for (const t of allTrials) {
+        for (const ta of t.data.therapeutic_areas || []) tas.add(ta)
       }
+      return [...tas].sort()
     }
-    // Also add common ones that might not be in data yet
-    return [...tas].sort()
-  }, [allTrials])
+    return taTerms.map((t) => t.value).sort()
+  }, [taTerms, allTrials])
 
   async function handleCreateRule() {
     if (!newRule.pattern || !newRule.target_ta) return
@@ -172,9 +176,21 @@ export function ClassificationRulesPage() {
           <Settings className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Classification Rules</h1>
         </div>
-        <span className="text-sm text-text-muted">
-          {rules?.length ?? 0} rules · {formatNumber(unclassified.length)} unclassified · {formatNumber(conditionStats.length)} total conditions
-        </span>
+        <div className="flex items-center gap-3">
+          <CsvDownloadButton
+            getData={() => ({
+              columns: ['Pattern', 'Match Type', 'Action', 'Target TA', 'Priority', 'Notes'],
+              rows: (rules || []).map((r) => [
+                r.pattern, r.match_type, r.action, r.target_ta,
+                String(r.priority ?? ''), r.notes ?? '',
+              ]),
+            })}
+            filenamePrefix="classification-rules"
+          />
+          <span className="text-sm text-text-muted">
+            {rules?.length ?? 0} rules · {formatNumber(unclassified.length)} unclassified · {formatNumber(conditionStats.length)} total conditions
+          </span>
+        </div>
       </div>
 
       {/* Add Rule Form */}
@@ -218,13 +234,36 @@ export function ClassificationRulesPage() {
                 <input
                   type="text"
                   value={newRule.target_ta}
-                  onChange={(e) => setNewRule((p) => ({ ...p, target_ta: e.target.value.toUpperCase() }))}
-                  placeholder="e.g. NEUROSCIENCE"
+                  onChange={(e) => {
+                    const input = e.target.value
+                    // Try to resolve label to value (e.g. "Lung Cancer" → "LUNG_CANCER")
+                    const match = taTerms?.find((t) =>
+                      t.label.toLowerCase() === input.toLowerCase() ||
+                      t.value.toLowerCase() === input.toLowerCase() ||
+                      t.value === input
+                    )
+                    setNewRule((p) => ({ ...p, target_ta: match ? match.value : input }))
+                  }}
+                  onBlur={() => {
+                    // On blur, resolve partial matches
+                    const input = newRule.target_ta
+                    const match = taTerms?.find((t) =>
+                      t.label.toLowerCase() === input.toLowerCase() ||
+                      t.value.toLowerCase() === input.toLowerCase() ||
+                      t.label.toLowerCase() === input.replace(/_/g, ' ').toLowerCase()
+                    )
+                    if (match) setNewRule((p) => ({ ...p, target_ta: match.value }))
+                  }}
+                  placeholder="e.g. Lung Cancer or LUNG_CANCER"
                   list="ta-values"
                   className="mt-1 w-full rounded-md border border-gray-300 bg-surface px-3 py-1.5 text-sm focus:border-primary focus:outline-none"
                 />
                 <datalist id="ta-values">
-                  {taValues.map((ta) => <option key={ta} value={ta} />)}
+                  {taValues.map((ta) => {
+                    const term = taTerms?.find((t) => t.value === ta)
+                    const label = term?.label || ta.replace(/_/g, ' ')
+                    return <option key={ta} value={label} />
+                  })}
                 </datalist>
               </div>
             </div>

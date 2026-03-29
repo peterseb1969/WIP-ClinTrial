@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { reportQuery } from '@/lib/reporting'
+import { type SqlQuery } from '@/components/SqlInspector'
 
 export interface TrialData {
   nct_id: string
@@ -61,20 +62,20 @@ function parseJsonArray(val: string | null): string[] {
   }
 }
 
+const ALL_TRIALS_SQL = `SELECT document_id, nct_id, title, brief_title, acronym,
+                data_status as status, phases, study_type, therapeutic_areas,
+                enrollment, start_date, sponsor, interventions, conditions,
+                has_results, ctgov_url
+         FROM doc_ct_trial`
+
+export const allTrialsQueries: SqlQuery[] = [{ label: 'All Trials', sql: ALL_TRIALS_SQL, params: [] }]
+
 /** Fetch all CT_TRIAL documents via server-side SQL (direct columns, no data_json blob) */
 export function useAllTrials() {
   return useQuery<TrialDocument[]>({
     queryKey: ['clintrial', 'all-trials'],
     queryFn: async () => {
-      const result = await reportQuery<TrialRow>(
-        `SELECT document_id, nct_id, title, brief_title, acronym,
-                data_status as status, phases, study_type, therapeutic_areas,
-                enrollment, start_date, sponsor, interventions, conditions,
-                has_results, ctgov_url
-         FROM doc_ct_trial`,
-        [],
-        10000,
-      )
+      const result = await reportQuery<TrialRow>(ALL_TRIALS_SQL, [], 10000)
       return result.rows.map((r) => ({
         document_id: r.document_id,
         data: {

@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, Search } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
+import { SqlInspector } from '@/components/SqlInspector'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTrialFilters, type FilterKey } from '@/hooks/useTrialFilters'
-import { useTherapeuticAreaTree, type TANode } from '@/hooks/useTherapeuticAreaTree'
+import { useTherapeuticAreaTree, taTreeQueries, type TANode } from '@/hooks/useTherapeuticAreaTree'
 import { useTherapeuticAreaTerms, buildKeywordMap, conditionMatchesArea } from '@/hooks/useTherapeuticAreaTerms'
 import { useFilterToggle } from '@/hooks/useFilterNav'
 import { useClassificationRules, applyRules } from '@/hooks/useClassificationRules'
@@ -112,10 +114,25 @@ export function TherapeuticAreasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Therapeutic Areas</h1>
-        <span className="text-sm text-text-muted">
-          {flatAreas.length} areas · {formatNumber(filtered.length)} trials
-        </span>
+        <div className="flex items-center gap-3">
+          <CsvDownloadButton
+            getData={() => ({
+              columns: ['Therapeutic Area', 'Trials', 'Conditions'],
+              rows: flatAreas.map((a) => [
+                a.area.replace(/_/g, ' '),
+                String(a.trialCount),
+                String(a.conditions.length),
+              ]),
+            })}
+            filenamePrefix="therapeutic-areas"
+          />
+          <span className="text-sm text-text-muted">
+            {flatAreas.length} areas · {formatNumber(filtered.length)} trials
+          </span>
+        </div>
       </div>
+
+      <SqlInspector queries={taTreeQueries} />
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />

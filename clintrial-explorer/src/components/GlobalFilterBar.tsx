@@ -15,15 +15,17 @@ const LABEL_MAP: Record<string, string> = {
   condition: 'Condition',
   sponsor: 'Sponsor',
   country: 'Country',
+  nct_id: 'Trials',
   has_results: 'Has Results',
   has_ae_data: 'Has AE Data',
   has_baseline: 'Has Baseline',
   has_outcomes: 'Has Outcomes',
+  has_protocol: 'Has Protocol',
   bookmarked: 'Bookmarked',
   search: 'Search',
 }
 
-const MULTI_KEYS = new Set(['status', 'phase', 'study_type', 'therapeutic_area', 'molecule', 'condition', 'sponsor', 'country'])
+const MULTI_KEYS = new Set(['status', 'phase', 'study_type', 'therapeutic_area', 'molecule', 'condition', 'sponsor', 'country', 'nct_id'])
 
 function formatValue(value: string) {
   return value.replace(/_/g, ' ')
@@ -91,22 +93,33 @@ export function GlobalFilterBar() {
             <span className="text-[10px] text-primary/70 font-medium mr-0.5">
               {LABEL_MAP[key] || key}:
             </span>
-            {values.map((value) => (
+            {key === 'nct_id' ? (
+              /* Show NCT ID filter as a summary chip, not individual IDs */
               <button
-                key={`${key}:${value}`}
-                onClick={() => {
-                  if (MULTI_KEYS.has(key)) {
-                    trialFilters.removeValue(key as MultiFilterKey, value)
-                  } else {
-                    trialFilters.removeKey(key as SingleFilterKey)
-                  }
-                }}
+                onClick={() => trialFilters.removeKey(key as MultiFilterKey)}
                 className="inline-flex items-center gap-0.5 rounded-full bg-primary text-white px-2 py-0.5 text-[11px] font-medium hover:bg-primary/80"
               >
-                {formatValue(value)}
+                {values.length} selected
                 <X className="h-2.5 w-2.5" />
               </button>
-            ))}
+            ) : (
+              values.map((value) => (
+                <button
+                  key={`${key}:${value}`}
+                  onClick={() => {
+                    if (MULTI_KEYS.has(key)) {
+                      trialFilters.removeValue(key as MultiFilterKey, value)
+                    } else {
+                      trialFilters.removeKey(key as SingleFilterKey)
+                    }
+                  }}
+                  className="inline-flex items-center gap-0.5 rounded-full bg-primary text-white px-2 py-0.5 text-[11px] font-medium hover:bg-primary/80"
+                >
+                  {formatValue(value)}
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              ))
+            )}
           </div>
         ))}
       </div>

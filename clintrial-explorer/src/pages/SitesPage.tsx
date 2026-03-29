@@ -3,6 +3,8 @@ import { Search, ArrowUpDown, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/Card'
+import { CsvDownloadButton } from '@/components/CsvDownloadButton'
+import { SqlInspector, type SqlQuery } from '@/components/SqlInspector'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { cn, formatNumber } from '@/lib/utils'
 import { reportQuery } from '@/lib/reporting'
@@ -27,21 +29,23 @@ export function SitesPage() {
     [filtered],
   )
 
+  const siteStatsSql = `SELECT country, nct_id, COUNT(*) as site_count
+         FROM doc_ct_trial_site
+         GROUP BY country, nct_id`
+
   // Fetch all site stats server-side
   const { data: allSiteStats, isLoading: loadingSites } = useQuery({
     queryKey: ['clintrial', 'site-stats'],
     queryFn: async () => {
       const result = await reportQuery<{ country: string; nct_id: string; site_count: number }>(
-        `SELECT country, nct_id, COUNT(*) as site_count
-         FROM doc_ct_trial_site
-         GROUP BY country, nct_id`,
-        [],
-        50000,
+        siteStatsSql, [], 50000,
       )
       return result.rows
     },
     staleTime: 5 * 60 * 1000,
   })
+
+  const queries: SqlQuery[] = [{ label: 'Site Statistics', sql: siteStatsSql, params: [] }]
 
   // Build enrollment lookup by NCT ID
   const enrollmentByNct = useMemo(() => {
@@ -104,10 +108,21 @@ export function SitesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sites</h1>
-        <span className="text-sm text-text-muted">
-          {formatNumber(totalSites)} sites · {siteStats.length} countries
-        </span>
+        <div className="flex items-center gap-3">
+          <CsvDownloadButton
+            getData={() => ({
+              columns: ['Country', 'Trials', 'Sites', 'Enrollment'],
+              rows: displayed.map((r) => [r.country, String(r.trialCount), String(r.siteCount), String(r.enrollment)]),
+            })}
+            filenamePrefix="sites"
+          />
+          <span className="text-sm text-text-muted">
+            {formatNumber(totalSites)} sites · {siteStats.length} countries
+          </span>
+        </div>
       </div>
+
+      <SqlInspector queries={queries} />
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />

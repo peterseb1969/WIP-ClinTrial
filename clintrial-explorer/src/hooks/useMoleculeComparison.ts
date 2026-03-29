@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { reportQuery } from '@/lib/reporting'
 import { useAllTrials } from './useAllTrials'
 import { useMemo } from 'react'
+import { type SqlQuery } from '@/components/SqlInspector'
 
 interface AEByMolecule {
   molecule: string
@@ -9,6 +10,17 @@ interface AEByMolecule {
   organ_system: string
   trial_count: number
 }
+
+const MOLECULE_COMPARE_SQL = `SELECT i.value as molecule, ae.term, ae.organ_system,
+                COUNT(DISTINCT ae.nct_id) as trial_count
+         FROM doc_ct_trial_ae ae
+         JOIN doc_ct_trial t ON ae.nct_id = t.nct_id AND t.status = 'active',
+              jsonb_array_elements_text(t.interventions::jsonb) as i(value)
+         WHERE ae.status = 'active'
+           AND ae.nct_id = ANY($1)
+           AND i.value = ANY($2)
+         GROUP BY i.value, ae.term, ae.organ_system
+         ORDER BY i.value, trial_count DESC`
 
 /** Fetch AE profiles for multiple molecules in a single query */
 export function useMoleculeComparisonAEs(moleculeNames: string[]) {
@@ -31,18 +43,7 @@ export function useMoleculeComparisonAEs(moleculeNames: string[]) {
     queryFn: async () => {
       if (nctIds.length === 0) return []
       const result = await reportQuery<AEByMolecule>(
-        `SELECT i.value as molecule, ae.term, ae.organ_system,
-                COUNT(DISTINCT ae.nct_id) as trial_count
-         FROM doc_ct_trial_ae ae
-         JOIN doc_ct_trial t ON ae.nct_id = t.nct_id AND t.status = 'active',
-              jsonb_array_elements_text(t.interventions::jsonb) as i(value)
-         WHERE ae.status = 'active'
-           AND ae.nct_id = ANY($1)
-           AND i.value = ANY($2)
-         GROUP BY i.value, ae.term, ae.organ_system
-         ORDER BY i.value, trial_count DESC`,
-        [nctIds, moleculeNames],
-        5000,
+        MOLECULE_COMPARE_SQL, [nctIds, moleculeNames], 5000,
       )
       return result.rows.map((r) => ({
         ...r,
@@ -53,5 +54,9 @@ export function useMoleculeComparisonAEs(moleculeNames: string[]) {
     staleTime: 5 * 60 * 1000,
   })
 
-  return { data: data ?? [], isLoading }
+  const queries: SqlQuery[] = moleculeNames.length >= 2
+    ? [{ label: 'Molecule Comparison AEs', sql: MOLECULE_COMPARE_SQL, params: [nctIds, moleculeNames] }]
+    : []
+
+  return { data: data ?? [], isLoading, queries }
 }

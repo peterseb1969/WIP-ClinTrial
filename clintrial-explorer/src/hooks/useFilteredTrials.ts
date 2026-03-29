@@ -41,7 +41,18 @@ function useDataAvailability() {
     staleTime: 10 * 60 * 1000,
   })
 
-  return { aeNctIds, outcomeNctIds, baselineNctIds }
+  const { data: protocolNctIds } = useQuery({
+    queryKey: ['clintrial', 'has-protocol'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        "SELECT DISTINCT nct_id FROM doc_ct_trial WHERE file_references_json IS NOT NULL AND file_references_json != '[]'",
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  return { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds }
 }
 
 /** Returns all trials with therapeutic areas enriched by classification rules,
@@ -52,7 +63,7 @@ export function useFilteredTrials() {
   const { filters } = useTrialFilters()
   const { has: isBookmarked } = useBookmarks()
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
-  const { aeNctIds, outcomeNctIds, baselineNctIds } = useDataAvailability()
+  const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds } = useDataAvailability()
 
   // Enrich trials with rule-based TA classification
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
@@ -88,6 +99,9 @@ export function useFilteredTrials() {
     return enrichedTrials.filter((t) => {
       const d = t.data
 
+      // NCT ID filter (programmatic, not shown in UI quick filters)
+      if (filters.nct_id?.length && !filters.nct_id.includes(d.nct_id)) return false
+
       // Multi-select filters: trial must match at least one selected value
       if (filters.status?.length && !filters.status.includes(d.status)) return false
       if (filters.phase?.length && !filters.phase.some((p) => d.phases?.includes(p))) return false
@@ -109,6 +123,7 @@ export function useFilteredTrials() {
       if (filters.has_ae_data === 'true' && aeNctIds && !aeNctIds.has(d.nct_id)) return false
       if (filters.has_outcomes === 'true' && outcomeNctIds && !outcomeNctIds.has(d.nct_id)) return false
       if (filters.has_baseline === 'true' && baselineNctIds && !baselineNctIds.has(d.nct_id)) return false
+      if (filters.has_protocol === 'true' && protocolNctIds && !protocolNctIds.has(d.nct_id)) return false
 
       // Free-text search
       if (filters.search) {
@@ -119,7 +134,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds])
 
   return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
 }

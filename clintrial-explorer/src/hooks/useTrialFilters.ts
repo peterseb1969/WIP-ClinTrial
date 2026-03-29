@@ -10,6 +10,7 @@ export type MultiFilterKey =
   | 'condition'
   | 'sponsor'
   | 'country'
+  | 'nct_id'
 
 /** Filter keys that are single-value toggles or free text */
 export type SingleFilterKey =
@@ -17,6 +18,7 @@ export type SingleFilterKey =
   | 'has_ae_data'
   | 'has_baseline'
   | 'has_outcomes'
+  | 'has_protocol'
   | 'bookmarked'
   | 'search'
 
@@ -31,7 +33,7 @@ export type Filters = {
 
 const MULTI_KEYS: Set<string> = new Set<string>([
   'status', 'phase', 'study_type', 'therapeutic_area',
-  'molecule', 'condition', 'sponsor', 'country',
+  'molecule', 'condition', 'sponsor', 'country', 'nct_id',
 ])
 
 const STORAGE_KEY = 'clintrial-trial-filters'
@@ -141,6 +143,19 @@ export const trialFilters = {
       delete next[key]
     } else {
       next[key] = updated
+    }
+    snapshot = next
+    save(snapshot)
+    notify()
+  },
+
+  /** Set an entire multi-select filter to a specific array of values */
+  setMulti(key: MultiFilterKey, values: string[]): void {
+    const next = { ...snapshot }
+    if (values.length === 0) {
+      delete next[key]
+    } else {
+      next[key] = values
     }
     snapshot = next
     save(snapshot)
