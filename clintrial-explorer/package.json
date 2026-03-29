@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
-    "@wip/client": "file:../../../../tmp/wip-client-0.1.0.tgz",
-    "@wip/react": "file:../libs/wip-react-0.1.0.tgz",
+    "@wip/client": "file:../libs/wip-client-0.2.0.tgz",
+    "@wip/react": "file:../libs/wip-react-0.2.0.tgz",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.460.0",

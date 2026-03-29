@@ -8,12 +8,14 @@ import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { CsvDownloadButton } from '@/components/CsvDownloadButton'
 import { SqlInspector } from '@/components/SqlInspector'
 import { AEDrillDownPanel } from '@/components/AEDrillDownPanel'
+import { AETermManager } from '@/components/AETermManager'
 import { PageLoading } from '@/components/LoadingSpinner'
 import {
   useAEFrequency, useAEGrouped, useAEByCombination, useOrganSystems,
   useAESeverityDistribution, useAETemporal,
   type AERow,
 } from '@/hooks/useAEAnalytics'
+import { useAETermResolution, mergeResolvedRows, type ResolvedTerm } from '@/hooks/useAETermResolution'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/utils'
@@ -43,8 +45,20 @@ export function AdverseEventsPage() {
   const [showCombinations, setShowCombinations] = useState(false)
   const [showMonotherapy, setShowMonotherapy] = useState(false)
 
+  const [managingTerm, setManagingTerm] = useState<string | null>(null)
+
   const { data: organSystems, queries: organQueries } = useOrganSystems()
-  const { data: flatData, isLoading: loadingFlat, trialCount, nctIds, queries: freqQueries } = useAEFrequency(category)
+  const { data: rawFlatData, isLoading: loadingFlat, trialCount, nctIds, queries: freqQueries } = useAEFrequency(category)
+  const { resolve, terminologyId, termCount: resolvedTermCount } = useAETermResolution()
+
+  // Apply term resolution: merge rows that resolve to the same canonical term
+  const flatData = useMemo(() => {
+    if (!rawFlatData.length) return rawFlatData
+    return mergeResolvedRows(rawFlatData, resolve)
+  }, [rawFlatData, resolve])
+
+  // All unique raw term strings (pre-merge, deduplicated) for suggestions/typeahead
+  const allRawTerms = useMemo(() => [...new Set(rawFlatData.map((r) => r.term))], [rawFlatData])
   const { data: groupedData, isLoading: loadingGrouped, queries: groupedQueries } = useAEGrouped(
     viewMode === 'grouped' ? groupBy : 'none', category,
   )
@@ -339,6 +353,9 @@ export function AdverseEventsPage() {
           <CsvDownloadButton getData={getCsvData} filenamePrefix="adverse-events" />
           <span className="text-sm text-text-muted">
             Across {formatNumber(trialCount)} trials
+            {resolvedTermCount > 0 && (
+              <> · {formatNumber(resolvedTermCount)} normalized terms</>
+            )}
           </span>
         </div>
       </div>
@@ -453,6 +470,11 @@ export function AdverseEventsPage() {
           onToggleExpand={toggleExpand}
           nctIds={nctIds}
           SortHeader={SortHeader}
+          resolve={resolve}
+          terminologyId={terminologyId}
+          managingTerm={managingTerm}
+          onManage={setManagingTerm}
+          allRawTerms={allRawTerms}
         />
       ) : viewMode === 'organ_system' ? (
         <OrganAccordion
@@ -462,6 +484,11 @@ export function AdverseEventsPage() {
           expandedTerms={expandedTerms}
           onToggleExpand={toggleExpand}
           nctIds={nctIds}
+          resolve={resolve}
+          onManage={setManagingTerm}
+          managingTerm={managingTerm}
+          terminologyId={terminologyId}
+          allRawTerms={allRawTerms}
         />
       ) : (
         (loadingGrouped || loadingCombos) ? (
@@ -586,6 +613,7 @@ export function AdverseEventsPage() {
 /** Flat frequency table with drill-down and incidence columns */
 function FlatTable({
   rows, showAll, onToggleShowAll, expandedTerms, onToggleExpand, nctIds, SortHeader,
+  resolve, terminologyId, managingTerm, onManage, allRawTerms,
 }: {
   rows: AERow[]
   showAll: boolean
@@ -594,6 +622,11 @@ function FlatTable({
   onToggleExpand: (key: string) => void
   nctIds: string[]
   SortHeader: React.FC<{ label: string; field: SortKey; align?: 'right' }>
+  resolve: (raw: string) => ResolvedTerm | null
+  terminologyId: string | null
+  managingTerm: string | null
+  onManage: (term: string | null) => void
+  allRawTerms: string[]
 }) {
   const displayed = showAll ? rows : rows.slice(0, AE_PAGE_SIZE)
 
@@ -602,6 +635,7 @@ function FlatTable({
       <CardHeader>
         <CardTitle>AE Frequency ({formatNumber(rows.length)} terms)</CardTitle>
       </CardHeader>
+
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -618,6 +652,7 @@ function FlatTable({
             {displayed.map((ae) => {
               const key = `${ae.term}|${ae.organ_system}|${ae.ae_category}`
               const expanded = expandedTerms.has(key)
+              const resolved = resolve(ae.term)
               return (
                 <AERowWithDrillDown
                   key={key}
@@ -626,6 +661,13 @@ function FlatTable({
                   expanded={expanded}
                   onToggle={() => onToggleExpand(key)}
                   nctIds={nctIds}
+                  resolved={resolved}
+                  onManage={onManage}
+                  managing={managingTerm === ae.term}
+                  terminologyId={terminologyId}
+                  onCloseManage={() => onManage(null)}
+                  allRawTerms={allRawTerms}
+                  resolve={resolve}
                 />
               )
             })}
@@ -646,16 +688,25 @@ function FlatTable({
 
 /** Single AE row + expandable drill-down */
 function AERowWithDrillDown({
-  ae, expanded, onToggle, nctIds,
+  ae, expanded, onToggle, nctIds, resolved, onManage, managing, terminologyId, onCloseManage,
+  allRawTerms, resolve,
 }: {
   ae: AERow; rowKey: string; expanded: boolean; onToggle: () => void; nctIds: string[]
+  resolved: ResolvedTerm | null
+  onManage: (term: string) => void
+  managing: boolean
+  terminologyId: string | null
+  onCloseManage: () => void
+  allRawTerms: string[]
+  resolve: (raw: string) => ResolvedTerm | null
 }) {
   return (
     <>
       <tr
         className={cn(
-          'border-b border-gray-50 cursor-pointer hover:bg-gray-50',
+          'group border-b border-gray-50 cursor-pointer hover:bg-gray-50',
           expanded && 'bg-blue-50/50',
+          managing && 'bg-primary/5',
         )}
         onClick={onToggle}
       >
@@ -664,7 +715,26 @@ function AERowWithDrillDown({
             ? <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
             : <ChevronRight className="h-3.5 w-3.5 text-text-muted" />}
         </td>
-        <td className="py-1.5 pr-4 font-medium">{ae.term}</td>
+        <td className="py-1.5 pr-4">
+          <div className="flex items-center gap-1.5">
+            <span className="font-medium">{ae.term}</span>
+            {resolved && resolved.aliases.length > 0 && (
+              <span className="text-[10px] text-primary bg-primary/10 rounded-full px-1.5">
+                +{resolved.aliases.length}
+              </span>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); managing ? onCloseManage() : onManage(ae.term) }}
+              className={cn(
+                'text-text-muted hover:text-primary ml-1',
+                managing ? 'text-primary' : 'opacity-0 group-hover:opacity-100',
+              )}
+              title="Manage term"
+            >
+              <Search className="h-3 w-3" />
+            </button>
+          </div>
+        </td>
         <td className="py-1.5 pr-4 text-text-muted">{ae.organ_system}</td>
         <td className="py-1.5 pr-4 text-right tabular-nums">{formatNumber(ae.trial_count)}</td>
         <td className="py-1.5 pr-4 text-right tabular-nums">{formatNumber(ae.report_count)}</td>
@@ -685,6 +755,21 @@ function AERowWithDrillDown({
           </div>
         </td>
       </tr>
+      {managing && terminologyId && (
+        <tr>
+          <td colSpan={6} className="p-2">
+            <AETermManager
+              term={ae.term}
+              termId={resolved?.termId ?? null}
+              terminologyId={terminologyId}
+              aliases={resolved?.aliases ?? []}
+              allRawTerms={allRawTerms}
+              resolve={resolve}
+              onClose={onCloseManage}
+            />
+          </td>
+        </tr>
+      )}
       {expanded && (
         <AEDrillDownPanel term={ae.term} aeCategory={ae.ae_category} nctIds={nctIds} />
       )}
@@ -695,6 +780,7 @@ function AERowWithDrillDown({
 /** Organ system accordion view */
 function OrganAccordion({
   groups, expandedOrgans, onToggleOrgan, expandedTerms, onToggleExpand, nctIds,
+  resolve, onManage, managingTerm, terminologyId, allRawTerms,
 }: {
   groups: Array<{ organ: string; rows: AERow[]; termCount: number; totalReports: number; maxIncidence: number }>
   expandedOrgans: Set<string>
@@ -702,6 +788,11 @@ function OrganAccordion({
   expandedTerms: Set<string>
   onToggleExpand: (key: string) => void
   nctIds: string[]
+  resolve: (raw: string) => ResolvedTerm | null
+  onManage: (term: string | null) => void
+  managingTerm: string | null
+  terminologyId: string | null
+  allRawTerms: string[]
 }) {
   return (
     <div className="space-y-3">
@@ -753,6 +844,13 @@ function OrganAccordion({
                           expanded={termExpanded}
                           onToggle={() => onToggleExpand(key)}
                           nctIds={nctIds}
+                          resolved={resolve(ae.term)}
+                          onManage={onManage}
+                          managing={managingTerm === ae.term}
+                          terminologyId={terminologyId}
+                          onCloseManage={() => onManage(null)}
+                          allRawTerms={allRawTerms}
+                          resolve={resolve}
                         />
                       )
                     })}
