@@ -185,12 +185,12 @@ def check_wip_available():
 
 
 def resolve_template_ids():
-    """Resolve template IDs via Registry synonym lookup (installation-independent).
+    """Resolve template IDs from the WIP instance.
 
-    Each template has a stable composite key {ns, type, value} registered as a synonym.
-    This avoids hardcoding UUIDs that change across WIP instances.
-    Routes through the Caddy/ingress proxy so it works for both local and K8s deployments.
+    Tries Registry synonym lookup first (preferred — installation-independent).
+    Falls back to template-store list API if Registry synonyms aren't registered.
     """
+    # Try Registry synonym lookup first
     url = f"{WIP_BASE}/api/registry/entries/lookup/by-key"
     lookups = [
         {"namespace": NAMESPACE, "entity_type": "templates",
@@ -207,18 +207,37 @@ def resolve_template_ids():
                 value = r["matched_composite_key"].get("value")
                 if value:
                     TEMPLATES[value] = r["entry_id"]
-        # Verify all resolved
-        missing = [v for v in TEMPLATE_VALUES if v not in TEMPLATES]
-        if missing:
-            print(f"ERROR: Could not resolve template IDs for: {missing}")
-            print("The data model has not been bootstrapped yet.")
-            print("Run /bootstrap in Claude Code to create terminologies and templates.\n")
-            return False
+    except Exception:
+        pass  # Fall through to template-store fallback
+
+    missing = [v for v in TEMPLATE_VALUES if v not in TEMPLATES]
+    if not missing:
         print(f"Resolved {len(TEMPLATES)} template IDs via Registry synonyms")
         return True
+
+    # Fallback: resolve via template-store list API
+    try:
+        ts_url = f"{WIP_BASE}/api/template-store/templates?namespace={NAMESPACE}&page_size=100"
+        resp = requests.get(ts_url, headers=wip_headers(), verify=False, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        items = data.get("items", data) if isinstance(data, dict) else data
+        for t in items:
+            val = t.get("value")
+            if val and val in TEMPLATE_VALUES and val not in TEMPLATES:
+                TEMPLATES[val] = t["template_id"]
     except Exception as e:
-        print(f"ERROR: Failed to connect to WIP Registry: {e}\n")
+        print(f"ERROR: Failed to resolve templates: {e}\n")
         return False
+
+    missing = [v for v in TEMPLATE_VALUES if v not in TEMPLATES]
+    if missing:
+        print(f"ERROR: Could not resolve template IDs for: {missing}")
+        print("The data model has not been bootstrapped yet.")
+        print("Run /bootstrap in Claude Code to create terminologies and templates.\n")
+        return False
+    print(f"Resolved {len(TEMPLATES)} template IDs via template-store")
+    return True
 
 # Counters for summary
 COUNTS = {
