@@ -23,7 +23,7 @@ WIP_BASE = os.environ.get("WIP_BASE", "https://localhost:8443")
 WIP_REGISTRY_BASE = os.environ.get("WIP_REGISTRY_BASE", "http://localhost:8001")
 WIP_API_KEY = os.environ.get("WIP_API_KEY", "dev_master_key_for_testing")
 CTGOV_BASE = "https://clinicaltrials.gov/api/v2"
-NAMESPACE = "clintrial"
+NAMESPACE = os.environ.get("WIP_NAMESPACE", "clintrial")
 SYNC_STATE_FILE = os.path.join(os.path.dirname(__file__), "..", "data-model", "sync-state.json")
 
 # Template values — IDs are resolved at startup via Registry synonyms
@@ -36,6 +36,9 @@ TEMPLATE_VALUES = [
     "CT_TRIAL_BASELINE",
 ]
 TEMPLATES = {}  # Populated by resolve_template_ids()
+
+# Organization name -> document_id cache (populated during org creation phase)
+ORG_DOC_IDS = {}
 
 # Known molecules in CT_MOLECULE terminology — canonical values and brand-name aliases
 KNOWN_MOLECULES = {
@@ -340,7 +343,7 @@ def wip_create_documents_bulk(template_key, data_list, batch_size=100):
         body = [
             {
                 "template_id": TEMPLATES[template_key],
-                "template_version": 1,
+                # template_version omitted — WIP resolves to latest active version
                 "namespace": NAMESPACE,
                 "data": d,
                 "created_by": "clintrial-import",
@@ -581,8 +584,12 @@ def create_organizations_bulk(org_names, org_type="Sponsor"):
 
     print(f"  Creating {len(data_list)} organizations (bulk)...")
     results = wip_create_documents_bulk("CT_ORGANIZATION", data_list)
-    for r in results:
+    for idx, r in enumerate(results):
         if r:
+            # Cache document_id for sponsor reference fields
+            doc_id = r.get("document_id") or r.get("id")
+            if doc_id and idx < len(org_names):
+                ORG_DOC_IDS[org_names[idx]] = doc_id
             if r.get("_import_status") == "created":
                 COUNTS["orgs_created"] += 1
             else:
@@ -602,7 +609,14 @@ def create_trial(trial_data):
     data["title"] = trial_data["title"]
     data["status"] = trial_data["status"]
     data["study_type"] = trial_data["study_type"]
-    data["sponsor"] = trial_data["sponsor"]  # WIP resolves via identity field
+    # sponsor is a reference field — needs document_id of the CT_ORGANIZATION doc
+    sponsor_name = trial_data["sponsor"]
+    sponsor_doc_id = ORG_DOC_IDS.get(sponsor_name)
+    if not sponsor_doc_id:
+        print(f"    WARN: No document_id for sponsor '{sponsor_name}', skipping trial {trial_data['nct_id']}")
+        COUNTS["errors"] += 1
+        return None
+    data["sponsor"] = sponsor_doc_id
 
     # Optional fields — only include if present
     for field in [
@@ -689,7 +703,7 @@ def create_outcomes(nct_id, primary_outcomes, secondary_outcomes):
             continue
         data = {
             "nct_id": nct_id,
-            "trial": nct_id,
+            # "trial" reference omitted — needs document_id UUID, nct_id links data instead
             "outcome_type": outcome_type,
             "sequence": seq,
             "measure": measure,
@@ -729,7 +743,7 @@ def create_sites(nct_id, locations, max_sites=20):
 
         data = {
             "nct_id": nct_id,
-            "trial": nct_id,
+            # "trial" reference omitted — needs document_id UUID, nct_id links data instead
             "facility": facility,
         }
 
@@ -791,7 +805,7 @@ def create_adverse_events(nct_id, ae_module):
 
             data = {
                 "nct_id": nct_id,
-                "trial": nct_id,
+                # "trial" reference omitted — needs document_id UUID, nct_id links data instead
                 "ae_category": category,
                 "term": term,
                 "stats": stats,
@@ -832,7 +846,7 @@ def create_baselines(nct_id, baseline_module):
 
         data = {
             "nct_id": nct_id,
-            "trial": nct_id,
+            # "trial" reference omitted — needs document_id UUID, nct_id links data instead
             "measure_title": title,
         }
         if measure.get("paramType"):
@@ -937,7 +951,7 @@ def update_outcome_with_results(nct_id, results_outcomes):
 
         data = {
             "nct_id": nct_id,
-            "trial": nct_id,
+            # "trial" reference omitted — needs document_id UUID, nct_id links data instead
             "outcome_type": otype,
             "sequence": seq,
             "measure": measure,
@@ -1184,12 +1198,17 @@ def link_files_to_trial(nct_id, file_ids):
         "title": row["title"],
         "status": row["data_status"],
         "study_type": row["study_type"],
-        "sponsor": row["sponsor"],
         "documents": file_ids,
     }
+    # sponsor is a reference field — needs document_id
+    sponsor_doc_id = ORG_DOC_IDS.get(row["sponsor"])
+    if sponsor_doc_id:
+        data["sponsor"] = sponsor_doc_id
+    else:
+        data["sponsor"] = row["sponsor"]  # fallback, may fail validation
+
     body = [{
         "template_id": TEMPLATES["CT_TRIAL"],
-        "template_version": 1,
         "namespace": NAMESPACE,
         "data": data,
         "created_by": "clintrial-import",

@@ -1,9 +1,9 @@
 import { createWipClient } from '@wip/client'
-import { config } from './config'
+import { getConfig } from './config'
 
-// In browser: use empty baseUrl so requests go to same origin (proxied by Vite/Caddy)
-// The VITE_WIP_HOST env var is only used for the proxy target, not by the client directly
+// baseUrl is the full origin + base path (e.g. "https://wip-kubi.local/apps/clintrial")
+// API key is injected server-side by @wip/proxy — not needed in the browser
 export const wipClient = createWipClient({
-  baseUrl: '',
-  auth: { type: 'api-key', key: config.wipApiKey },
+  baseUrl: getConfig().wipApiUrl,
+  auth: { type: 'api-key', key: '' },
 })

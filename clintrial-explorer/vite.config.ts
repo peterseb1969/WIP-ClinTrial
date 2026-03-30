@@ -18,7 +18,11 @@ export default defineConfig(({ mode }) => {
       allowedHosts: true,
       proxy: {
         '/api': {
-          target: env.VITE_WIP_HOST || 'https://localhost:8443',
+          target: `http://localhost:${env.PORT || '3013'}`,
+          changeOrigin: true,
+        },
+        '/files': {
+          target: `http://localhost:${env.PORT || '3013'}`,
           changeOrigin: true,
           secure: false,
           configure: (proxy) => {

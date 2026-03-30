@@ -6,7 +6,7 @@
   "identity_fields": ["nct_id", "facility", "country"],
   "fields": [
     {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true},
-    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_template": "CT_TRIAL", "reference_type": "document"},
+    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_type": "document", "target_templates": ["CT_TRIAL"]},
     {"name": "facility", "label": "Facility", "type": "string", "mandatory": true},
     {"name": "city", "label": "City", "type": "string", "mandatory": false},
     {"name": "state", "label": "State/Province", "type": "string", "mandatory": false},

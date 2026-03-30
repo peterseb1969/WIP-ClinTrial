@@ -1,4 +1,4 @@
-import { config } from './config'
+import { getConfig } from './config'
 
 interface QueryResult<T = Record<string, unknown>> {
   columns: string[]
@@ -13,11 +13,12 @@ export async function reportQuery<T = Record<string, unknown>>(
   params?: unknown[],
   maxRows = 1000,
 ): Promise<QueryResult<T>> {
-  const res = await fetch('/api/reporting-sync/query', {
+  const { wipApiUrl } = getConfig()
+  const res = await fetch(`${wipApiUrl}/api/reporting-sync/query`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': config.wipApiKey,
+      // API key injected server-side by @wip/proxy
     },
     body: JSON.stringify({
       sql,

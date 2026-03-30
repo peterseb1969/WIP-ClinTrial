@@ -6,7 +6,7 @@
   "identity_fields": ["nct_id", "ae_category", "term"],
   "fields": [
     {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true},
-    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_template": "CT_TRIAL", "reference_type": "document"},
+    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_type": "document", "target_templates": ["CT_TRIAL"]},
     {"name": "ae_category", "label": "AE Category", "type": "string", "mandatory": true, "enum": ["SERIOUS", "OTHER"]},
     {"name": "term", "label": "Term", "type": "string", "mandatory": true},
     {"name": "organ_system", "label": "Organ System", "type": "string", "mandatory": false},

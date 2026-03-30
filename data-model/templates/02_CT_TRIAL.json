@@ -19,7 +19,7 @@
     {"name": "start_date", "label": "Start Date", "type": "date", "mandatory": false},
     {"name": "primary_completion_date", "label": "Primary Completion Date", "type": "date", "mandatory": false},
     {"name": "completion_date", "label": "Completion Date", "type": "date", "mandatory": false},
-    {"name": "sponsor", "label": "Sponsor", "type": "reference", "mandatory": true, "reference_template": "CT_ORGANIZATION", "reference_type": "document"},
+    {"name": "sponsor", "label": "Sponsor", "type": "reference", "mandatory": true, "reference_type": "document", "target_templates": ["CT_ORGANIZATION"]},
     {"name": "collaborators", "label": "Collaborators", "type": "array", "mandatory": false, "items": {"type": "string"}},
     {"name": "interventions", "label": "Interventions", "type": "array", "mandatory": false, "items": {"type": "term", "terminology_ref": "CT_MOLECULE"}},
     {"name": "conditions", "label": "Conditions", "type": "array", "mandatory": false, "items": {"type": "string"}},
