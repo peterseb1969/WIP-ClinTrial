@@ -8,9 +8,9 @@ COPY package.json ./
 RUN WCLIENT=$(ls /tmp/libs/wip-client-*.tgz 2>/dev/null | head -1) && \
     WREACT=$(ls /tmp/libs/wip-react-*.tgz 2>/dev/null | head -1) && \
     WPROXY=$(ls /tmp/libs/wip-proxy-*.tgz 2>/dev/null | head -1) && \
-    sed -i "s|\"file:../libs/wip-client-0.1.0.tgz\"|\"file:${WCLIENT}\"|" package.json && \
-    sed -i "s|\"file:../../WorldInPie/libs/wip-proxy\"|\"file:${WPROXY}\"|" package.json && \
-    sed -i "s|\"file:../libs/wip-react-0.1.0.tgz\"|\"file:${WREACT}\"|" package.json && \
+    sed -i "s|\"file:[^\"]*wip-client[^\"]*\"|\"file:${WCLIENT}\"|" package.json && \
+    sed -i "s|\"file:[^\"]*wip-proxy[^\"]*\"|\"file:${WPROXY}\"|" package.json && \
+    sed -i "s|\"file:[^\"]*wip-react[^\"]*\"|\"file:${WREACT}\"|" package.json && \
     npm install --ignore-scripts
 
 COPY . .
