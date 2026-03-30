@@ -62,11 +62,12 @@ function parseJsonArray(val: string | null): string[] {
   }
 }
 
-const ALL_TRIALS_SQL = `SELECT document_id, nct_id, title, brief_title, acronym,
-                data_status as status, phases, study_type, therapeutic_areas,
-                enrollment, start_date, sponsor, interventions, conditions,
-                has_results, ctgov_url
-         FROM doc_ct_trial`
+const ALL_TRIALS_SQL = `SELECT t.document_id, t.nct_id, t.title, t.brief_title, t.acronym,
+                t.data_status as status, t.phases, t.study_type, t.therapeutic_areas,
+                t.enrollment, t.start_date, o.org_name as sponsor, t.interventions,
+                t.conditions, t.has_results, t.ctgov_url
+         FROM doc_ct_trial t
+         LEFT JOIN doc_ct_organization o ON t.sponsor = o.document_id`
 
 export const allTrialsQueries: SqlQuery[] = [{ label: 'All Trials', sql: ALL_TRIALS_SQL, params: [] }]
 

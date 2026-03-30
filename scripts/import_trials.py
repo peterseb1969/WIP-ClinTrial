@@ -20,7 +20,6 @@ from datetime import datetime, timezone
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 WIP_BASE = os.environ.get("WIP_BASE", "https://localhost:8443")
-WIP_REGISTRY_BASE = os.environ.get("WIP_REGISTRY_BASE", "http://localhost:8001")
 WIP_API_KEY = os.environ.get("WIP_API_KEY", "dev_master_key_for_testing")
 CTGOV_BASE = "https://clinicaltrials.gov/api/v2"
 NAMESPACE = os.environ.get("WIP_NAMESPACE", "clintrial")
@@ -178,7 +177,7 @@ COUNTRY_MAP = {
 def check_wip_available():
     """Check if WIP is reachable. Returns True if it is, False otherwise."""
     try:
-        resp = requests.get(f"{WIP_REGISTRY_BASE}/api/registry/namespaces",
+        resp = requests.get(f"{WIP_BASE}/api/registry/namespaces",
                             headers=wip_headers(), verify=False, timeout=5)
         return resp.status_code == 200
     except Exception:
@@ -190,8 +189,9 @@ def resolve_template_ids():
 
     Each template has a stable composite key {ns, type, value} registered as a synonym.
     This avoids hardcoding UUIDs that change across WIP instances.
+    Routes through the Caddy/ingress proxy so it works for both local and K8s deployments.
     """
-    url = f"{WIP_REGISTRY_BASE}/api/registry/entries/lookup/by-key"
+    url = f"{WIP_BASE}/api/registry/entries/lookup/by-key"
     lookups = [
         {"namespace": NAMESPACE, "entity_type": "templates",
          "composite_key": {"ns": NAMESPACE, "type": "template", "value": v}}
