@@ -11,6 +11,7 @@ export interface TrialData {
   phases: string[]
   study_type: string
   therapeutic_areas?: string[]
+  ta_pinned?: boolean
   brief_summary?: string
   enrollment?: number
   start_date?: string
@@ -44,6 +45,7 @@ interface TrialRow {
   phases: string | null
   study_type: string
   therapeutic_areas: string | null
+  ta_pinned: boolean | null
   enrollment: number | null
   start_date: string | null
   sponsor: string
@@ -64,10 +66,11 @@ function parseJsonArray(val: string | null): string[] {
 
 const ALL_TRIALS_SQL = `SELECT t.document_id, t.nct_id, t.title, t.brief_title, t.acronym,
                 t.data_status as status, t.phases, t.study_type, t.therapeutic_areas,
-                t.enrollment, t.start_date, o.org_name as sponsor, t.interventions,
+                t.ta_pinned, t.enrollment, t.start_date, o.org_name as sponsor, t.interventions,
                 t.conditions, t.has_results, t.ctgov_url
          FROM doc_ct_trial t
-         LEFT JOIN doc_ct_organization o ON t.sponsor = o.document_id`
+         LEFT JOIN doc_ct_organization o ON t.sponsor = o.document_id
+         WHERE t.status = 'active'`
 
 export const allTrialsQueries: SqlQuery[] = [{ label: 'All Trials', sql: ALL_TRIALS_SQL, params: [] }]
 
@@ -88,6 +91,7 @@ export function useAllTrials() {
           phases: parseJsonArray(r.phases),
           study_type: r.study_type || '',
           therapeutic_areas: parseJsonArray(r.therapeutic_areas),
+          ta_pinned: r.ta_pinned ?? false,
           enrollment: r.enrollment ?? undefined,
           start_date: r.start_date || undefined,
           sponsor: r.sponsor || '',

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   ExternalLink,
@@ -9,6 +9,11 @@ import {
   AlertTriangle,
   BarChart3,
   ClipboardList,
+  Pin,
+  PinOff,
+  Plus,
+  X,
+  Check,
 } from 'lucide-react'
 import { useWipClient } from '@wip/react'
 import { Badge } from '@/components/Badge'
@@ -27,6 +32,7 @@ import {
   useTrialBaselines,
   useTrialFiles,
 } from '@/hooks/useTrialDetail'
+import { usePinTrial } from '@/hooks/useClassification'
 import { formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
 
@@ -44,7 +50,44 @@ const TABS: Array<{ id: TabId; label: string; icon: React.ElementType }> = [
 export function TrialDetailPage() {
   const { nctId } = useParams<{ nctId: string }>()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
-  const { data: trial, isLoading, error } = useTrial(nctId || '')
+  const { data: trial, isLoading, error, refetch } = useTrial(nctId || '')
+  const pinMutation = usePinTrial()
+  const [addingTA, setAddingTA] = useState(false)
+  const [newTA, setNewTA] = useState('')
+
+  const handleTogglePin = useCallback(() => {
+    if (!trial) return
+    const d = trial.data
+    pinMutation.mutate(
+      { nct_id: d.nct_id, pinned: !d.ta_pinned, therapeutic_areas: d.therapeutic_areas },
+      { onSuccess: () => setTimeout(() => refetch(), 3000) },
+    )
+  }, [trial, pinMutation, refetch])
+
+  const handleRemoveTA = useCallback((taToRemove: string) => {
+    if (!trial) return
+    const d = trial.data
+    const newTAs = (d.therapeutic_areas || []).filter((ta) => ta !== taToRemove)
+    pinMutation.mutate(
+      { nct_id: d.nct_id, pinned: true, therapeutic_areas: newTAs },
+      { onSuccess: () => setTimeout(() => refetch(), 3000) },
+    )
+  }, [trial, pinMutation, refetch])
+
+  const handleAddTA = useCallback(() => {
+    if (!trial || !newTA.trim()) return
+    const d = trial.data
+    const currentTAs = d.therapeutic_areas || []
+    if (currentTAs.includes(newTA.trim())) {
+      setNewTA('')
+      setAddingTA(false)
+      return
+    }
+    pinMutation.mutate(
+      { nct_id: d.nct_id, pinned: true, therapeutic_areas: [...currentTAs, newTA.trim()] },
+      { onSuccess: () => { setTimeout(() => refetch(), 3000); setNewTA(''); setAddingTA(false) } },
+    )
+  }, [trial, newTA, pinMutation, refetch])
 
   if (isLoading) return <PageLoading message={`Loading ${nctId}...`} />
   if (error) return <ErrorMessage message={error.message} />
@@ -68,6 +111,20 @@ export function TrialDetailPage() {
                 </ChipLink>
               ))}
               {d.acronym && <Badge variant="muted">{d.acronym}</Badge>}
+              {/* Pin toggle */}
+              <button
+                onClick={handleTogglePin}
+                disabled={pinMutation.isPending}
+                title={d.ta_pinned ? 'Unpin TAs (allow auto-classification)' : 'Pin TAs (prevent auto-classification)'}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                  d.ta_pinned
+                    ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                    : 'bg-gray-100 text-text-muted hover:bg-gray-200'
+                } disabled:opacity-50`}
+              >
+                {d.ta_pinned ? <Pin className="h-3 w-3" /> : <PinOff className="h-3 w-3" />}
+                {d.ta_pinned ? 'Pinned' : 'Unpin'}
+              </button>
             </div>
             <h2 className="mt-1 text-base text-text-muted">{d.brief_title || d.title}</h2>
           </div>
@@ -90,11 +147,50 @@ export function TrialDetailPage() {
               {m}
             </ChipLink>
           ))}
+          {/* Editable TA chips */}
           {(d.therapeutic_areas || []).map((ta) => (
-            <ChipLink key={ta} filterKey="therapeutic_area" filterValue={ta}>
-              {ta}
-            </ChipLink>
+            <span key={ta} className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium group">
+              <ChipLink filterKey="therapeutic_area" filterValue={ta}>
+                {ta}
+              </ChipLink>
+              <button
+                onClick={() => handleRemoveTA(ta)}
+                disabled={pinMutation.isPending}
+                className="hidden group-hover:inline-flex items-center text-text-muted hover:text-danger disabled:opacity-50"
+                title="Remove TA (auto-pins trial)"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
           ))}
+          {/* Add TA */}
+          {addingTA ? (
+            <span className="inline-flex items-center gap-1">
+              <input
+                type="text"
+                value={newTA}
+                onChange={(e) => setNewTA(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddTA(); if (e.key === 'Escape') setAddingTA(false) }}
+                placeholder="TA value"
+                autoFocus
+                className="w-32 rounded-full border border-gray-300 px-2.5 py-0.5 text-xs focus:border-primary focus:outline-none"
+              />
+              <button onClick={handleAddTA} disabled={pinMutation.isPending} className="text-primary hover:text-primary/80">
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={() => setAddingTA(false)} className="text-text-muted hover:text-text">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          ) : (
+            <button
+              onClick={() => setAddingTA(true)}
+              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-text-muted hover:bg-gray-200"
+              title="Add TA (auto-pins trial)"
+            >
+              <Plus className="h-3 w-3" /> Add TA
+            </button>
+          )}
           {d.ctgov_url && (
             <a
               href={d.ctgov_url}

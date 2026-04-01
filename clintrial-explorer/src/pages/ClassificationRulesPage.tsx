@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Settings, Plus, Trash2, Search, Lightbulb, Check, X } from 'lucide-react'
+import { Settings, Plus, Trash2, Search, Lightbulb, Check, X, Play, Loader2, CheckCircle2, AlertCircle, Pin } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { CsvDownloadButton } from '@/components/CsvDownloadButton'
@@ -12,7 +12,9 @@ import {
   type ClassificationRule,
 } from '@/hooks/useClassificationRules'
 import { useAllTrials } from '@/hooks/useAllTrials'
+import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 import { useTherapeuticAreaTerms } from '@/hooks/useTherapeuticAreaTerms'
+import { useRunClassification, type ClassificationResultItem } from '@/hooks/useClassification'
 import { formatNumber } from '@/lib/utils'
 
 const MATCH_TYPES = [
@@ -29,11 +31,14 @@ const ACTIONS = [
 export function ClassificationRulesPage() {
   const { data: rules, isLoading: loadingRules } = useClassificationRules()
   const { data: allTrials, isLoading: loadingTrials } = useAllTrials()
+  const { trials: filteredTrials } = useFilteredTrials()
   const createRule = useCreateRule()
   const deleteRule = useDeleteRule()
+  const classification = useRunClassification()
 
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [dryRun, setDryRun] = useState(true)
   const [newRule, setNewRule] = useState({
     pattern: '',
     match_type: 'CONTAINS',
@@ -192,6 +197,90 @@ export function ClassificationRulesPage() {
           </span>
         </div>
       </div>
+
+      {/* Run Classification */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between w-full">
+            <CardTitle>Run Classification</CardTitle>
+            <span className="text-xs text-text-muted">
+              Scope: {filteredTrials.length} filtered trial{filteredTrials.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </CardHeader>
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={dryRun}
+                onChange={(e) => setDryRun(e.target.checked)}
+                disabled={classification.isRunning}
+                className="accent-primary"
+              />
+              Dry run (preview only, no changes saved)
+            </label>
+
+            {!classification.isRunning ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const trialIds = filteredTrials.map((t) => t.data.nct_id)
+                    classification.run({ trialIds, dryRun })
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+                >
+                  <Play className="h-4 w-4" />
+                  Run Classification
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={classification.cancel}
+                className="inline-flex items-center gap-2 rounded-md bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {/* Progress */}
+          {classification.isRunning && classification.progress && (
+            <div className="flex items-center gap-3 text-sm">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span>{classification.progress.message}</span>
+              {classification.progress.total && (
+                <span className="text-text-muted">
+                  ({classification.progress.processed}/{classification.progress.total})
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Error */}
+          {classification.error && (
+            <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4" />
+              {classification.error}
+            </div>
+          )}
+
+          {/* Summary */}
+          {classification.summary && (
+            <div className="flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-700">
+              <CheckCircle2 className="h-4 w-4" />
+              {classification.summary.dryRun ? 'Preview:' : 'Applied:'}{' '}
+              {classification.summary.changed} changed, {classification.summary.pinned} pinned (skipped),{' '}
+              {classification.summary.unchanged} unchanged out of {classification.summary.total} trials
+            </div>
+          )}
+
+          {/* Results table */}
+          {classification.results.length > 0 && (
+            <ClassificationResultsTable results={classification.results} />
+          )}
+        </div>
+      </Card>
 
       {/* Add Rule Form */}
       {showAddForm ? (
@@ -460,6 +549,109 @@ export function ClassificationRulesPage() {
           </button>
         )}
       </Card>
+    </div>
+  )
+}
+
+function ClassificationResultsTable({ results }: { results: ClassificationResultItem[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false)
+  const displayed = showAll ? results : results.slice(0, 20)
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b text-left text-xs text-text-muted">
+            <th className="pb-2 pr-3">NCT ID</th>
+            <th className="pb-2 pr-3">Status</th>
+            <th className="pb-2 pr-3">Old TAs</th>
+            <th className="pb-2 pr-3">New TAs</th>
+            <th className="pb-2 pr-3">Provenance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {displayed.map((r) => (
+            <tr key={r.nct_id} className="border-b border-gray-50 hover:bg-gray-50">
+              <td className="py-1.5 pr-3 font-mono text-xs">{r.nct_id}</td>
+              <td className="py-1.5 pr-3">
+                {r.pinned ? (
+                  <Badge variant="muted"><Pin className="inline h-3 w-3 mr-0.5" />Pinned</Badge>
+                ) : r.changed ? (
+                  <Badge variant="success">Changed</Badge>
+                ) : (
+                  <Badge variant="muted">Unchanged</Badge>
+                )}
+              </td>
+              <td className="py-1.5 pr-3">
+                <div className="flex flex-wrap gap-1">
+                  {r.old_tas.map((ta) => (
+                    <span key={ta} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px]">{ta}</span>
+                  ))}
+                  {r.old_tas.length === 0 && <span className="text-[10px] text-text-muted">none</span>}
+                </div>
+              </td>
+              <td className="py-1.5 pr-3">
+                <div className="flex flex-wrap gap-1">
+                  {r.new_tas.map((ta) => {
+                    const isNew = !r.old_tas.includes(ta)
+                    return (
+                      <span
+                        key={ta}
+                        className={`rounded px-1.5 py-0.5 text-[10px] ${isNew ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}
+                      >
+                        {ta}
+                      </span>
+                    )
+                  })}
+                </div>
+              </td>
+              <td className="py-1.5 pr-3">
+                {r.provenance.length > 0 && (
+                  <button
+                    onClick={() => setExpanded(expanded === r.nct_id ? null : r.nct_id)}
+                    className="text-[10px] text-primary hover:underline"
+                  >
+                    {r.provenance.length} rule{r.provenance.length !== 1 ? 's' : ''} matched
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Expanded provenance */}
+      {expanded && (() => {
+        const item = results.find((r) => r.nct_id === expanded)
+        if (!item) return null
+        return (
+          <div className="mt-2 rounded-md bg-blue-50 p-3">
+            <p className="text-xs font-medium text-blue-700 mb-2">
+              Provenance for {expanded}
+            </p>
+            <div className="space-y-1">
+              {item.provenance.map((p, i) => (
+                <div key={i} className="text-[11px] text-blue-800">
+                  <span className="font-mono">{p.rule_pattern}</span>
+                  {' '}<span className="text-blue-600">({p.match_type})</span>
+                  {' matched '}<span className="font-medium">"{p.matched_condition}"</span>
+                  {' → '}<span className="font-medium">{p.action} {p.target_ta}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
+      {results.length > 20 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-2 text-xs font-medium text-primary hover:underline"
+        >
+          {showAll ? 'Show less' : `Show all ${results.length} results`}
+        </button>
+      )}
     </div>
   )
 }

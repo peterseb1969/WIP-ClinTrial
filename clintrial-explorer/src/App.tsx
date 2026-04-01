@@ -12,7 +12,7 @@ import { MoleculeDetailPage } from '@/pages/MoleculeDetailPage'
 import { SitesPage } from '@/pages/SitesPage'
 import { BookmarksPage } from '@/pages/BookmarksPage'
 import { TherapeuticAreasPage } from '@/pages/TherapeuticAreasPage'
-import { SyncPage } from '@/pages/SyncPage'
+import { ImportPage } from '@/pages/ImportPage'
 import { AdverseEventsPage } from '@/pages/AdverseEventsPage'
 import { MoleculeComparePage } from '@/pages/MoleculeComparePage'
 import { ClassificationRulesPage } from '@/pages/ClassificationRulesPage'
@@ -44,7 +44,8 @@ export default function App() {
               <Route path="sites" element={<SitesPage />} />
               <Route path="bookmarks" element={<BookmarksPage />} />
               <Route path="settings/rules" element={<ClassificationRulesPage />} />
-              <Route path="sync" element={<SyncPage />} />
+              <Route path="import" element={<ImportPage />} />
+              <Route path="sync" element={<ImportPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

@@ -13,6 +13,7 @@
     {"name": "phases", "label": "Phases", "type": "array", "mandatory": false, "items": {"type": "term", "terminology_ref": "CT_PHASE"}},
     {"name": "study_type", "label": "Study Type", "type": "term", "mandatory": true, "terminology_ref": "CT_STUDY_TYPE"},
     {"name": "therapeutic_areas", "label": "Therapeutic Areas", "type": "array", "mandatory": false, "items": {"type": "term", "terminology_ref": "CT_THERAPEUTIC_AREA"}},
+    {"name": "ta_pinned", "label": "TA Classification Pinned", "type": "boolean", "mandatory": false},
     {"name": "brief_summary", "label": "Brief Summary", "type": "string", "mandatory": false},
     {"name": "detailed_description", "label": "Detailed Description", "type": "string", "mandatory": false},
     {"name": "enrollment", "label": "Enrollment", "type": "integer", "mandatory": false},

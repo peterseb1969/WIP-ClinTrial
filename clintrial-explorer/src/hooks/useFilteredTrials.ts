@@ -75,6 +75,8 @@ export function useFilteredTrials() {
     console.log(`[enrichment] Applying ${rules.length} rules to ${trials.length} trials`)
     let enrichedCount = 0
     const result = trials.map((t) => {
+      // Skip client-side enrichment for pinned trials
+      if (t.data.ta_pinned) return t
       const enrichedTAs = enrichTherapeuticAreas(
         t.data.therapeutic_areas,
         t.data.conditions,

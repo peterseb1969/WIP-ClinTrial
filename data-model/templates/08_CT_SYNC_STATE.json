@@ -1,0 +1,14 @@
+{
+  "value": "CT_SYNC_STATE",
+  "label": "Import Sync State",
+  "description": "Tracks incremental import state for ClinicalTrials.gov synchronization",
+  "namespace": "clintrial",
+  "identity_fields": ["sync_key"],
+  "fields": [
+    {"name": "sync_key", "label": "Sync Key", "type": "string", "mandatory": true},
+    {"name": "trials_state", "label": "Trials State", "type": "string", "mandatory": false},
+    {"name": "last_sync", "label": "Last Sync", "type": "string", "mandatory": false},
+    {"name": "last_import_summary", "label": "Last Import Summary", "type": "string", "mandatory": false}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}

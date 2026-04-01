@@ -8,7 +8,7 @@ import {
   AlertTriangle,
   MapPin,
   Bookmark,
-  RefreshCw,
+  Upload,
   Settings,
   Menu,
   Home,
@@ -27,7 +27,7 @@ const navItems = [
   { to: '/sites', icon: MapPin, label: 'Sites' },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
   { to: '/settings/rules', icon: Settings, label: 'Rules' },
-  { to: '/sync', icon: RefreshCw, label: 'Sync' },
+  { to: '/import', icon: Upload, label: 'Import' },
 ] as const
 
 const breadcrumbLabels: Record<string, string> = {
@@ -39,7 +39,8 @@ const breadcrumbLabels: Record<string, string> = {
   bookmarks: 'Bookmarks',
   settings: 'Settings',
   rules: 'Classification Rules',
-  sync: 'Sync Status',
+  import: 'Import',
+  sync: 'Import',
 }
 
 /** App shell with sidebar navigation, top bar with breadcrumbs, and global filter bar */
