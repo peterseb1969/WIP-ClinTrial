@@ -9,6 +9,7 @@ import { loadSyncState, saveSyncState, shouldSkipTrial, updateTrialSyncEntry, ty
 import {
   initPipeline,
   createOrganizationsBulk,
+  ensureCountryTerms,
   createTrial,
   createOutcomes,
   createSites,
@@ -167,58 +168,74 @@ export async function runImport(
     const total = studiesToProcess.length
     progress('fetch', `${total} trials to process (${counts.trials_skipped} unchanged)`, 0, total)
 
+    // Extract all trial data once
+    const extractedData = studiesToProcess.map((study) => extractTrialData(study))
+
     // Phase 2: Create organizations
     progress('orgs', 'Creating organizations...', 0, total)
     const sponsorNames = new Set<string>()
-    for (const study of studiesToProcess) {
-      const data = extractTrialData(study)
+    for (const data of extractedData) {
       if (data.sponsor) sponsorNames.add(data.sponsor)
       for (const c of data.collaborators) sponsorNames.add(c)
     }
     await createOrganizationsBulk([...sponsorNames], counts)
 
+    // Phase 2b: Ensure all country terms exist before processing sites
+    progress('countries', 'Checking country terms...', 0, total)
+    const allCountries: string[] = []
+    for (const data of extractedData) {
+      for (const loc of data.locations) {
+        if (loc.country) allCountries.push(loc.country)
+      }
+    }
+    await ensureCountryTerms(allCountries, counts)
+
     // Phase 3: Process trials
     for (let i = 0; i < studiesToProcess.length; i++) {
       if (signal.aborted) throw new Error('Import cancelled')
 
-      const study = studiesToProcess[i]
-      const data = extractTrialData(study)
+      const data = extractedData[i]
       const nctId = data.nct_id
       const source = options.nctIds?.length ? 'specific' : (data.sponsor || 'unknown')
 
       progress('trials', `Processing ${nctId}...`, i, total, nctId)
 
-      // Create trial
-      const success = await createTrial(data, counts)
-      if (!success) continue
+      try {
+        // Create trial
+        const success = await createTrial(data, counts)
+        if (!success) continue
 
-      // Create child documents
-      await createOutcomes(nctId, data.primary_outcomes, data.secondary_outcomes, counts)
-      await createSites(nctId, data.locations, counts)
+        // Create child documents
+        await createOutcomes(nctId, data.primary_outcomes, data.secondary_outcomes, counts)
+        await createSites(nctId, data.locations, counts)
 
-      // Fetch results and documents if trial has results
-      if (data.has_results) {
-        const resultsData = await fetchTrialResultsAndDocs(nctId, signal)
-        if (resultsData.resultsSection) {
-          const aeModule = resultsData.resultsSection.adverseEventsModule
-          const baselineModule = resultsData.resultsSection.baselineCharacteristicsModule
-          const outcomeMeasures = resultsData.resultsSection.outcomeMeasuresModule?.outcomeMeasures
+        // Fetch results and documents if trial has results
+        if (data.has_results) {
+          const resultsData = await fetchTrialResultsAndDocs(nctId, signal)
+          if (resultsData.resultsSection) {
+            const aeModule = resultsData.resultsSection.adverseEventsModule
+            const baselineModule = resultsData.resultsSection.baselineCharacteristicsModule
+            const outcomeMeasures = resultsData.resultsSection.outcomeMeasuresModule?.outcomeMeasures
 
-          await createAdverseEvents(nctId, aeModule, counts)
-          await createBaselines(nctId, baselineModule, counts)
-          if (outcomeMeasures) {
-            await updateOutcomesWithResults(nctId, outcomeMeasures, counts)
+            await createAdverseEvents(nctId, aeModule, counts)
+            await createBaselines(nctId, baselineModule, counts)
+            if (outcomeMeasures) {
+              await updateOutcomesWithResults(nctId, outcomeMeasures, counts)
+            }
+          }
+
+          // Download and upload PDFs
+          if (!options.skipPdfs && resultsData.documentSection) {
+            await downloadAndUploadPdfs(nctId, resultsData.documentSection, counts, signal)
           }
         }
 
-        // Download and upload PDFs
-        if (!options.skipPdfs && resultsData.documentSection) {
-          await downloadAndUploadPdfs(nctId, resultsData.documentSection, counts, signal)
-        }
+        // Update sync state
+        updateTrialSyncEntry(syncState, nctId, getLastUpdateDate(studiesToProcess[i]), source)
+      } catch (err) {
+        counts.errors++
+        counts.error_log.push(`Trial ${nctId}: ${(err as Error).message}`)
       }
-
-      // Update sync state
-      updateTrialSyncEntry(syncState, nctId, getLastUpdateDate(study), source)
 
       // Checkpoint every 50 trials
       if ((i + 1) % 50 === 0) {

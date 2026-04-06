@@ -88,6 +88,11 @@ export async function reportQuery<T = Record<string, unknown>>(
 /** Template ID + version cache */
 const templateCache = new Map<string, { id: string; version: number }>()
 
+/** Clear the template cache (call when starting a new import to avoid stale IDs) */
+export function clearTemplateCache(): void {
+  templateCache.clear()
+}
+
 /** Resolve template value to template_id and latest version. */
 export async function resolveTemplateId(value: string): Promise<string> {
   const cached = templateCache.get(value)
@@ -177,6 +182,23 @@ export async function createDocumentsBulk(
   }
 
   return { created, updated, errors, results: allResults }
+}
+
+/** Resolve a terminology value to its terminology_id */
+export async function resolveTerminologyId(value: string, namespace?: string): Promise<string> {
+  const ns = namespace || NAMESPACE
+  const data = (await wipGet(
+    `/api/def-store/terminologies/by-value/${value}?namespace=${ns}`,
+  )) as { terminology_id: string }
+  return data.terminology_id
+}
+
+/** Create terms in a terminology. Returns per-item results. */
+export async function createTerms(
+  terminologyId: string,
+  terms: Array<{ value: string; label: string; aliases?: string[] }>,
+): Promise<unknown> {
+  return wipPost(`/api/def-store/terminologies/${terminologyId}/terms`, terms)
 }
 
 export { NAMESPACE }

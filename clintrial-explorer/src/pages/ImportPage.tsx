@@ -57,16 +57,10 @@ export function ImportPage() {
 
   const parsedSyncState = useMemo(() => {
     if (!syncState) return null
-    try {
-      const trialsState = syncState.trials_state ? JSON.parse(syncState.trials_state) : {}
-      const lastSummary = syncState.last_import_summary ? JSON.parse(syncState.last_import_summary) : null
-      return {
-        lastSync: syncState.last_sync,
-        trialCount: Object.keys(trialsState).length,
-        lastSummary,
-      }
-    } catch {
-      return null
+    return {
+      lastSync: syncState.last_sync,
+      trialCount: syncState.trial_count ?? 0,
+      lastSummary: syncState.last_import_summary ?? null,
     }
   }, [syncState])
 
@@ -317,16 +311,23 @@ export function ImportPage() {
             <dd className="font-medium">{formatNumber(parsedSyncState.trialCount)}</dd>
           </dl>
           {parsedSyncState.lastSummary && (
-            <div className="mt-3 rounded-md bg-gray-50 p-3">
-              <p className="text-xs font-medium text-text-muted mb-1">Last Import Summary</p>
-              <div className="grid grid-cols-2 gap-1 text-xs sm:grid-cols-4">
-                {Object.entries(parsedSyncState.lastSummary).map(([key, val]) => (
-                  <span key={key}>
-                    <span className="text-text-muted">{key.replace(/_/g, ' ')}:</span>{' '}
-                    <span className="font-medium">{String(val)}</span>
-                  </span>
-                ))}
+            <div className="mt-3 space-y-2">
+              <div className="rounded-md bg-gray-50 p-3">
+                <p className="text-xs font-medium text-text-muted mb-1">Last Import Summary</p>
+                <div className="grid grid-cols-2 gap-1 text-xs sm:grid-cols-4">
+                  {Object.entries(parsedSyncState.lastSummary)
+                    .filter(([key]) => key !== 'error_log')
+                    .map(([key, val]) => (
+                      <span key={key}>
+                        <span className="text-text-muted">{key.replace(/_/g, ' ')}:</span>{' '}
+                        <span className="font-medium">{String(val)}</span>
+                      </span>
+                    ))}
+                </div>
               </div>
+              {Array.isArray(parsedSyncState.lastSummary.error_log) && parsedSyncState.lastSummary.error_log.length > 0 && (
+                <ErrorLog errors={parsedSyncState.lastSummary.error_log} />
+              )}
             </div>
           )}
         </Card>

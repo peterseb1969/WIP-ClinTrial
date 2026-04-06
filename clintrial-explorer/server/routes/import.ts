@@ -85,7 +85,11 @@ router.post('/import/cancel', (_req, res) => {
 router.get('/import/sync-state', async (_req, res) => {
   try {
     const state = await loadSyncState()
-    res.json(state)
+    res.json({
+      trial_count: Object.keys(state.trials).length,
+      last_sync: state.last_sync,
+      last_import_summary: state.last_import_summary,
+    })
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }

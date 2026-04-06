@@ -8,6 +8,9 @@ import {
   createDocumentsBulk,
   wipUploadFile,
   reportQuery,
+  clearTemplateCache,
+  resolveTerminologyId,
+  createTerms,
   type BulkResult,
 } from './wip-api.js'
 import {
@@ -31,6 +34,10 @@ let taKeywords: Map<string, Set<string>> = new Map()
 
 /** Pinned trial TAs — loaded before import, restored after */
 let pinnedTrials: Map<string, string[]> = new Map()
+
+/** Known valid country term values — populated from WIP at pipeline init */
+let knownCountryTerms: Set<string> = new Set()
+let countryTerminologyId: string | null = null
 
 export interface ImportCounts {
   orgs_created: number
@@ -96,6 +103,9 @@ export async function initPipeline(): Promise<void> {
 
   // Load pinned trials
   await loadPinnedTrials()
+
+  // Load known country terms
+  await loadCountryTerms()
 }
 
 async function loadTAKeywords(): Promise<void> {
@@ -119,6 +129,74 @@ async function loadPinnedTrials(): Promise<void> {
   } catch (err) {
     console.warn('Could not load pinned trials:', err)
   }
+}
+
+async function loadCountryTerms(): Promise<void> {
+  try {
+    countryTerminologyId = await resolveTerminologyId('COUNTRY', 'wip')
+    const result = await reportQuery<{ value: string }>(
+      `SELECT t.value FROM terms t
+       JOIN terminologies tt ON t.terminology_id = tt.terminology_id
+       WHERE tt.value = 'COUNTRY' AND tt.namespace = 'wip' AND t.status = 'active'`,
+    )
+    knownCountryTerms = new Set(result.rows.map((r) => r.value))
+  } catch (err) {
+    console.warn('Could not load country terms:', err)
+  }
+}
+
+/** Look up a CT.gov country name → valid COUNTRY term value. No auto-create. */
+function resolveCountry(rawCountry: string, counts: ImportCounts): string | null {
+  const mapped = COUNTRY_MAP[rawCountry]
+  const candidates = mapped ? [mapped, rawCountry] : [rawCountry]
+  for (const candidate of candidates) {
+    if (knownCountryTerms.has(candidate)) return candidate
+  }
+  logError(counts, `Sites: Unknown country '${rawCountry}' not in COUNTRY terminology`)
+  return null
+}
+
+/** Pre-scan all studies for unknown countries, batch-create missing terms, and wait for cache.
+ *  Call this ONCE before processing trials, not per-site. */
+export async function ensureCountryTerms(
+  rawCountries: string[],
+  counts: ImportCounts,
+): Promise<void> {
+  if (!countryTerminologyId) return
+
+  const missing: Array<{ value: string; label: string; aliases?: string[] }> = []
+  const seen = new Set<string>()
+
+  for (const raw of rawCountries) {
+    if (seen.has(raw)) continue
+    seen.add(raw)
+
+    const mapped = COUNTRY_MAP[raw]
+    const candidates = mapped ? [mapped, raw] : [raw]
+    const found = candidates.some((c) => knownCountryTerms.has(c))
+    if (found) continue
+
+    if (mapped) {
+      missing.push({ value: mapped, label: raw, aliases: [raw] })
+      logError(counts, `Auto-created country term '${mapped}' (${raw}) — verify in COUNTRY terminology`)
+    } else {
+      missing.push({ value: raw, label: raw })
+      logError(counts, `Auto-created country term '${raw}' (no ISO code in COUNTRY_MAP) — add mapping to transforms.ts`)
+    }
+  }
+
+  if (!missing.length) return
+
+  try {
+    await createTerms(countryTerminologyId, missing)
+    for (const t of missing) knownCountryTerms.add(t.value)
+  } catch (err) {
+    logError(counts, `Failed to batch-create country terms: ${(err as Error).message}`)
+    return
+  }
+
+  // Wait for WIP term cache to refresh (PoNIF #6)
+  await new Promise((resolve) => setTimeout(resolve, 6000))
 }
 
 /** Create organizations in bulk. Caches document IDs. */
@@ -277,11 +355,16 @@ export async function createSites(
     const facility = loc.facility
     if (!facility) continue
 
-    const d: AnyObj = { nct_id: nctId, facility }
+    if (!loc.country) continue // country is mandatory
+    const cc = await resolveCountry(loc.country, counts)
+    if (!cc) continue
+    const d: AnyObj = {
+      nct_id: nctId,
+      facility,
+      country: cc,
+    }
     if (loc.city) d.city = loc.city
     if (loc.state) d.state = loc.state
-    const cc = COUNTRY_MAP[loc.country || '']
-    if (cc) d.country = cc
     if (loc.zip) d.zip = loc.zip
     if (loc.status) d.site_status = loc.status
     dataList.push(d)
@@ -527,5 +610,8 @@ export function clearCaches(): void {
   ORG_DOC_IDS.clear()
   taKeywords = new Map()
   pinnedTrials = new Map()
+  knownCountryTerms = new Set()
+  countryTerminologyId = null
   TEMPLATES = {}
+  clearTemplateCache()
 }

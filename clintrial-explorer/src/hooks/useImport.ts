@@ -134,6 +134,7 @@ export function useImportJob() {
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
         let buffer = ''
+        let eventType = ''
 
         while (true) {
           const { done, value } = await reader.read()
@@ -143,7 +144,6 @@ export function useImportJob() {
           const lines = buffer.split('\n')
           buffer = lines.pop() || ''
 
-          let eventType = ''
           for (const line of lines) {
             if (line.startsWith('event: ')) {
               eventType = line.slice(7).trim()
@@ -155,7 +155,9 @@ export function useImportJob() {
                     setProgress(data)
                     break
                   case 'complete':
-                    setProgress((prev) => prev ? { ...prev, ...data.counts } : null)
+                    if (data.counts) {
+                      setProgress((prev) => prev ? { ...prev, counts: data.counts } : null)
+                    }
                     setCompleted(true)
                     setIsRunning(false)
                     stopPolling()
@@ -170,6 +172,7 @@ export function useImportJob() {
               } catch {
                 // skip
               }
+              eventType = ''
             }
           }
         }
