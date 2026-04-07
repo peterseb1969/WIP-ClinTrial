@@ -3,7 +3,7 @@
  * Replaces the file-based sync-state.json with a WIP CT_SYNC_STATE document.
  */
 
-import { reportQuery, resolveTemplateId, createDocumentsBulk, wipGet } from './wip-api.js'
+import { reportQuery, resolveTemplateId, createDocumentsBulk } from './wip-api.js'
 
 export interface TrialSyncEntry {
   last_update: string
@@ -19,29 +19,8 @@ export interface SyncState {
 
 const SYNC_KEY = 'clintrial-import'
 
-/** Load sync state from WIP — reads from document-store directly (reporting-sync may not cover this template) */
+/** Load sync state from WIP via reporting SQL */
 export async function loadSyncState(): Promise<SyncState> {
-  try {
-    // Try document-store directly first
-    const docs = (await wipGet(
-      `/api/document-store/documents?namespace=clintrial&template_value=CT_SYNC_STATE&page_size=1`,
-    )) as { items: Array<{ data: Record<string, string | null> }> }
-
-    if (docs.items?.length > 0) {
-      const d = docs.items[0].data
-      return {
-        trials: d.trials_state ? JSON.parse(d.trials_state) : {},
-        last_sync: d.last_sync || null,
-        last_import_summary: d.last_import_summary
-          ? JSON.parse(d.last_import_summary)
-          : null,
-      }
-    }
-  } catch (err) {
-    console.warn('Could not load sync state from document-store:', err)
-  }
-
-  // Fallback to reporting
   try {
     const result = await reportQuery<{
       sync_key: string
