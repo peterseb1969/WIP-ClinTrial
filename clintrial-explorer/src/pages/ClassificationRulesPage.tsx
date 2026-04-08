@@ -633,10 +633,24 @@ function ClassificationResultsTable({ results }: { results: ClassificationResult
             <div className="space-y-1">
               {item.provenance.map((p, i) => (
                 <div key={i} className="text-[11px] text-blue-800">
-                  <span className="font-mono">{p.rule_pattern}</span>
-                  {' '}<span className="text-blue-600">({p.match_type})</span>
-                  {' matched '}<span className="font-medium">"{p.matched_condition}"</span>
-                  {' → '}<span className="font-medium">{p.action} {p.target_ta}</span>
+                  {p.inherited_from ? (
+                    <>
+                      <span className="inline-block rounded bg-purple-100 px-1 py-[1px] text-[9px] font-semibold uppercase text-purple-700">
+                        ontology
+                      </span>
+                      {' '}<span className="font-medium">{p.target_ta}</span>
+                      {' inherited from '}
+                      <span className="font-mono">{p.inherited_from}</span>
+                      {' (is_a)'}
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-mono">{p.rule_pattern}</span>
+                      {' '}<span className="text-blue-600">({p.match_type})</span>
+                      {' matched '}<span className="font-medium">"{p.matched_condition}"</span>
+                      {' → '}<span className="font-medium">{p.action} {p.target_ta}</span>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

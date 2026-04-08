@@ -12,6 +12,7 @@ import {
   type TrialForClassification,
 } from '../lib/classifier.js'
 import { classifyTherapeuticAreas, loadTAKeywordMap } from '../lib/transforms.js'
+import { loadTAAncestors } from '../lib/ta-ontology.js'
 
 const router = Router()
 
@@ -123,15 +124,17 @@ router.post('/classify', async (req, res) => {
   sendSSE(res, 'status', { phase: 'loading', message: 'Fetching rules and trials...' })
 
   try {
-    const [rules, trials, taKeywords] = await Promise.all([
+    const [rules, trials, taKeywords, ancestorMap] = await Promise.all([
       fetchRules(),
       fetchTrials(trialIds),
       loadTAKeywordMap(),
+      loadTAAncestors(),
     ])
 
+    const ontologyEdges = [...ancestorMap.values()].reduce((n, s) => n + s.size, 0)
     sendSSE(res, 'status', {
       phase: 'classifying',
-      message: `Classifying ${trials.length} trials with ${rules.length} rules + keyword map (${taKeywords.size} TAs)`,
+      message: `Classifying ${trials.length} trials with ${rules.length} rules + keyword map (${taKeywords.size} TAs), ontology: ${ancestorMap.size} children / ${ontologyEdges} ancestor links`,
       total: trials.length,
     })
 
@@ -152,7 +155,7 @@ router.post('/classify', async (req, res) => {
     // then applies rules on top. But we want to detect changes vs the ORIGINAL stored TAs.
     // So we run classifyTrials (which applies rules on the enriched baseline),
     // then compare final result against originalTAs.
-    const results = classifyTrials(trials, rules)
+    const results = classifyTrials(trials, rules, ancestorMap)
 
     // Fix change detection: compare against original stored TAs, not enriched baseline
     for (const r of results) {

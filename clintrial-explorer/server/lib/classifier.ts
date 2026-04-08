@@ -24,6 +24,9 @@ export interface RuleMatch {
   action: string
   matched_condition: string
   target_ta: string
+  /** If set, this TA was inherited from an ancestor walk, not matched directly.
+   * Value is the leaf TA that produced this ancestor. */
+  inherited_from?: string
 }
 
 export interface ClassificationResult {
@@ -120,10 +123,46 @@ export interface TrialForClassification {
   [key: string]: unknown
 }
 
-/** Classify a set of trials using rules. Returns results with provenance. */
+/**
+ * Walk is_a ancestors for a set of leaf TAs and return the inherited additions
+ * along with per-ancestor provenance. Only applies to ADD (not REMOVE).
+ */
+export function walkAncestors(
+  leaves: Set<string>,
+  ancestorMap: Map<string, Set<string>>,
+  matchedConditionByLeaf: Map<string, string>,
+): { inherited: Set<string>; provenance: RuleMatch[] } {
+  const inherited = new Set<string>()
+  const provenance: RuleMatch[] = []
+
+  for (const leaf of leaves) {
+    const ancestors = ancestorMap.get(leaf)
+    if (!ancestors) continue
+    for (const ancestor of ancestors) {
+      if (leaves.has(ancestor) || inherited.has(ancestor)) continue
+      inherited.add(ancestor)
+      provenance.push({
+        rule_document_id: '',
+        rule_pattern: `is_a: ${leaf}`,
+        match_type: 'ONTOLOGY',
+        action: 'ADD',
+        matched_condition: matchedConditionByLeaf.get(leaf) ?? leaf,
+        target_ta: ancestor,
+        inherited_from: leaf,
+      })
+    }
+  }
+
+  return { inherited, provenance }
+}
+
+/** Classify a set of trials using rules. Returns results with provenance.
+ * If ancestorMap is provided, matched leaf TAs are expanded with their
+ * transitive is_a ancestors and tagged in provenance as inherited. */
 export function classifyTrials(
   trials: TrialForClassification[],
   rules: ClassificationRule[],
+  ancestorMap?: Map<string, Set<string>>,
 ): ClassificationResult[] {
   const results: ClassificationResult[] = []
 
@@ -144,28 +183,38 @@ export function classifyTrials(
     const base = new Set(trial.therapeutic_areas || [])
     const conditions = trial.conditions || []
 
-    if (conditions.length === 0) {
-      results.push({
-        nct_id: trial.nct_id,
-        document_id: trial.document_id,
-        old_tas: [...base],
-        new_tas: [...base],
-        provenance: [],
-        pinned: false,
-        changed: false,
-      })
-      continue
-    }
-
-    const { add, remove, provenance } = applyRulesWithProvenance(
-      conditions,
-      rules,
-      trial.nct_id,
-    )
+    const { add, remove, provenance } =
+      conditions.length === 0
+        ? { add: new Set<string>(), remove: new Set<string>(), provenance: [] as RuleMatch[] }
+        : applyRulesWithProvenance(conditions, rules, trial.nct_id)
 
     const newTAs = new Set(base)
     for (const ta of add) newTAs.add(ta)
     for (const ta of remove) newTAs.delete(ta)
+
+    // Ontology walk: add transitive is_a ancestors of every TA in the final set.
+    // Runs AFTER remove so a removed leaf doesn't contribute ancestors.
+    // REMOVE does not cascade down — explicit leaf-level control.
+    if (ancestorMap && ancestorMap.size > 0 && newTAs.size > 0) {
+      // Record one representative condition per matched leaf for provenance.
+      // Baseline/keyword-sourced leaves fall back to '(baseline)'.
+      const conditionByLeaf = new Map<string, string>()
+      for (const p of provenance) {
+        if (p.action === 'ADD' && !conditionByLeaf.has(p.target_ta)) {
+          conditionByLeaf.set(p.target_ta, p.matched_condition)
+        }
+      }
+      for (const leaf of newTAs) {
+        if (!conditionByLeaf.has(leaf)) conditionByLeaf.set(leaf, '(baseline)')
+      }
+      const { inherited, provenance: inheritedProv } = walkAncestors(
+        newTAs,
+        ancestorMap,
+        conditionByLeaf,
+      )
+      for (const ta of inherited) newTAs.add(ta)
+      provenance.push(...inheritedProv)
+    }
     const newTAsSorted = [...newTAs].sort()
     const oldTAsSorted = [...base].sort()
 

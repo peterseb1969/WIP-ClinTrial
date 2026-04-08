@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { reportQuery } from '@/lib/reporting'
 
 export interface ClassificationRule {
   document_id: string
@@ -114,20 +115,87 @@ export function applyRules(
   return { add, remove }
 }
 
-/** Enrich a trial's therapeutic areas using classification rules */
+/** Enrich a trial's therapeutic areas using classification rules
+ * and (optionally) transitive is_a ancestors from the TA ontology. */
 export function enrichTherapeuticAreas(
   storedTAs: string[] | undefined,
   conditions: string[] | undefined,
   rules: ClassificationRule[],
   nctId?: string,
+  ancestorMap?: Map<string, Set<string>>,
 ): string[] {
   const base = new Set(storedTAs || [])
-  if (!conditions || rules.length === 0) return [...base]
 
-  const { add, remove } = applyRules(conditions, rules, nctId)
-  for (const ta of add) base.add(ta)
-  for (const ta of remove) base.delete(ta)
+  if (conditions && rules.length > 0) {
+    const { add, remove } = applyRules(conditions, rules, nctId)
+    for (const ta of add) base.add(ta)
+    for (const ta of remove) base.delete(ta)
+  }
+
+  if (ancestorMap && ancestorMap.size > 0 && base.size > 0) {
+    for (const leaf of [...base]) {
+      const ancestors = ancestorMap.get(leaf)
+      if (!ancestors) continue
+      for (const a of ancestors) base.add(a)
+    }
+  }
+
   return [...base].sort()
+}
+
+const TA_TERMINOLOGY_SQL = `SELECT DISTINCT terminology_id FROM terms
+         WHERE terminology_value = 'CT_THERAPEUTIC_AREA' AND status = 'active'
+         LIMIT 1`
+
+const TA_RELATIONSHIPS_SQL = `SELECT DISTINCT source_term_value AS source, target_term_value AS target
+         FROM term_relationships
+         WHERE relationship_type = 'is_a'
+         AND source_terminology_id = target_terminology_id
+         AND source_terminology_id = $1`
+
+/** Fetch the TA is_a ancestor map: each child → set of transitive ancestors.
+ * Used by live preview to match server-side classification behavior. */
+export function useTAAncestors() {
+  return useQuery<Map<string, Set<string>>>({
+    queryKey: ['clintrial', 'ta-ancestors'],
+    queryFn: async () => {
+      const termResult = await reportQuery<{ terminology_id: string }>(TA_TERMINOLOGY_SQL)
+      const taTerminologyId = termResult.rows[0]?.terminology_id
+      if (!taTerminologyId) return new Map()
+
+      const rel = await reportQuery<{ source: string; target: string }>(
+        TA_RELATIONSHIPS_SQL, [taTerminologyId],
+      )
+
+      const directParents = new Map<string, Set<string>>()
+      for (const row of rel.rows) {
+        if (!directParents.has(row.source)) directParents.set(row.source, new Set())
+        directParents.get(row.source)!.add(row.target)
+      }
+
+      const ancestors = new Map<string, Set<string>>()
+      function walk(node: string, stack: Set<string>): Set<string> {
+        const cached = ancestors.get(node)
+        if (cached) return cached
+        if (stack.has(node)) return new Set()
+        stack.add(node)
+        const result = new Set<string>()
+        const parents = directParents.get(node)
+        if (parents) {
+          for (const p of parents) {
+            result.add(p)
+            for (const a of walk(p, stack)) result.add(a)
+          }
+        }
+        stack.delete(node)
+        ancestors.set(node, result)
+        return result
+      }
+      for (const child of directParents.keys()) walk(child, new Set())
+      return ancestors
+    },
+    staleTime: 30 * 60 * 1000,
+  })
 }
 
 /** Resolve template ID for CT_CLASSIFICATION_RULE */

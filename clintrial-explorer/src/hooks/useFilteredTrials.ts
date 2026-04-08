@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAllTrials, useTrialsByCountries, type TrialDocument } from './useAllTrials'
 import { useTrialFilters } from './useTrialFilters'
 import { useBookmarks } from './useBookmarks'
-import { useClassificationRules, enrichTherapeuticAreas } from './useClassificationRules'
+import { useClassificationRules, enrichTherapeuticAreas, useTAAncestors } from './useClassificationRules'
 import { reportQuery } from '@/lib/reporting'
 
 /** Pre-compute sets of NCT IDs that have related data (AE, outcomes, baselines) */
@@ -60,19 +60,18 @@ function useDataAvailability() {
 export function useFilteredTrials() {
   const { data: trials, isLoading, error, refetch } = useAllTrials()
   const { data: rules } = useClassificationRules()
+  const { data: ancestorMap } = useTAAncestors()
   const { filters } = useTrialFilters()
   const { has: isBookmarked } = useBookmarks()
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
   const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds } = useDataAvailability()
 
-  // Enrich trials with rule-based TA classification
+  // Enrich trials with rule-based TA classification and ontology ancestor walk
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
     if (!trials) return undefined
-    if (!rules || rules.length === 0) {
-      console.log('[enrichment] No rules loaded, skipping enrichment. rules:', rules)
-      return trials
-    }
-    console.log(`[enrichment] Applying ${rules.length} rules to ${trials.length} trials`)
+    const hasRules = rules && rules.length > 0
+    const hasOntology = ancestorMap && ancestorMap.size > 0
+    if (!hasRules && !hasOntology) return trials
     let enrichedCount = 0
     const result = trials.map((t) => {
       // Skip client-side enrichment for pinned trials
@@ -80,8 +79,9 @@ export function useFilteredTrials() {
       const enrichedTAs = enrichTherapeuticAreas(
         t.data.therapeutic_areas,
         t.data.conditions,
-        rules,
+        rules || [],
         t.data.nct_id,
+        ancestorMap,
       )
       if (enrichedTAs.length === (t.data.therapeutic_areas?.length ?? 0) &&
           enrichedTAs.every((ta, i) => ta === t.data.therapeutic_areas?.[i])) {
@@ -90,9 +90,9 @@ export function useFilteredTrials() {
       enrichedCount++
       return { ...t, data: { ...t.data, therapeutic_areas: enrichedTAs } }
     })
-    console.log(`[enrichment] Enriched ${enrichedCount} trials`)
+    console.log(`[enrichment] Enriched ${enrichedCount} trials (rules: ${rules?.length ?? 0}, ontology ancestors: ${ancestorMap?.size ?? 0})`)
     return result
-  }, [trials, rules])
+  }, [trials, rules, ancestorMap])
 
   const filtered = useMemo(() => {
     if (!enrichedTrials) return []

@@ -13,6 +13,7 @@ export interface ClassificationResultItem {
     action: string
     matched_condition: string
     target_ta: string
+    inherited_from?: string
   }>
   pinned: boolean
   changed: boolean
