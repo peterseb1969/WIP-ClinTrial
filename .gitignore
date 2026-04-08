@@ -31,3 +31,15 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code ephemera
+.claude-context-pct
+
+# Import run logs (local only)
+import-log-*.txt
+
+# Raw CT.gov dumps used during import debugging
+clintrial-raw/
+
+# Cross-agent case store (symlinked to shared directory)
+yac-discussions

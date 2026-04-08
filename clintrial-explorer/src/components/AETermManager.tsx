@@ -194,7 +194,7 @@ export function AETermManager({
             onClick={async () => {
               setBusy(true)
               try {
-                await client.defStore.createTerms(terminologyId, [{ value: term, label: term }])
+                await client.defStore.createTerms(terminologyId, [{ value: term, label: term }], { namespace: 'clintrial' })
                 invalidate()
               } catch (e) {
                 setError(String(e))
