@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Search, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react'
+import { Search, AlertTriangle, ChevronDown, ChevronRight, Sparkles } from 'lucide-react'
+import { AECleanupModal } from '@/components/AECleanupModal'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   LineChart, Line,
@@ -46,6 +47,7 @@ export function AdverseEventsPage() {
   const [showMonotherapy, setShowMonotherapy] = useState(false)
 
   const [managingTerm, setManagingTerm] = useState<string | null>(null)
+  const [showCleanupModal, setShowCleanupModal] = useState(false)
 
   const { data: organSystems, queries: organQueries } = useOrganSystems()
   const { data: rawFlatData, isLoading: loadingFlat, trialCount, nctIds, queries: freqQueries } = useAEFrequency(category)
@@ -350,6 +352,14 @@ export function AdverseEventsPage() {
           <h1 className="text-2xl font-bold">Adverse Events</h1>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowCleanupModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+            title="Use Claude to cluster raw AE term strings by semantic equivalence"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            AI Cleanup
+          </button>
           <CsvDownloadButton getData={getCsvData} filenamePrefix="adverse-events" />
           <span className="text-sm text-text-muted">
             Across {formatNumber(trialCount)} trials
@@ -578,6 +588,9 @@ export function AdverseEventsPage() {
           </Card>
         )}
       </div>
+
+      {/* AI Cleanup Modal */}
+      {showCleanupModal && <AECleanupModal onClose={() => setShowCleanupModal(false)} />}
 
       {/* Summary stats */}
       {flatData.length > 0 && viewMode !== 'grouped' && (

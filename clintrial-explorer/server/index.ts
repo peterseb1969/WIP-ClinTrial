@@ -1,9 +1,13 @@
+// MUST be first: loads .env into process.env before any other module reads it
+import './load-env.js'
+
 import express from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { wipProxy } from '@wip/proxy'
 import classifyRoutes from './routes/classify.js'
 import importRoutes from './routes/import.js'
+import aeCleanupRoutes from './routes/ae-cleanup.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -18,6 +22,7 @@ app.use('/server-api', express.json({ limit: '50mb' }))
 // Mount custom server routes
 app.use('/server-api', classifyRoutes)
 app.use('/server-api', importRoutes)
+app.use('/server-api', aeCleanupRoutes)
 
 // Proxy /api/* and /files/* to WIP backend (injects API key server-side)
 app.use(wipProxy({ baseUrl: WIP_BASE_URL, apiKey: WIP_API_KEY }))

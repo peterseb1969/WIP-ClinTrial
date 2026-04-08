@@ -201,4 +201,36 @@ export async function createTerms(
   return wipPost(`/api/def-store/terminologies/${terminologyId}/terms`, terms)
 }
 
+/** Generic PUT with bulk envelope (matching wip-client convention). */
+export async function wipPut(path: string, body: unknown): Promise<unknown> {
+  const res = await fetch(`${WIP_BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: headers(),
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`WIP PUT ${path}: ${res.status} ${res.statusText}`)
+  return res.json()
+}
+
+/** Generic DELETE with body (matching wip-client convention). */
+export async function wipDeleteWithBody(path: string, body: unknown): Promise<unknown> {
+  const res = await fetch(`${WIP_BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers: headers(),
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`WIP DELETE ${path}: ${res.status} ${res.statusText}`)
+  return res.json()
+}
+
+/** Update a term's aliases (and optionally other fields). */
+export async function updateTermAliases(termId: string, aliases: string[]): Promise<unknown> {
+  return wipPut('/api/def-store/terms', [{ term_id: termId, aliases }])
+}
+
+/** Deactivate (soft-delete) a term by ID. */
+export async function deleteTermById(termId: string): Promise<unknown> {
+  return wipDeleteWithBody('/api/def-store/terms', [{ id: termId }])
+}
+
 export { NAMESPACE }
