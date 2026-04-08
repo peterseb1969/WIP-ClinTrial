@@ -113,7 +113,8 @@ export function ClassificationRulesPage() {
   }, [testPattern, newRule.match_type, newRule.action, newRule.target_ta, conditionStats])
 
   // Get ALL TA values from the terminology (every level of hierarchy)
-  const { data: taTerms } = useTherapeuticAreaTerms()
+  const { data: taTermsData } = useTherapeuticAreaTerms()
+  const taTerms = taTermsData?.terms
   const taValues = useMemo(() => {
     if (!taTerms || taTerms.length === 0) {
       // Fallback: extract from trial data

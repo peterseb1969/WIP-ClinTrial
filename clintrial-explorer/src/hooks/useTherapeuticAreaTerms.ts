@@ -1,14 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
 
-interface TATerm {
+export interface TATerm {
+  term_id: string
   value: string
   label: string
   aliases: string[]
 }
 
+export interface TATermsData {
+  terminologyId: string | null
+  terms: TATerm[]
+}
+
 /** Fetch CT_THERAPEUTIC_AREA terms with aliases from WIP API */
 export function useTherapeuticAreaTerms() {
-  return useQuery<TATerm[]>({
+  return useQuery<TATermsData>({
     queryKey: ['clintrial', 'ta-terms'],
     queryFn: async () => {
       // Resolve terminology ID by value
@@ -16,22 +22,24 @@ export function useTherapeuticAreaTerms() {
         '/api/def-store/terminologies/by-value/CT_THERAPEUTIC_AREA?namespace=clintrial',
         { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
       )
-      if (!lookupRes.ok) return []
+      if (!lookupRes.ok) return { terminologyId: null, terms: [] }
       const terminology = await lookupRes.json()
       const terminologyId = terminology.terminology_id
-      if (!terminologyId) return []
+      if (!terminologyId) return { terminologyId: null, terms: [] }
 
       const res = await fetch(
-        `/api/def-store/terminologies/${terminologyId}/terms?page_size=100`,
+        `/api/def-store/terminologies/${terminologyId}/terms?page_size=500`,
         { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
       )
-      if (!res.ok) return []
+      if (!res.ok) return { terminologyId, terms: [] }
       const data = await res.json()
-      return (data.items ?? []).map((t: Record<string, unknown>) => ({
+      const terms: TATerm[] = (data.items ?? []).map((t: Record<string, unknown>) => ({
+        term_id: t.term_id as string,
         value: t.value as string,
         label: (t.label as string) || (t.value as string),
         aliases: (t.aliases as string[]) || [],
       }))
+      return { terminologyId, terms }
     },
     staleTime: 30 * 60 * 1000,
   })
