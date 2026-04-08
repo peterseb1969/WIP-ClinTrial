@@ -12,7 +12,7 @@ import { AEDrillDownPanel } from '@/components/AEDrillDownPanel'
 import { AETermManager } from '@/components/AETermManager'
 import { PageLoading } from '@/components/LoadingSpinner'
 import {
-  useAEFrequency, useAEGrouped, useAEByCombination, useOrganSystems,
+  useAEFrequency, useAEGrouped, useAEByCombination, useOrganSystems, useAERawStringCount,
   useAESeverityDistribution, useAETemporal,
   type AERow,
 } from '@/hooks/useAEAnalytics'
@@ -52,6 +52,7 @@ export function AdverseEventsPage() {
   const { data: organSystems, queries: organQueries } = useOrganSystems()
   const { data: rawFlatData, isLoading: loadingFlat, trialCount, nctIds, queries: freqQueries } = useAEFrequency(category)
   const { resolve, terminologyId, termCount: resolvedTermCount } = useAETermResolution()
+  const { data: rawStringCount } = useAERawStringCount()
 
   // Apply term resolution: merge rows that resolve to the same canonical term
   const flatData = useMemo(() => {
@@ -363,8 +364,11 @@ export function AdverseEventsPage() {
           <CsvDownloadButton getData={getCsvData} filenamePrefix="adverse-events" />
           <span className="text-sm text-text-muted">
             Across {formatNumber(trialCount)} trials
+            {rawStringCount !== undefined && rawStringCount > 0 && (
+              <> · {formatNumber(rawStringCount)} raw AE strings</>
+            )}
             {resolvedTermCount > 0 && (
-              <> · {formatNumber(resolvedTermCount)} normalized terms</>
+              <> → {formatNumber(resolvedTermCount)} canonical term{resolvedTermCount === 1 ? '' : 's'}</>
             )}
           </span>
         </div>

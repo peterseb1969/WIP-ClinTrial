@@ -84,6 +84,24 @@ export function useAEFrequency(category: 'ALL' | 'SERIOUS' | 'OTHER') {
   }
 }
 
+/** Count of distinct raw AE term strings across all trials (the "mess" number) */
+export function useAERawStringCount() {
+  return useQuery({
+    queryKey: ['clintrial', 'ae-raw-string-count'],
+    queryFn: async () => {
+      const result = await reportQuery<{ n: string | number }>(
+        `SELECT COUNT(DISTINCT term)::int AS n
+         FROM doc_ct_trial_ae
+         WHERE status = 'active' AND term IS NOT NULL AND term != ''`,
+        [],
+        1,
+      )
+      return Number(result.rows[0]?.n ?? 0)
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 /** AE frequency grouped by molecule or therapeutic area */
 export function useAEGrouped(groupBy: GroupBy, category: 'ALL' | 'SERIOUS' | 'OTHER') {
   const { nctIds, isLoading: loadingTrials, trialCount } = useFilteredNctIds()

@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Sparkles, X, Check, AlertTriangle, Loader2 } from 'lucide-react'
+import { Sparkles, X, Check, AlertTriangle, Loader2, ChevronDown, ChevronRight } from 'lucide-react'
 import {
   useProposeAECleanup,
   useApplyAECleanup,
+  useAECleanupStats,
   type AECleanupCluster,
 } from '@/hooks/useAECleanup'
 import { formatNumber } from '@/lib/utils'
@@ -15,7 +16,9 @@ interface Props {
 export function AECleanupModal({ onClose }: Props) {
   const propose = useProposeAECleanup()
   const apply = useApplyAECleanup()
+  const cheapStats = useAECleanupStats(!propose.data && !propose.isPending)
   const [approved, setApproved] = useState<Set<number>>(new Set())
+  const [caseExpanded, setCaseExpanded] = useState(false)
   const [applyResult, setApplyResult] = useState<{
     created: number
     updated: number
@@ -23,23 +26,37 @@ export function AECleanupModal({ onClose }: Props) {
     errors: number
   } | null>(null)
 
-  const clusters = propose.data?.clusters ?? []
+  const allClusters = propose.data?.clusters ?? []
   const stats = propose.data?.stats
 
-  // Pre-approve high-confidence clusters (>= 0.9) when results arrive
+  // Split off the auto-generated case-only clusters (reason set by the server
+  // in collapseCaseVariants). They're confidence 1.0 and reviewing them is
+  // just noise — they're applied automatically. Everything else came from
+  // Claude and needs human review.
+  const { caseClusters, reviewClusters } = useMemo(() => {
+    const cc: AECleanupCluster[] = []
+    const rc: AECleanupCluster[] = []
+    for (const c of allClusters) {
+      if (c.reason.startsWith('Case-only variants')) cc.push(c)
+      else rc.push(c)
+    }
+    return { caseClusters: cc, reviewClusters: rc }
+  }, [allClusters])
+
+  // Pre-approve high-confidence review clusters (>= 0.9) when results arrive
   useEffect(() => {
-    if (clusters.length > 0 && approved.size === 0) {
+    if (reviewClusters.length > 0 && approved.size === 0) {
       const pre = new Set<number>()
-      clusters.forEach((c, i) => {
+      reviewClusters.forEach((c, i) => {
         if (c.confidence >= 0.9) pre.add(i)
       })
       setApproved(pre)
     }
-  }, [clusters, approved.size])
+  }, [reviewClusters, approved.size])
 
-  const approvedClusters = useMemo(
-    () => clusters.filter((_, i) => approved.has(i)),
-    [clusters, approved],
+  const approvedReviewClusters = useMemo(
+    () => reviewClusters.filter((_, i) => approved.has(i)),
+    [reviewClusters, approved],
   )
 
   const toggle = (i: number) => {
@@ -52,16 +69,18 @@ export function AECleanupModal({ onClose }: Props) {
   }
 
   const toggleAll = () => {
-    if (approved.size === clusters.length) {
+    if (approved.size === reviewClusters.length) {
       setApproved(new Set())
     } else {
-      setApproved(new Set(clusters.map((_, i) => i)))
+      setApproved(new Set(reviewClusters.map((_, i) => i)))
     }
   }
 
   const handleApply = async () => {
     try {
-      const result = await apply.mutateAsync(approvedClusters)
+      // Always include the auto case clusters — they're pre-verified deterministic merges.
+      const payload = [...caseClusters, ...approvedReviewClusters]
+      const result = await apply.mutateAsync(payload)
       setApplyResult({
         created: result.created,
         updated: result.updated,
@@ -101,6 +120,24 @@ export function AECleanupModal({ onClose }: Props) {
                 spelling variants, typos, pluralizations, abbreviations, and obvious synonyms.
                 You review each proposed cluster before anything is written to WIP.
               </p>
+              {cheapStats.data && (
+                <div className="rounded-md border bg-gray-50 px-3 py-2 text-xs text-text-muted">
+                  <div className="font-medium text-text">Current state (free preview):</div>
+                  <ul className="mt-1 space-y-0.5">
+                    <li>
+                      {formatNumber(cheapStats.data.raw_term_count)} distinct raw AE strings
+                    </li>
+                    <li>{formatNumber(cheapStats.data.existing_term_count)} existing canonical terms</li>
+                    <li>
+                      {formatNumber(cheapStats.data.unmapped_count)} unmapped (→{' '}
+                      {formatNumber(cheapStats.data.unique_lowercase_count)} after case collapse,
+                      {' '}
+                      {formatNumber(cheapStats.data.case_collapsed_count)} trivial merges will be
+                      auto-applied)
+                    </li>
+                  </ul>
+                </div>
+              )}
               <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
@@ -149,7 +186,7 @@ export function AECleanupModal({ onClose }: Props) {
                 <span>{formatNumber(stats!.unmapped_count)} unmapped</span>
                 <span>·</span>
                 <span>
-                  {clusters.length} cluster{clusters.length === 1 ? '' : 's'} proposed
+                  {caseClusters.length} case-only + {reviewClusters.length} reviewable
                 </span>
                 {stats!.truncated && (
                   <span className="text-amber-600">
@@ -164,25 +201,62 @@ export function AECleanupModal({ onClose }: Props) {
                 )}
               </div>
 
-              {clusters.length === 0 ? (
+              {/* Auto-apply banner for case-only clusters */}
+              {caseClusters.length > 0 && (
+                <div className="rounded-md border border-green-200 bg-green-50">
+                  <button
+                    onClick={() => setCaseExpanded((v) => !v)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs"
+                  >
+                    {caseExpanded ? (
+                      <ChevronDown className="h-3.5 w-3.5 text-green-700" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 text-green-700" />
+                    )}
+                    <Check className="h-3.5 w-3.5 text-green-700" />
+                    <span className="font-medium text-green-800">
+                      {caseClusters.length} case-only merge{caseClusters.length === 1 ? '' : 's'}
+                    </span>
+                    <span className="text-green-700">
+                      — will be applied automatically (e.g. HEADACHE / Headache / headache)
+                    </span>
+                  </button>
+                  {caseExpanded && (
+                    <div className="max-h-64 overflow-y-auto border-t border-green-200 px-3 py-2 text-[11px]">
+                      <div className="space-y-1">
+                        {caseClusters.map((c, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <span className="font-medium text-green-900">→ {c.canonical}</span>
+                            <span className="text-green-700">
+                              {c.variants.filter((v) => v !== c.canonical).join(', ')}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {reviewClusters.length === 0 ? (
                 <div className="rounded-md border bg-gray-50 p-6 text-center text-sm text-text-muted">
-                  No clusters worth merging. Your AE terms look clean already.
+                  No Claude-proposed clusters. Your non-case AE terms look clean already.
                 </div>
               ) : (
                 <>
                   {/* Bulk select */}
                   <div className="flex items-center justify-between text-xs">
                     <button onClick={toggleAll} className="text-primary hover:underline">
-                      {approved.size === clusters.length ? 'Deselect all' : 'Select all'}
+                      {approved.size === reviewClusters.length ? 'Deselect all' : 'Select all'}
                     </button>
                     <span className="text-text-muted">
-                      {approved.size} of {clusters.length} selected
+                      {approved.size} of {reviewClusters.length} selected
                     </span>
                   </div>
 
                   {/* Cluster list */}
                   <div className="space-y-2">
-                    {clusters.map((c, i) => (
+                    {reviewClusters.map((c, i) => (
                       <ClusterCard
                         key={i}
                         cluster={c}
@@ -220,7 +294,7 @@ export function AECleanupModal({ onClose }: Props) {
         </div>
 
         {/* Footer */}
-        {propose.data && !applyResult && clusters.length > 0 && (
+        {propose.data && !applyResult && allClusters.length > 0 && (
           <div className="flex items-center justify-end gap-2 border-t px-5 py-3">
             <button
               onClick={handleClose}
@@ -230,7 +304,7 @@ export function AECleanupModal({ onClose }: Props) {
             </button>
             <button
               onClick={handleApply}
-              disabled={approved.size === 0 || apply.isPending}
+              disabled={caseClusters.length + approved.size === 0 || apply.isPending}
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-40"
             >
               {apply.isPending ? (
@@ -238,7 +312,7 @@ export function AECleanupModal({ onClose }: Props) {
               ) : (
                 <Check className="h-4 w-4" />
               )}
-              Apply {approved.size} cluster{approved.size === 1 ? '' : 's'}
+              Apply {caseClusters.length} auto + {approved.size} reviewed
             </button>
           </div>
         )}

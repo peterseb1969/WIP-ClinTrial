@@ -236,6 +236,39 @@ Cluster the raw strings above and return the JSON array as specified. Remember: 
 }
 
 /**
+ * GET /server-api/ae-cleanup/stats
+ * Cheap counts-only endpoint — no Claude call, no cost. Lets the UI show
+ * the "N raw → M canonical" story and preview what a propose run would
+ * look like before spending any tokens.
+ */
+router.get('/ae-cleanup/stats', async (_req, res) => {
+  try {
+    const terminologyId = await resolveTerminologyId(AE_TERMINOLOGY_VALUE)
+    const [existing, rawTerms] = await Promise.all([
+      loadExistingTerms(terminologyId),
+      loadRawAETerms(),
+    ])
+    const aliasedSet = new Set<string>()
+    for (const t of existing) {
+      aliasedSet.add(t.canonical.toLowerCase())
+      for (const a of t.aliases) aliasedSet.add(a.toLowerCase())
+    }
+    const unmapped = rawTerms.filter((r) => !aliasedSet.has(r.term.toLowerCase()))
+    const lowerSet = new Set(unmapped.map((r) => r.term.toLowerCase()))
+    res.json({
+      raw_term_count: rawTerms.length,
+      existing_term_count: existing.length,
+      unmapped_count: unmapped.length,
+      case_collapsed_count: unmapped.length - lowerSet.size,
+      unique_lowercase_count: lowerSet.size,
+    })
+  } catch (e) {
+    console.error('[ae-cleanup/stats] error:', e)
+    res.status(500).json({ error: String(e) })
+  }
+})
+
+/**
  * POST /server-api/ae-cleanup/propose
  * Returns: { clusters: Cluster[], stats: {...} }
  */

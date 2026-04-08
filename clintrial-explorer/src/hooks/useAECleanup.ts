@@ -1,4 +1,26 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+export interface AECleanupStats {
+  raw_term_count: number
+  existing_term_count: number
+  unmapped_count: number
+  case_collapsed_count: number
+  unique_lowercase_count: number
+}
+
+/** Cheap counts-only preview — no Claude call, no cost. */
+export function useAECleanupStats(enabled: boolean) {
+  return useQuery<AECleanupStats>({
+    queryKey: ['clintrial', 'ae-cleanup-stats'],
+    queryFn: async () => {
+      const res = await fetch('/server-api/ae-cleanup/stats')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json()
+    },
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}
 
 export interface AECleanupCluster {
   canonical: string
