@@ -52,12 +52,12 @@ export interface AECleanupApplyResponse {
 
 /** Call Claude to propose AE term clusters. */
 export function useProposeAECleanup() {
-  return useMutation<AECleanupProposeResponse, Error, void>({
-    mutationFn: async () => {
+  return useMutation<AECleanupProposeResponse, Error, { maxTerms?: number } | void>({
+    mutationFn: async (vars) => {
       const res = await fetch('/server-api/ae-cleanup/propose', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: '{}',
+        body: JSON.stringify({ maxTerms: vars?.maxTerms }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }))

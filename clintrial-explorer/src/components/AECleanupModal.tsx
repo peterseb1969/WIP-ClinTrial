@@ -1,5 +1,16 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Sparkles, X, Check, AlertTriangle, Loader2, ChevronDown, ChevronRight } from 'lucide-react'
+import {
+  Sparkles,
+  X,
+  Check,
+  AlertTriangle,
+  Loader2,
+  ChevronDown,
+  ChevronRight,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+} from 'lucide-react'
 import {
   useProposeAECleanup,
   useApplyAECleanup,
@@ -12,6 +23,8 @@ interface Props {
   onClose: () => void
 }
 
+type SortMode = 'desc' | 'asc' | 'none'
+
 /** Modal for AI-assisted AE term cleanup. */
 export function AECleanupModal({ onClose }: Props) {
   const propose = useProposeAECleanup()
@@ -19,6 +32,17 @@ export function AECleanupModal({ onClose }: Props) {
   const cheapStats = useAECleanupStats(!propose.data && !propose.isPending)
   const [approved, setApproved] = useState<Set<number>>(new Set())
   const [caseExpanded, setCaseExpanded] = useState(false)
+  const [caseApplied, setCaseApplied] = useState(false)
+  const [sortMode, setSortMode] = useState<SortMode>('desc')
+  const [maxTerms, setMaxTerms] = useState(3000)
+  // Per-cluster variant removals (session-only, indexed by original reviewClusters index).
+  const [removedVariants, setRemovedVariants] = useState<Record<number, Set<string>>>({})
+  const [caseApplyResult, setCaseApplyResult] = useState<{
+    created: number
+    updated: number
+    deleted: number
+    errors: number
+  } | null>(null)
   const [applyResult, setApplyResult] = useState<{
     created: number
     updated: number
@@ -31,7 +55,7 @@ export function AECleanupModal({ onClose }: Props) {
 
   // Split off the auto-generated case-only clusters (reason set by the server
   // in collapseCaseVariants). They're confidence 1.0 and reviewing them is
-  // just noise — they're applied automatically. Everything else came from
+  // just noise — they get their own Apply button. Everything else came from
   // Claude and needs human review.
   const { caseClusters, reviewClusters } = useMemo(() => {
     const cc: AECleanupCluster[] = []
@@ -42,6 +66,34 @@ export function AECleanupModal({ onClose }: Props) {
     }
     return { caseClusters: cc, reviewClusters: rc }
   }, [allClusters])
+
+  // Apply per-variant removals and drop clusters whose variants are now empty.
+  // Returns the live clusters plus a map from live-index → original-index, so
+  // approval/removal state stays keyed on the stable original index.
+  const liveReviewClusters = useMemo(() => {
+    const out: Array<{ cluster: AECleanupCluster; originalIndex: number }> = []
+    reviewClusters.forEach((c, origIdx) => {
+      const removed = removedVariants[origIdx]
+      const variants = removed ? c.variants.filter((v) => !removed.has(v)) : c.variants
+      if (variants.length === 0) return
+      out.push({
+        cluster: { ...c, variants },
+        originalIndex: origIdx,
+      })
+    })
+    return out
+  }, [reviewClusters, removedVariants])
+
+  const sortedLiveClusters = useMemo(() => {
+    if (sortMode === 'none') return liveReviewClusters
+    const copy = [...liveReviewClusters]
+    copy.sort((a, b) =>
+      sortMode === 'desc'
+        ? b.cluster.confidence - a.cluster.confidence
+        : a.cluster.confidence - b.cluster.confidence,
+    )
+    return copy
+  }, [liveReviewClusters, sortMode])
 
   // Pre-approve high-confidence review clusters (>= 0.9) when results arrive
   useEffect(() => {
@@ -54,33 +106,87 @@ export function AECleanupModal({ onClose }: Props) {
     }
   }, [reviewClusters, approved.size])
 
-  const approvedReviewClusters = useMemo(
-    () => reviewClusters.filter((_, i) => approved.has(i)),
-    [reviewClusters, approved],
+  const approvedLiveClusters = useMemo(
+    () =>
+      liveReviewClusters
+        .filter(({ originalIndex }) => approved.has(originalIndex))
+        .map(({ cluster }) => cluster),
+    [liveReviewClusters, approved],
   )
 
-  const toggle = (i: number) => {
+  const toggle = (origIdx: number) => {
     setApproved((prev) => {
       const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
+      if (next.has(origIdx)) next.delete(origIdx)
+      else next.add(origIdx)
       return next
     })
   }
 
   const toggleAll = () => {
-    if (approved.size === reviewClusters.length) {
-      setApproved(new Set())
+    const liveIdxSet = new Set(liveReviewClusters.map((x) => x.originalIndex))
+    const allSelected = [...liveIdxSet].every((i) => approved.has(i))
+    if (allSelected) {
+      setApproved((prev) => {
+        const next = new Set(prev)
+        liveIdxSet.forEach((i) => next.delete(i))
+        return next
+      })
     } else {
-      setApproved(new Set(reviewClusters.map((_, i) => i)))
+      setApproved((prev) => {
+        const next = new Set(prev)
+        liveIdxSet.forEach((i) => next.add(i))
+        return next
+      })
+    }
+  }
+
+  const removeVariant = (origIdx: number, variant: string) => {
+    setRemovedVariants((prev) => {
+      const next = { ...prev }
+      const set = new Set(next[origIdx] ?? [])
+      set.add(variant)
+      next[origIdx] = set
+      return next
+    })
+    // If the cluster ends up empty, drop it from `approved` too.
+    setApproved((prev) => {
+      const cluster = reviewClusters[origIdx]
+      if (!cluster) return prev
+      const removed = new Set(removedVariants[origIdx] ?? [])
+      removed.add(variant)
+      const remaining = cluster.variants.filter((v) => !removed.has(v))
+      if (remaining.length === 0 && prev.has(origIdx)) {
+        const next = new Set(prev)
+        next.delete(origIdx)
+        return next
+      }
+      return prev
+    })
+  }
+
+  const cycleSort = () => {
+    setSortMode((m) => (m === 'desc' ? 'asc' : m === 'asc' ? 'none' : 'desc'))
+  }
+
+  const handleApplyCaseOnly = async () => {
+    try {
+      const result = await apply.mutateAsync(caseClusters)
+      setCaseApplyResult({
+        created: result.created,
+        updated: result.updated,
+        deleted: result.deleted,
+        errors: result.errors.length,
+      })
+      setCaseApplied(true)
+    } catch (e) {
+      console.error(e)
     }
   }
 
   const handleApply = async () => {
     try {
-      // Always include the auto case clusters — they're pre-verified deterministic merges.
-      const payload = [...caseClusters, ...approvedReviewClusters]
-      const result = await apply.mutateAsync(payload)
+      const result = await apply.mutateAsync(approvedLiveClusters)
       setApplyResult({
         created: result.created,
         updated: result.updated,
@@ -95,6 +201,10 @@ export function AECleanupModal({ onClose }: Props) {
   const handleClose = () => {
     onClose()
   }
+
+  const liveSelectedCount = liveReviewClusters.filter(({ originalIndex }) =>
+    approved.has(originalIndex),
+  ).length
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -148,13 +258,30 @@ export function AECleanupModal({ onClose }: Props) {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => propose.mutate()}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-              >
-                <Sparkles className="h-4 w-4" />
-                Analyze AE terms
-              </button>
+              <div className="flex items-end gap-3">
+                <label className="flex flex-col text-xs text-text-muted">
+                  <span className="mb-1">Max terms sent to Claude</span>
+                  <input
+                    type="number"
+                    min={100}
+                    max={10000}
+                    step={100}
+                    value={maxTerms}
+                    onChange={(e) => setMaxTerms(Number(e.target.value) || 0)}
+                    className="w-32 rounded-md border px-2 py-1.5 text-sm text-text"
+                  />
+                </label>
+                <button
+                  onClick={() => propose.mutate({ maxTerms })}
+                  className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Analyze AE terms
+                </button>
+              </div>
+              <p className="text-[11px] text-text-muted">
+                Higher = more complete coverage but more tokens and $ cost. Default 3000.
+              </p>
             </div>
           )}
 
@@ -186,7 +313,7 @@ export function AECleanupModal({ onClose }: Props) {
                 <span>{formatNumber(stats!.unmapped_count)} unmapped</span>
                 <span>·</span>
                 <span>
-                  {caseClusters.length} case-only + {reviewClusters.length} reviewable
+                  {caseClusters.length} case-only + {liveReviewClusters.length} reviewable
                 </span>
                 {stats!.truncated && (
                   <span className="text-amber-600">
@@ -201,26 +328,62 @@ export function AECleanupModal({ onClose }: Props) {
                 )}
               </div>
 
-              {/* Auto-apply banner for case-only clusters */}
+              {/* Case-only banner with its own Apply button */}
               {caseClusters.length > 0 && (
-                <div className="rounded-md border border-green-200 bg-green-50">
-                  <button
-                    onClick={() => setCaseExpanded((v) => !v)}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs"
-                  >
-                    {caseExpanded ? (
-                      <ChevronDown className="h-3.5 w-3.5 text-green-700" />
+                <div
+                  className={`rounded-md border ${
+                    caseApplied ? 'border-green-300 bg-green-100' : 'border-green-200 bg-green-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <button
+                      onClick={() => setCaseExpanded((v) => !v)}
+                      className="flex flex-1 items-center gap-2 text-left text-xs"
+                    >
+                      {caseExpanded ? (
+                        <ChevronDown className="h-3.5 w-3.5 text-green-700" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5 text-green-700" />
+                      )}
+                      <Check className="h-3.5 w-3.5 text-green-700" />
+                      <span className="font-medium text-green-800">
+                        {caseClusters.length} case-only merge
+                        {caseClusters.length === 1 ? '' : 's'}
+                      </span>
+                      <span className="text-green-700">
+                        — deterministic (e.g. HEADACHE / Headache / headache)
+                      </span>
+                    </button>
+                    {caseApplied ? (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-green-200 px-2 py-1 text-[11px] font-medium text-green-900">
+                        <Check className="h-3 w-3" />
+                        Applied
+                        {caseApplyResult && (
+                          <span className="font-normal">
+                            {' '}
+                            ({caseApplyResult.created}+/{caseApplyResult.updated}↑
+                            {caseApplyResult.errors > 0
+                              ? `/${caseApplyResult.errors}!`
+                              : ''}
+                            )
+                          </span>
+                        )}
+                      </span>
                     ) : (
-                      <ChevronRight className="h-3.5 w-3.5 text-green-700" />
+                      <button
+                        onClick={handleApplyCaseOnly}
+                        disabled={apply.isPending}
+                        className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-green-700 disabled:opacity-40"
+                      >
+                        {apply.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="h-3 w-3" />
+                        )}
+                        Apply case-only
+                      </button>
                     )}
-                    <Check className="h-3.5 w-3.5 text-green-700" />
-                    <span className="font-medium text-green-800">
-                      {caseClusters.length} case-only merge{caseClusters.length === 1 ? '' : 's'}
-                    </span>
-                    <span className="text-green-700">
-                      — will be applied automatically (e.g. HEADACHE / Headache / headache)
-                    </span>
-                  </button>
+                  </div>
                   {caseExpanded && (
                     <div className="max-h-64 overflow-y-auto border-t border-green-200 px-3 py-2 text-[11px]">
                       <div className="space-y-1">
@@ -238,30 +401,52 @@ export function AECleanupModal({ onClose }: Props) {
                 </div>
               )}
 
-              {reviewClusters.length === 0 ? (
+              {liveReviewClusters.length === 0 ? (
                 <div className="rounded-md border bg-gray-50 p-6 text-center text-sm text-text-muted">
                   No Claude-proposed clusters. Your non-case AE terms look clean already.
                 </div>
               ) : (
                 <>
-                  {/* Bulk select */}
+                  {/* Bulk select + sort */}
                   <div className="flex items-center justify-between text-xs">
-                    <button onClick={toggleAll} className="text-primary hover:underline">
-                      {approved.size === reviewClusters.length ? 'Deselect all' : 'Select all'}
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button onClick={toggleAll} className="text-primary hover:underline">
+                        {liveSelectedCount === liveReviewClusters.length
+                          ? 'Deselect all'
+                          : 'Select all'}
+                      </button>
+                      <button
+                        onClick={cycleSort}
+                        className="inline-flex items-center gap-1 text-text-muted hover:text-text"
+                        title="Toggle sort"
+                      >
+                        {sortMode === 'desc' ? (
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        ) : sortMode === 'asc' ? (
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ArrowUpDown className="h-3.5 w-3.5" />
+                        )}
+                        Confidence
+                        {sortMode === 'desc' && ' (high → low)'}
+                        {sortMode === 'asc' && ' (low → high)'}
+                        {sortMode === 'none' && ' (original order)'}
+                      </button>
+                    </div>
                     <span className="text-text-muted">
-                      {approved.size} of {reviewClusters.length} selected
+                      {liveSelectedCount} of {liveReviewClusters.length} selected
                     </span>
                   </div>
 
                   {/* Cluster list */}
                   <div className="space-y-2">
-                    {reviewClusters.map((c, i) => (
+                    {sortedLiveClusters.map(({ cluster, originalIndex }) => (
                       <ClusterCard
-                        key={i}
-                        cluster={c}
-                        approved={approved.has(i)}
-                        onToggle={() => toggle(i)}
+                        key={originalIndex}
+                        cluster={cluster}
+                        approved={approved.has(originalIndex)}
+                        onToggle={() => toggle(originalIndex)}
+                        onRemoveVariant={(v) => removeVariant(originalIndex, v)}
                       />
                     ))}
                   </div>
@@ -294,7 +479,7 @@ export function AECleanupModal({ onClose }: Props) {
         </div>
 
         {/* Footer */}
-        {propose.data && !applyResult && allClusters.length > 0 && (
+        {propose.data && !applyResult && liveReviewClusters.length > 0 && (
           <div className="flex items-center justify-end gap-2 border-t px-5 py-3">
             <button
               onClick={handleClose}
@@ -304,7 +489,7 @@ export function AECleanupModal({ onClose }: Props) {
             </button>
             <button
               onClick={handleApply}
-              disabled={caseClusters.length + approved.size === 0 || apply.isPending}
+              disabled={liveSelectedCount === 0 || apply.isPending}
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-40"
             >
               {apply.isPending ? (
@@ -312,7 +497,7 @@ export function AECleanupModal({ onClose }: Props) {
               ) : (
                 <Check className="h-4 w-4" />
               )}
-              Apply {caseClusters.length} auto + {approved.size} reviewed
+              Apply {liveSelectedCount} reviewed
             </button>
           </div>
         )}
@@ -336,10 +521,12 @@ function ClusterCard({
   cluster,
   approved,
   onToggle,
+  onRemoveVariant,
 }: {
   cluster: AECleanupCluster
   approved: boolean
   onToggle: () => void
+  onRemoveVariant: (variant: string) => void
 }) {
   const confidenceColor =
     cluster.confidence >= 0.9
@@ -349,8 +536,8 @@ function ClusterCard({
         : 'text-red-700 bg-red-100'
 
   return (
-    <label
-      className={`block cursor-pointer rounded-md border p-3 transition-colors ${
+    <div
+      className={`block rounded-md border p-3 transition-colors ${
         approved ? 'border-primary bg-primary/5' : 'border-gray-200 hover:bg-gray-50'
       }`}
     >
@@ -359,11 +546,11 @@ function ClusterCard({
           type="checkbox"
           checked={approved}
           onChange={onToggle}
-          className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+          className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">→ {cluster.canonical}</span>
+            <span className="text-sm font-semibold">→ {cluster.canonical}</span>
             {cluster.existing_canonical && (
               <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
                 merge into existing
@@ -376,20 +563,35 @@ function ClusterCard({
             </span>
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1">
-            {cluster.variants.map((v) => (
-              <span
-                key={v}
-                className="rounded-full bg-white border px-2 py-0.5 text-[11px] text-text-muted"
-              >
-                {v}
-              </span>
-            ))}
+            {cluster.variants.map((v) => {
+              const isCanonical = v === cluster.canonical
+              return (
+                <span
+                  key={v}
+                  className="inline-flex items-center gap-1 rounded-full border bg-white px-2 py-0.5 text-[11px] text-text-muted"
+                >
+                  {v}
+                  {!isCanonical && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onRemoveVariant(v)
+                      }}
+                      className="text-text-muted hover:text-danger"
+                      title="Remove from cluster"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </span>
+              )
+            })}
           </div>
           {cluster.reason && (
             <p className="mt-1.5 text-[11px] italic text-text-muted">{cluster.reason}</p>
           )}
         </div>
       </div>
-    </label>
+    </div>
   )
 }

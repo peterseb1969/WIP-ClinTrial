@@ -272,10 +272,16 @@ router.get('/ae-cleanup/stats', async (_req, res) => {
  * POST /server-api/ae-cleanup/propose
  * Returns: { clusters: Cluster[], stats: {...} }
  */
-router.post('/ae-cleanup/propose', async (_req, res) => {
+router.post('/ae-cleanup/propose', async (req, res) => {
   const t0 = Date.now()
   try {
-    console.log('[ae-cleanup/propose] start')
+    const body = (req.body ?? {}) as { maxTerms?: number }
+    const requestedMax = Number(body.maxTerms)
+    const MAX_TERMS =
+      Number.isFinite(requestedMax) && requestedMax > 0
+        ? Math.min(Math.floor(requestedMax), 10000)
+        : 3000
+    console.log(`[ae-cleanup/propose] start (maxTerms=${MAX_TERMS})`)
     const terminologyId = await resolveTerminologyId(AE_TERMINOLOGY_VALUE)
     console.log(`[ae-cleanup/propose] resolved terminology in ${Date.now() - t0}ms`)
     const [existing, rawTerms] = await Promise.all([
@@ -318,7 +324,6 @@ router.post('/ae-cleanup/propose', async (_req, res) => {
 
     // Re-sort representatives by frequency (top-down) and cap to protect the model budget.
     reps.sort((a, b) => b.trial_count - a.trial_count)
-    const MAX_TERMS = 3000
     const toSend = reps.slice(0, MAX_TERMS)
 
     const userMessage = buildUserMessage(toSend, existing)
