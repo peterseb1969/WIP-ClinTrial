@@ -115,7 +115,7 @@ export function GlobalFilterBar() {
                   }}
                   className="inline-flex items-center gap-0.5 rounded-full bg-primary text-white px-2 py-0.5 text-[11px] font-medium hover:bg-primary/80"
                 >
-                  {formatValue(value)}
+                  {key === 'search' ? `"${value}"` : formatValue(value)}
                   <X className="h-2.5 w-2.5" />
                 </button>
               ))

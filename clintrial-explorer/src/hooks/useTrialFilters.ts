@@ -205,7 +205,6 @@ export function useTrialFilters() {
   // Build flat list of active entries for the filter bar
   const activeEntries: Array<{ key: FilterKey; value: string }> = []
   for (const [k, v] of Object.entries(filters)) {
-    if (k === 'search') continue
     if (Array.isArray(v)) {
       for (const val of v) {
         activeEntries.push({ key: k as FilterKey, value: val })
