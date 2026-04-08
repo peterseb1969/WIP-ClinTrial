@@ -1,172 +1,121 @@
 # Improvement Roadmap
 
-Prioritized enhancement plan based on user feedback (2026-03-26).
-Updated after therapeutic area classification was completed (2,508 trials classified).
+Current state of the ClinTrial Explorer application. Last updated 2026-04-08.
 
-## Core Problems
+The app is well past its initial scope. Most of the original roadmap has shipped. This document tracks what's left and what's been added since the original plan.
 
-1. **Trial-centric architecture** — every interaction funnels to the Trials page. Entities like molecules, countries, and adverse events are filter selectors, not first-class objects.
-2. **Single-select, forced redirect** — clicking a filter value selects one item and redirects to the Trials page. No multi-select, no stay-on-page.
-3. **Limited filter dimensions** — only basic filters exist (status, phase, molecule, country). Missing: has AE data, has protocol PDF, has SAP, therapeutic area, and other data-availability filters.
+## Status Summary
 
-## Completed
+| Phase | Status |
+|-------|--------|
+| Phase 1 — Filter Model | ✅ Shipped |
+| Phase 2 — Content Pages | ✅ Mostly shipped (1 item open) |
+| Phase 3 — Advanced Exploration | ✅ Shipped |
+| Phase 4 — Polish | Partial (low-priority items deferred) |
+| New work added since original plan | See "Beyond the Original Plan" |
 
-- ~~Therapeutic area classifier~~ — Done (2026-03-26). 2,508 of 3,867 trials classified via keyword matching against 37 CT_THERAPEUTIC_AREA terms. Script: `scripts/classify_therapeutic_areas.py`.
-- ~~Global cumulative filters~~ — Done. Filters persist across pages via sessionStorage.
-- ~~Server-side SQL queries~~ — Done. Dashboard, trial detail, sites all use reporting layer.
-- ~~Filter-aware pages~~ — Done. Molecules and Sites reflect active filters.
-- ~~Selected item highlighting~~ — Done. Active molecule/country visually highlighted.
+---
 
-## Phase 1: Fix the Filter Model
+## Open Items
 
-### 1a. Multi-select filters
-**Priority:** Critical — architectural foundation
-**Effort:** Medium
+### High value
 
-Change filter values from `string` to `string[]`. A user can select US + CH + DE as countries, or atezolizumab + bevacizumab as molecules. The filter bar shows multiple chips per key. Client-side filtering uses `some`/`includes` instead of `===`.
+#### Ontology-aware classification
+**Priority:** High — closes a real semantic gap
+**Effort:** Small
 
-**Changes:** `useTrialFilters` store, `useFilteredTrials` hook, `GlobalFilterBar`, `useTrialsByCountry` (needs to accept multiple countries), all quick filter controls on TrialsPage.
-
-### 1b. Stay-on-page selection
-**Priority:** Critical — UX foundation
-**Effort:** Medium
-
-Clicking a molecule/country/status toggles it in the global filter *without navigating away*. The current page re-renders with the updated filter. Each page gets a "View N matching trials →" button for explicit navigation to the trial list.
-
-**Changes:** `useFilterNav` → `useFilterToggle`. ChipLink stays on current page. Molecules/Sites/Dashboard pages add a "View trials" action.
-
-### 1c. Richer trial filters
-**Priority:** High — directly requested
-**Effort:** Medium
-
-Add data-availability filters to the Trials page and global filter bar:
-
-| Filter | Logic | Data source |
-|--------|-------|-------------|
-| Has AE data | Trial has rows in doc_ct_trial_ae | `SELECT DISTINCT nct_id FROM doc_ct_trial_ae` |
-| Has results/outcomes | Trial has rows in doc_ct_trial_outcome with result_groups | Reporting SQL |
-| Has baseline data | Trial has rows in doc_ct_trial_baseline | Reporting SQL |
-| Has protocol PDF | Trial has linked PDF file of type "protocol" | File references (once PDFs are imported) |
-| Has SAP PDF | Trial has linked PDF file of type "statistical analysis plan" | File references (once PDFs are imported) |
-| Therapeutic area | Now populated on 2,508 trials | Direct field filter (multi-select) |
-| Enrollment range | Min/max enrollment slider | Direct field filter |
-| Date range | Start date between X and Y | Direct field filter |
-
-The "has PDF" filters depend on importing trial documents (KNOWN_ISSUES #3). The others can be implemented now.
-
-**Implementation:** Pre-compute the sets of NCT IDs that have AE/outcome/baseline data via SQL queries (similar to the existing `useTrialsByCountry` pattern). Cache with 5-min stale time. Filter client-side against the trial list.
-
-## Phase 2: Content Pages (unblocked by TA classification)
-
-### 2a. Therapeutic Area hierarchy view
-**Priority:** High — now unblocked
-**Effort:** Medium
-
-Each therapeutic area is a collapsible section that expands to show all trial conditions it covers. Clicking a condition filters trials. Shows the mapping between curated areas and raw ClinicalTrials.gov conditions.
-
-Could live on a dedicated page (`/therapeutic-areas`) or as an expandable panel on the Dashboard.
-
-Additionally shows:
-- Number of trials per area (and per condition within the area)
-- Unclassified conditions (the 35% of trials with no therapeutic area match)
-- Which keywords triggered the classification (transparency)
-
-### 2b. Dashboard filter-awareness
-**Priority:** High — quick win
-**Effort:** Low (30 min)
-
-Dashboard charts currently always show the full dataset. Add WHERE clauses to the 7 SQL queries based on active filters. Dashboard becomes another lens on the filtered dataset. Now that therapeutic areas are populated, add a therapeutic area chart.
-
-### 2c. Molecule Detail Page (`/molecules/:name`)
-**Priority:** High — leverages existing terminology data
-**Effort:** Medium
-
-| Section | Data Source |
-|---------|------------|
-| Name + aliases (brand names, company codes) | CT_MOLECULE term aliases |
-| Drug class | CT_DRUG_CLASS ontology relationships |
-| Molecular targets | CT_TARGET ontology relationships |
-| Trial summary (by phase, status) | Reporting SQL aggregation |
-| Therapeutic areas | From classified trials using this molecule |
-| Aggregate AE profile | Reporting SQL on doc_ct_trial_ae |
-| Trial list | Filtered trial list component |
-
-### 2d. Condition normalization via CT_CONDITION terminology
-**Priority:** High — conditions are the most visible data quality issue
-**Effort:** High (data model change)
-
-ClinicalTrials.gov conditions are free text with rampant duplication: 79 distinct spellings for "lung cancer" variants alone ("Non-Small Cell Lung Cancer" vs "Non-small Cell Lung Cancer" vs "NSCLC" vs "Carcinoma, Non-Small-Cell Lung" vs Unicode-comma variants).
+The classifier currently does flat condition→TA matching. When a rule matches "breast cancer" and adds `BREAST_CANCER`, it does **not** also add `ONCOLOGY`, even though `BREAST_CANCER --is_a--> ONCOLOGY` is declared in the ontology. The ontology data is in WIP and unused at classification time.
 
 **Implementation:**
-1. Create a `CT_CONDITION` terminology with curated canonical terms and aliases (like CT_MOLECULE)
-2. Build a condition resolver in the import script that maps free-text conditions to CT_CONDITION terms
-3. Store resolved condition term values on the trial document (alongside or replacing the raw conditions array)
-4. Unresolved conditions flagged for manual curation
-5. This is a Phase 2/3 data model change — new terminology, new/modified template field, re-import
+1. Server-side classifier (`server/lib/classifier.ts`) loads `is_a` ancestors from `CT_THERAPEUTIC_AREA` once per classification run via `list_relationships` / `get_term_hierarchy`
+2. After flat rule matching produces a set of leaf TAs, walk ancestors and add them to the result
+3. Provenance tracking notes which TAs were inherited vs. matched directly
+4. Frontend `applyRules` does the same for live preview/dry-run mode (preload the ancestor map at app start)
+5. Add a UI hint on the classification page: "Ontology hierarchy applied — N inherited TAs"
 
-**Interim fix (done):** Display-time normalization groups condition strings by lowercase/stripped form while showing the most common spelling. Doesn't fix the data but makes charts and lists usable.
+**Benefit:** Aggregations like "all oncology trials" stop needing to OR together every leaf TA. Dashboard, filter bar, and analytics all become hierarchical for free.
 
-## Phase 3: Advanced Exploration
+#### CT_CONDITION terminology and condition resolver
+**Priority:** High — biggest remaining data quality issue
+**Effort:** High (data model change + re-import)
 
-### 3a. Adverse Events Page (`/adverse-events`)
-**Priority:** Medium-High — high value, high effort
-**Effort:** High
+Conditions from ClinicalTrials.gov are free text with rampant duplication: dozens of spellings for "non-small cell lung cancer," Unicode-comma variants, qualifier ordering differences. Display-time normalization (already in place) papers over the issue but doesn't fix it.
 
-| Section | Description |
-|---------|-------------|
-| Top AEs | Most frequent AEs across filtered trials, sortable by incidence |
-| Organ system grouping | Collapsible, with serious/other toggle |
-| Drill-down | Click AE term → which trials reported it, per-arm stats |
-| Cross-trial comparison | Heatmap: AE terms × trials (or molecules), cells = incidence |
-| Filter-aware | Respects global filters |
+**Implementation:**
+1. Create `CT_CONDITION` terminology with curated canonical terms and aliases (mirror of `CT_MOLECULE`)
+2. Build a resolver in the import pipeline that maps free-text conditions to canonical CT_CONDITION terms
+3. Add a `resolved_conditions` field to `CT_TRIAL` (alongside the raw `conditions` array)
+4. Unresolved conditions surface in the classification rules page as a curation queue
+5. Re-run import to backfill
 
-Data source: Reporting SQL on `doc_ct_trial_ae` with GROUP BY aggregation.
+This is a Phase 2/3 data model change — touches templates, terminologies, the import pipeline, and existing documents.
 
-### 3b. Mapping rules transparency and configuration
-**Priority:** Medium-High
-**Effort:** Short-term Low, Long-term High
+### Medium value
 
-The therapeutic area classifier, ontology relationships (drug class → molecule, molecule → target), and similar mapping rules are currently invisible to the user.
+#### Enrollment range slider filter
+**Priority:** Medium — quick win
+**Effort:** Small
 
-**Short-term: Read-only visibility**
-- A "Data Model" or "Configuration" page showing:
-  - Therapeutic area → condition keyword mapping (which keywords map to which area, how many trials each rule matched)
-  - Molecule → drug class relationships (from CT_DRUG_CLASS ontology)
-  - Molecule → target relationships (from CT_TARGET ontology)
-  - Unmatched conditions (trials with no therapeutic area — helps identify gaps)
-- Transparency feature: user can see exactly why a trial is classified as "Lung Cancer" and spot misclassifications or missing rules.
+Add min/max enrollment slider to the global filter bar. Direct field filter, no SQL changes needed.
 
-**Long-term: User-configurable rules**
-- Edit keyword mappings through the UI (add/remove keywords per therapeutic area)
-- Add new therapeutic area terms
-- Run re-classification from the UI (trigger the classifier script, show progress)
-- Preview changes before applying ("if I add this keyword, which trials would be reclassified?")
-- Audit trail: who changed which rule, when, and how it affected classification
+#### Date range filter
+**Priority:** Medium
+**Effort:** Small
 
-**Data source:** All mapping rules already live in WIP as terminology terms (with aliases) and ontology relationships. The short-term view reads what's there. The long-term edit UI writes back via `@wip/client`.
+Add start-date range filter to the global filter bar. Same shape as enrollment.
 
-## Phase 4: Polish
+#### Therapeutic Area page — true hierarchy view
+**Priority:** Medium
+**Effort:** Small (depends on ontology-aware classification)
 
-### 4a. Country Detail Page (`/sites/:country`)
-**Priority:** Low — Sites page with filters covers most use cases
+The current `TherapeuticAreasPage` lists areas flat. Once classification is ontology-aware, expand it to show the actual `is_a` tree with collapsible parent nodes and trial counts at each level.
+
+### Low value (deferred)
+
+#### Country Detail Page (`/sites/:country`)
+**Priority:** Low
 **Effort:** Medium
 
-Summary stats, facility list, trial timeline for a country.
+Summary stats, facility list, trial timeline for a single country. The Sites page with country filters covers most use cases — only worth doing if a user explicitly asks.
 
-### 4b. Bookmarks as WIP documents
-**Priority:** Low — current localStorage approach works for single-user
+#### Bookmarks as WIP documents
+**Priority:** Low
 **Effort:** Medium
 
-Create a CT_BOOKMARK template in WIP. Enables multi-device sync and sharing.
+Bookmarks currently use localStorage (works fine for single-user). Migrating to a `CT_BOOKMARK` template in WIP would enable multi-device sync and sharing, but no current user has asked for it.
 
-### 4c. Import trial PDFs from ClinicalTrials.gov
-**Priority:** Low — prerequisite for "Has protocol PDF" / "Has SAP" filters
+#### E2E tests with Playwright
+**Priority:** Low
 **Effort:** Medium
 
-Download protocol documents, SAPs, and other PDFs from ClinicalTrials.gov API. Upload to WIP file store. Link to trial documents. See KNOWN_ISSUES.md #3.
+Existing unit/integration coverage via Vitest is reasonable. Playwright would catch UI regressions but adds CI complexity.
 
-## Deferred
+---
 
-- E2E tests with Playwright
-- Docker Compose integration with WIP ecosystem
-- Gateway registration and portal listing
+## Beyond the Original Plan
+
+Significant features and fixes shipped that weren't on the original roadmap.
+
+### Shipped
+
+- **In-app import pipeline** — full ClinicalTrials.gov ingest from the UI with SSE progress, sync state tracking, country auto-creation, per-trial error isolation, and persistent error log. Replaces the CLI-only import script.
+- **Persistent classification** — rules stored in WIP via `CT_CLASSIFICATION_RULE` template. Classification engine on the server with provenance tracking. Pin/unpin per trial protects manual TA edits from re-classification.
+- **AE term normalization via mutable terminology** — `CT_AE_TERM` mutable terminology with in-app term manager, alias merging, and resolution layer for charts and aggregations.
+- **Protocol PDF pipeline** — 863 PDFs imported from ClinicalTrials.gov to WIP file store. "Has protocol PDF" / "Has SAP" filters wired up.
+- **Molecule Compare Page** — side-by-side comparison of multiple molecules across trials, indications, AEs.
+- **CSV export** on every page with tabular data.
+- **SQL Inspector** — view and run reporting queries directly from the UI.
+- **Bulk import + offline download** of trial sets for analysis.
+
+### Open / pending decisions
+
+- **Bootstrap from UI** — fresh-install wizard that connects to any WIP instance and runs bootstrap from the seed files. Analysis complete; not yet started. Requires runtime WIP config + dynamic proxy.
+- **Backup / restore via UI** — waiting on platform decision (CASE-23). Platform is shipping this in WIP v1.0 wrapping `wip-toolkit`. The app will get a thin "Backup" / "Restore" UI on top once endpoints land. Do not build a parallel implementation.
+- **K8s deployment** — deferred until localhost is fully solid. Once Bootstrap from UI lands, fresh K8s deploys become trivial.
+
+---
+
+## Cross-cutting Notes
+
+- Roadmap status reflects code on `main` as of 2026-04-08. If you ship something, update this file in the same PR.
+- "Done" items removed from the active list to keep the document scannable. Git history is the source of truth for what was built and when.
