@@ -24,6 +24,8 @@ export interface ImportProgress {
     files_uploaded: number
     errors: number
     error_log?: string[]
+    warnings: number
+    warning_log?: string[]
   }
 }
 
@@ -86,6 +88,7 @@ export function useImportJob() {
           setIsRunning(false)
           stopPolling()
           queryClient.invalidateQueries({ queryKey: ['clintrial'] })
+          queryClient.invalidateQueries({ queryKey: ['import', 'sync-state'] })
         } else if (data.job.status === 'error' || data.job.status === 'cancelled') {
           setProgress(data.job.progress)
           setError(data.job.status === 'cancelled' ? 'Import cancelled' : 'Import failed')
@@ -162,6 +165,7 @@ export function useImportJob() {
                     setIsRunning(false)
                     stopPolling()
                     queryClient.invalidateQueries({ queryKey: ['clintrial'] })
+                    queryClient.invalidateQueries({ queryKey: ['import', 'sync-state'] })
                     break
                   case 'error':
                     setError(data.message)

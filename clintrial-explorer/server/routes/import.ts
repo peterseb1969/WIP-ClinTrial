@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { initSSE, sendSSE, endSSE } from '../lib/sse.js'
 import { runImport, getActiveJob, cancelActiveJob, type ImportOptions } from '../lib/import-orchestrator.js'
 import { loadSyncState } from '../lib/sync-state.js'
+import { wipGet, wipPatch, reportQuery } from '../lib/wip-api.js'
 
 const router = Router()
 
@@ -90,6 +91,77 @@ router.get('/import/sync-state', async (_req, res) => {
       last_sync: state.last_sync,
       last_import_summary: state.last_import_summary,
     })
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+/**
+ * POST /server-api/import/link-orphan-files
+ * One-off: scan uploaded files, extract NCT IDs from tags, PATCH trials to link them
+ */
+router.post('/import/link-orphan-files', async (_req, res) => {
+  try {
+    // Fetch all files, paginated
+    const nctFiles = new Map<string, string[]>()
+    let page = 1
+    const pageSize = 100
+
+    while (true) {
+      const resp = await wipGet(
+        `/api/document-store/files?namespace=clintrial&page=${page}&page_size=${pageSize}`,
+      ) as { items?: Array<{ file_id: string; metadata?: { tags?: string[] } }>; total?: number }
+
+      const files = resp.items || []
+      if (!files.length) break
+
+      for (const file of files) {
+        const tags = file.metadata?.tags || []
+        const nctId = tags.find((t: string) => t.startsWith('NCT'))
+        if (nctId && file.file_id) {
+          if (!nctFiles.has(nctId)) nctFiles.set(nctId, [])
+          nctFiles.get(nctId)!.push(file.file_id)
+        }
+      }
+
+      if (files.length < pageSize) break
+      page++
+    }
+
+    if (!nctFiles.size) {
+      return res.json({ success: true, total_files: 0, trials_updated: 0, errors: 0 })
+    }
+
+    // Look up document_ids
+    const nctIds = [...nctFiles.keys()]
+    const placeholders = nctIds.map((_, i) => `$${i + 1}`).join(',')
+    const docRows = await reportQuery<{ document_id: string; nct_id: string }>(
+      `SELECT document_id, nct_id FROM doc_ct_trial WHERE nct_id IN (${placeholders})`,
+      nctIds,
+      10000,
+    )
+
+    const nctToDocId = new Map<string, string>()
+    for (const row of docRows.rows) nctToDocId.set(row.nct_id, row.document_id)
+
+    // PATCH each trial with file IDs
+    let linked = 0
+    const errors: string[] = []
+    for (const [nctId, fileIds] of nctFiles) {
+      const docId = nctToDocId.get(nctId)
+      if (!docId) { errors.push(`No document for ${nctId}`); continue }
+      try {
+        await wipPatch('/api/document-store/documents', [{
+          document_id: docId,
+          patch: { documents: fileIds },
+        }])
+        linked++
+      } catch (err) {
+        errors.push(`${nctId}: ${(err as Error).message}`)
+      }
+    }
+
+    res.json({ success: true, total_files: [...nctFiles.values()].reduce((s, a) => s + a.length, 0), trials_updated: linked, errors: errors.length, error_log: errors })
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }

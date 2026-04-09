@@ -33,6 +33,16 @@ export async function wipPost(path: string, body: unknown): Promise<unknown> {
   return res.json()
 }
 
+export async function wipPatch(path: string, body: unknown): Promise<unknown> {
+  const res = await fetch(`${WIP_BASE_URL}${path}`, {
+    method: 'PATCH',
+    headers: headers(),
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`WIP PATCH ${path}: ${res.status} ${res.statusText}`)
+  return res.json()
+}
+
 export async function wipDelete(path: string): Promise<unknown> {
   const res = await fetch(`${WIP_BASE_URL}${path}`, {
     method: 'DELETE',

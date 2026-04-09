@@ -28,19 +28,20 @@
     {"value": "CHEMOTHERAPY", "label": "Chemotherapy", "aliases": ["Cytotoxic", "Chemo", "Cytotoxic Chemotherapy"]}
   ],
   "ontology": {
+    "_note": "source/target use TERMINOLOGY:TERM_VALUE format for the create_relationships MCP API",
     "relationships": [
-      {"source": "CHECKPOINT_INHIBITOR", "target": "IMMUNOTHERAPY", "type": "is_a"},
-      {"source": "PD_L1_INHIBITOR", "target": "CHECKPOINT_INHIBITOR", "type": "is_a"},
-      {"source": "PD_1_INHIBITOR", "target": "CHECKPOINT_INHIBITOR", "type": "is_a"},
-      {"source": "CTLA4_INHIBITOR", "target": "CHECKPOINT_INHIBITOR", "type": "is_a"},
-      {"source": "CAR_T_THERAPY", "target": "IMMUNOTHERAPY", "type": "is_a"},
-      {"source": "BISPECIFIC_ANTIBODY", "target": "IMMUNOTHERAPY", "type": "is_a"},
-      {"source": "ADC", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"},
-      {"source": "KINASE_INHIBITOR", "target": "SMALL_MOLECULE", "type": "is_a"},
-      {"source": "BTK_INHIBITOR", "target": "KINASE_INHIBITOR", "type": "is_a"},
-      {"source": "VEGF_INHIBITOR", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"},
-      {"source": "HER2_TARGETED", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"},
-      {"source": "CD20_TARGETED", "target": "MONOCLONAL_ANTIBODY", "type": "is_a"}
+      {"source": "CT_DRUG_CLASS:CHECKPOINT_INHIBITOR", "target": "CT_DRUG_CLASS:IMMUNOTHERAPY", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:PD_L1_INHIBITOR", "target": "CT_DRUG_CLASS:CHECKPOINT_INHIBITOR", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:PD_1_INHIBITOR", "target": "CT_DRUG_CLASS:CHECKPOINT_INHIBITOR", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:CTLA4_INHIBITOR", "target": "CT_DRUG_CLASS:CHECKPOINT_INHIBITOR", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:CAR_T_THERAPY", "target": "CT_DRUG_CLASS:IMMUNOTHERAPY", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:BISPECIFIC_ANTIBODY", "target": "CT_DRUG_CLASS:IMMUNOTHERAPY", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:ADC", "target": "CT_DRUG_CLASS:MONOCLONAL_ANTIBODY", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:KINASE_INHIBITOR", "target": "CT_DRUG_CLASS:SMALL_MOLECULE", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:BTK_INHIBITOR", "target": "CT_DRUG_CLASS:KINASE_INHIBITOR", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:VEGF_INHIBITOR", "target": "CT_DRUG_CLASS:MONOCLONAL_ANTIBODY", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:HER2_TARGETED", "target": "CT_DRUG_CLASS:MONOCLONAL_ANTIBODY", "type": "is_a"},
+      {"source": "CT_DRUG_CLASS:CD20_TARGETED", "target": "CT_DRUG_CLASS:MONOCLONAL_ANTIBODY", "type": "is_a"}
     ]
   }
 }

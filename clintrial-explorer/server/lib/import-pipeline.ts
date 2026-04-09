@@ -7,6 +7,7 @@ import {
   resolveTemplateIds,
   createDocumentsBulk,
   wipUploadFile,
+  wipPatch,
   reportQuery,
   clearTemplateCache,
   resolveTerminologyId,
@@ -56,14 +57,24 @@ export interface ImportCounts {
   files_uploaded: number
   errors: number
   error_log: string[]
+  warnings: number
+  warning_log: string[]
 }
 
 const MAX_ERROR_LOG = 200
+const MAX_WARNING_LOG = 200
 
 function logError(counts: ImportCounts, message: string) {
   counts.errors++
   if (counts.error_log.length < MAX_ERROR_LOG) {
     counts.error_log.push(message)
+  }
+}
+
+function logWarning(counts: ImportCounts, message: string) {
+  counts.warnings++
+  if (counts.warning_log.length < MAX_WARNING_LOG) {
+    counts.warning_log.push(message)
   }
 }
 
@@ -84,6 +95,7 @@ export function newCounts(): ImportCounts {
     aes_created: 0, aes_updated: 0,
     baselines_created: 0, baselines_updated: 0,
     files_uploaded: 0, errors: 0, error_log: [],
+    warnings: 0, warning_log: [],
   }
 }
 
@@ -178,10 +190,10 @@ export async function ensureCountryTerms(
 
     if (mapped) {
       missing.push({ value: mapped, label: raw, aliases: [raw] })
-      logError(counts, `Auto-created country term '${mapped}' (${raw}) — verify in COUNTRY terminology`)
+      logWarning(counts, `Auto-created country term '${mapped}' (${raw}) — verify in COUNTRY terminology`)
     } else {
       missing.push({ value: raw, label: raw })
-      logError(counts, `Auto-created country term '${raw}' (no ISO code in COUNTRY_MAP) — add mapping to transforms.ts`)
+      logWarning(counts, `Auto-created country term '${raw}' (no ISO code in COUNTRY_MAP) — add mapping to transforms.ts`)
     }
   }
 
@@ -224,16 +236,16 @@ export async function createOrganizationsBulk(
   logBulkErrors(counts, 'Org creation', result.results)
 }
 
-/** Create a single trial document. Returns true if successful. */
+/** Create a single trial document. Returns document_id if successful, null on failure. */
 export async function createTrial(
   trialData: AnyObj,
   counts: ImportCounts,
-): Promise<boolean> {
+): Promise<string | null> {
   const sponsorName = trialData.sponsor
   const sponsorDocId = ORG_DOC_IDS.get(sponsorName)
   if (!sponsorDocId) {
     logError(counts, `Trial ${trialData.nct_id}: no document_id for sponsor '${sponsorName}'`)
-    return false
+    return null
   }
 
   const data: AnyObj = {
@@ -294,7 +306,8 @@ export async function createTrial(
   else if (result.updated > 0) counts.trials_updated++
   else logBulkErrors(counts, `Trial ${trialData.nct_id}`, result.results)
 
-  return result.errors === 0
+  const docId = result.results[0]?.document_id || result.results[0]?.id || null
+  return result.errors === 0 ? docId : null
 }
 
 /** Create outcome documents for a trial */
@@ -598,6 +611,23 @@ export async function downloadAndUploadPdfs(
   }
 
   return fileIds
+}
+
+/** Link uploaded file IDs to a trial via PATCH (update_document) */
+export async function linkFilesToTrial(
+  nctId: string,
+  documentId: string,
+  fileIds: string[],
+  counts: ImportCounts,
+): Promise<void> {
+  try {
+    await wipPatch('/api/document-store/documents', [{
+      document_id: documentId,
+      patch: { documents: fileIds },
+    }])
+  } catch (err) {
+    logError(counts, `Link files to ${nctId}: ${(err as Error).message}`)
+  }
 }
 
 /** Get the org document ID cache */

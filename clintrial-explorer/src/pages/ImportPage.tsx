@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Upload, Play, Square, RotateCcw, Database, FileText, Clock, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronRight } from 'lucide-react'
+import { Upload, Play, Square, RotateCcw, Database, FileText, Clock, CheckCircle2, AlertCircle, AlertTriangle, Loader2, ChevronDown, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
@@ -282,8 +282,14 @@ export function ImportPage() {
                   <CounterBox label="AEs" value={counts.aes_created} />
                   <CounterBox label="Baselines" value={counts.baselines_created} />
                   <CounterBox label="Files uploaded" value={counts.files_uploaded} />
+                  <CounterBox label="Warnings" value={counts.warnings ?? 0} variant={counts.warnings > 0 ? 'warning' : 'default'} />
                   <CounterBox label="Errors" value={counts.errors} variant={counts.errors > 0 ? 'danger' : 'default'} />
                 </div>
+              )}
+
+              {/* Warning log */}
+              {counts && counts.warning_log && counts.warning_log.length > 0 && (
+                <WarningLog warnings={counts.warning_log} />
               )}
 
               {/* Error log */}
@@ -316,7 +322,7 @@ export function ImportPage() {
                 <p className="text-xs font-medium text-text-muted mb-1">Last Import Summary</p>
                 <div className="grid grid-cols-2 gap-1 text-xs sm:grid-cols-4">
                   {Object.entries(parsedSyncState.lastSummary)
-                    .filter(([key]) => key !== 'error_log')
+                    .filter(([key]) => key !== 'error_log' && key !== 'warning_log')
                     .map(([key, val]) => (
                       <span key={key}>
                         <span className="text-text-muted">{key.replace(/_/g, ' ')}:</span>{' '}
@@ -325,6 +331,9 @@ export function ImportPage() {
                     ))}
                 </div>
               </div>
+              {Array.isArray(parsedSyncState.lastSummary.warning_log) && parsedSyncState.lastSummary.warning_log.length > 0 && (
+                <WarningLog warnings={parsedSyncState.lastSummary.warning_log} />
+              )}
               {Array.isArray(parsedSyncState.lastSummary.error_log) && parsedSyncState.lastSummary.error_log.length > 0 && (
                 <ErrorLog errors={parsedSyncState.lastSummary.error_log} />
               )}
@@ -400,10 +409,46 @@ function ErrorLog({ errors }: { errors: string[] }) {
   )
 }
 
-function CounterBox({ label, value, variant = 'default' }: { label: string; value: number; variant?: 'default' | 'danger' }) {
+function WarningLog({ warnings }: { warnings: string[] }) {
+  const [expanded, setExpanded] = useState(false)
+
   return (
-    <div className={`rounded-md border p-2 text-center ${variant === 'danger' && value > 0 ? 'border-red-200 bg-red-50' : ''}`}>
-      <p className={`text-lg font-bold tabular-nums ${variant === 'danger' && value > 0 ? 'text-danger' : ''}`}>
+    <div className="rounded-md border border-amber-200 bg-amber-50">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100"
+      >
+        {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        <AlertTriangle className="h-4 w-4" />
+        {warnings.length} warning{warnings.length !== 1 ? 's' : ''} — click to {expanded ? 'hide' : 'show'} details
+      </button>
+      {expanded && (
+        <div className="max-h-64 overflow-y-auto border-t border-amber-200 px-3 py-2">
+          {warnings.map((w, i) => (
+            <div key={i} className="py-0.5 font-mono text-xs text-amber-700">
+              {w}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CounterBox({ label, value, variant = 'default' }: { label: string; value: number; variant?: 'default' | 'danger' | 'warning' }) {
+  const variantClasses = variant === 'danger' && value > 0
+    ? 'border-red-200 bg-red-50'
+    : variant === 'warning' && value > 0
+    ? 'border-amber-200 bg-amber-50'
+    : ''
+  const textClasses = variant === 'danger' && value > 0
+    ? 'text-danger'
+    : variant === 'warning' && value > 0
+    ? 'text-amber-600'
+    : ''
+  return (
+    <div className={`rounded-md border p-2 text-center ${variantClasses}`}>
+      <p className={`text-lg font-bold tabular-nums ${textClasses}`}>
         {formatNumber(value)}
       </p>
       <p className="text-[10px] text-text-muted">{label}</p>

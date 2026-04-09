@@ -50,11 +50,13 @@ export async function loadSyncState(): Promise<SyncState> {
   return { trials: {}, last_sync: null, last_import_summary: null }
 }
 
-/** Save sync state to WIP */
-export async function saveSyncState(state: SyncState): Promise<void> {
+/** Save sync state to WIP. Pass setLastSync=true only on successful completion. */
+export async function saveSyncState(state: SyncState, setLastSync = false): Promise<void> {
   try {
     const templateId = await resolveTemplateId('CT_SYNC_STATE')
-    state.last_sync = new Date().toISOString()
+    if (setLastSync) {
+      state.last_sync = new Date().toISOString()
+    }
 
     await createDocumentsBulk(templateId, [
       {

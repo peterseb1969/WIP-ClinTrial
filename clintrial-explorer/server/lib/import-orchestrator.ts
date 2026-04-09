@@ -17,6 +17,7 @@ import {
   createBaselines,
   updateOutcomesWithResults,
   downloadAndUploadPdfs,
+  linkFilesToTrial,
   newCounts,
   clearCaches,
   type ImportCounts,
@@ -113,14 +114,9 @@ export async function runImport(
       ? { trials: {}, last_sync: null, last_import_summary: null }
       : await loadSyncState()
 
-    // Calculate since date for incremental
-    let sinceDate = options.sinceDate
-    if (options.mode === 'incremental' && !sinceDate && syncState.last_sync) {
-      // Subtract 1 day from last sync for safety
-      const lastSync = new Date(syncState.last_sync)
-      lastSync.setDate(lastSync.getDate() - 1)
-      sinceDate = lastSync.toISOString().split('T')[0]
-    }
+    // For incremental: only use sinceDate if explicitly provided by the user.
+    // Otherwise fetch all trials and rely on shouldSkipTrial to skip already-synced ones.
+    const sinceDate = options.sinceDate || undefined
 
     // Phase 1: Fetch trials from CT.gov
     progress('fetch', 'Fetching trials from ClinicalTrials.gov...', 0, 0)
@@ -134,7 +130,6 @@ export async function runImport(
         if (signal.aborted) break
         progress('fetch', `Searching for ${sponsor} trials...`, allStudies.length, 0)
         const studies = await searchTrialsBySponsor(sponsor, {
-          maxResults: options.limit,
           sinceDate,
           signal,
         })
@@ -165,11 +160,13 @@ export async function runImport(
       return true
     })
 
-    const total = studiesToProcess.length
-    progress('fetch', `${total} trials to process (${counts.trials_skipped} unchanged)`, 0, total)
+    // Apply limit to new trials (not to the CT.gov fetch)
+    const limited = options.limit ? studiesToProcess.slice(0, options.limit) : studiesToProcess
+    const total = limited.length
+    progress('fetch', `${total} trials to process (${counts.trials_skipped} unchanged${options.limit ? `, capped at ${options.limit}` : ''})`, 0, total)
 
     // Extract all trial data once
-    const extractedData = studiesToProcess.map((study) => extractTrialData(study))
+    const extractedData = limited.map((study) => extractTrialData(study))
 
     // Phase 2: Create organizations
     progress('orgs', 'Creating organizations...', 0, total)
@@ -191,7 +188,7 @@ export async function runImport(
     await ensureCountryTerms(allCountries, counts)
 
     // Phase 3: Process trials
-    for (let i = 0; i < studiesToProcess.length; i++) {
+    for (let i = 0; i < limited.length; i++) {
       if (signal.aborted) throw new Error('Import cancelled')
 
       const data = extractedData[i]
@@ -202,8 +199,8 @@ export async function runImport(
 
       try {
         // Create trial
-        const success = await createTrial(data, counts)
-        if (!success) continue
+        const trialDocId = await createTrial(data, counts)
+        if (!trialDocId) continue
 
         // Create child documents
         await createOutcomes(nctId, data.primary_outcomes, data.secondary_outcomes, counts)
@@ -224,14 +221,17 @@ export async function runImport(
             }
           }
 
-          // Download and upload PDFs
+          // Download and upload PDFs, then link to trial via PATCH
           if (!options.skipPdfs && resultsData.documentSection) {
-            await downloadAndUploadPdfs(nctId, resultsData.documentSection, counts, signal)
+            const fileIds = await downloadAndUploadPdfs(nctId, resultsData.documentSection, counts, signal)
+            if (fileIds.length > 0) {
+              await linkFilesToTrial(nctId, trialDocId, fileIds, counts)
+            }
           }
         }
 
         // Update sync state
-        updateTrialSyncEntry(syncState, nctId, getLastUpdateDate(studiesToProcess[i]), source)
+        updateTrialSyncEntry(syncState, nctId, getLastUpdateDate(limited[i]), source)
       } catch (err) {
         counts.errors++
         counts.error_log.push(`Trial ${nctId}: ${(err as Error).message}`)
@@ -250,7 +250,7 @@ export async function runImport(
     // Save final sync state
     progress('saving', 'Saving sync state...', total, total)
     syncState.last_import_summary = { ...counts }
-    await saveSyncState(syncState)
+    await saveSyncState(syncState, true)
 
     if (activeJob) activeJob.status = 'completed'
     progress('complete', 'Import complete', total, total)

@@ -1,0 +1,10 @@
+{
+  "value": "_ONTOLOGY_RELATIONSHIP_TYPES",
+  "namespace": "wip",
+  "description": "Additional relationship types needed by this constellation. These terms are added to the system-managed _ONTOLOGY_RELATIONSHIP_TYPES terminology during bootstrap.",
+  "mode": "extend",
+  "terms": [
+    {"value": "targets", "label": "Targets", "description": "Molecule-to-molecular-target relationship", "metadata": {"inverse": "targeted_by", "transitive": false}},
+    {"value": "targeted_by", "label": "Targeted by", "description": "Inverse of targets - molecular target is acted upon by a molecule", "metadata": {"inverse": "targets", "transitive": false}}
+  ]
+}

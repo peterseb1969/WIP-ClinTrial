@@ -25,6 +25,11 @@ export default defineConfig(({ mode }) => {
           target: `http://localhost:${env.PORT || '3013'}`,
           changeOrigin: true,
         },
+        [`${env.VITE_BASE_PATH || '/apps/clintrial'}/api`]: {
+          target: `http://localhost:${env.PORT || '3013'}`,
+          changeOrigin: true,
+          rewrite: (p: string) => p.replace(env.VITE_BASE_PATH || '/apps/clintrial', ''),
+        },
         '/files': {
           target: `http://localhost:${env.PORT || '3013'}`,
           changeOrigin: true,
