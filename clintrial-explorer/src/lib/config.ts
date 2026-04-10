@@ -17,6 +17,13 @@ export function getConfig(): AppConfig {
   return _config
 }
 
+/** Build a URL for server-api endpoints, respecting the base path */
+export function serverApiUrl(path: string): string {
+  const { basePath } = getConfig()
+  const base = basePath.replace(/\/+$/, '')
+  return `${base}/server-api${path}`
+}
+
 // Legacy export for existing imports
 export const config = new Proxy({} as AppConfig, {
   get(_target, prop: string) {

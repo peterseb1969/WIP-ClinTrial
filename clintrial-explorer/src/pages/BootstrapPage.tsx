@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Database, AlertTriangle, RefreshCw, Loader2, ServerCrash } from 'lucide-react'
+import { serverApiUrl } from '@/lib/config'
 
 type AppStatus = 'checking' | 'wip_unreachable' | 'needs_bootstrap' | 'bootstrapping' | 'ready' | 'error'
 
@@ -19,7 +20,7 @@ export function BootstrapGate({ children }: { children: React.ReactNode }) {
     setStatus('checking')
     setError(null)
     try {
-      const res = await fetch('/server-api/bootstrap/status')
+      const res = await fetch(serverApiUrl('/bootstrap/status'))
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       setStatus(data.status as AppStatus)
@@ -36,7 +37,7 @@ export function BootstrapGate({ children }: { children: React.ReactNode }) {
     setError(null)
 
     try {
-      const response = await fetch('/server-api/bootstrap/run', { method: 'POST' })
+      const response = await fetch(serverApiUrl('/bootstrap/run'), { method: 'POST' })
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       if (!response.body) throw new Error('No response body')
 

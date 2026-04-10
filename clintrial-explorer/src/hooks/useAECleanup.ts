@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { serverApiUrl } from '@/lib/config'
 
 export interface AECleanupStats {
   raw_term_count: number
@@ -13,7 +14,7 @@ export function useAECleanupStats(enabled: boolean) {
   return useQuery<AECleanupStats>({
     queryKey: ['clintrial', 'ae-cleanup-stats'],
     queryFn: async () => {
-      const res = await fetch('/server-api/ae-cleanup/stats')
+      const res = await fetch(serverApiUrl('/ae-cleanup/stats'))
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return res.json()
     },
@@ -54,7 +55,7 @@ export interface AECleanupApplyResponse {
 export function useProposeAECleanup() {
   return useMutation<AECleanupProposeResponse, Error, { maxTerms?: number } | void>({
     mutationFn: async (vars) => {
-      const res = await fetch('/server-api/ae-cleanup/propose', {
+      const res = await fetch(serverApiUrl('/ae-cleanup/propose'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ maxTerms: vars?.maxTerms }),
@@ -73,7 +74,7 @@ export function useApplyAECleanup() {
   const qc = useQueryClient()
   return useMutation<AECleanupApplyResponse, Error, AECleanupCluster[]>({
     mutationFn: async (clusters) => {
-      const res = await fetch('/server-api/ae-cleanup/apply', {
+      const res = await fetch(serverApiUrl('/ae-cleanup/apply'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clusters }),

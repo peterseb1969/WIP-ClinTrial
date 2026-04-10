@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { serverApiUrl } from '@/lib/config'
 
 export interface ClassificationResultItem {
   nct_id: string
@@ -53,7 +54,7 @@ export function useRunClassification() {
 
       try {
         // Use fetch with POST to start SSE (EventSource only supports GET)
-        const response = await fetch('/server-api/classify', {
+        const response = await fetch(serverApiUrl('/classify'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(opts),
@@ -141,7 +142,7 @@ export function usePinTrial() {
       pinned: boolean
       therapeutic_areas?: string[]
     }) => {
-      const res = await fetch('/server-api/pin', {
+      const res = await fetch(serverApiUrl('/pin'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(opts),

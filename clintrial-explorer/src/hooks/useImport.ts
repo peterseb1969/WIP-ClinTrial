@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { serverApiUrl } from '@/lib/config'
 
 export interface ImportProgress {
   phase: string
@@ -50,7 +51,7 @@ export function useImportJob() {
   // Check for already-running job on mount
   useEffect(() => {
     let cancelled = false
-    fetch('/server-api/import/status')
+    fetch(serverApiUrl('/import/status'))
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return
@@ -76,7 +77,7 @@ export function useImportJob() {
     stopPolling()
     pollingRef.current = setInterval(async () => {
       try {
-        const res = await fetch('/server-api/import/status')
+        const res = await fetch(serverApiUrl('/import/status'))
         const data = await res.json()
         if (!data.job) return
 
@@ -117,7 +118,7 @@ export function useImportJob() {
       startPolling()
 
       try {
-        const response = await fetch('/server-api/import/start', {
+        const response = await fetch(serverApiUrl('/import/start'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(options),
@@ -190,7 +191,7 @@ export function useImportJob() {
 
   const cancel = useCallback(async () => {
     try {
-      await fetch('/server-api/import/cancel', { method: 'POST' })
+      await fetch(serverApiUrl('/import/cancel'), { method: 'POST' })
     } catch {
       // ignore
     }
@@ -211,7 +212,7 @@ export function useImportStatus() {
   return useQuery({
     queryKey: ['import', 'status'],
     queryFn: async () => {
-      const res = await fetch('/server-api/import/status')
+      const res = await fetch(serverApiUrl('/import/status'))
       if (!res.ok) return null
       const data = await res.json()
       return data.job
@@ -225,7 +226,7 @@ export function useSyncState() {
   return useQuery({
     queryKey: ['import', 'sync-state'],
     queryFn: async () => {
-      const res = await fetch('/server-api/import/sync-state')
+      const res = await fetch(serverApiUrl('/import/sync-state'))
       if (!res.ok) throw new Error('Failed to fetch sync state')
       return res.json()
     },
