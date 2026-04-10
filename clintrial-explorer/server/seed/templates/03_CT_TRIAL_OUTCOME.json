@@ -1,0 +1,22 @@
+{
+  "value": "CT_TRIAL_OUTCOME",
+  "label": "Trial Outcome",
+  "description": "Primary, secondary, and other outcome measures for clinical trials",
+  "namespace": "clintrial",
+  "identity_fields": ["nct_id", "outcome_type", "sequence"],
+  "fields": [
+    {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true},
+    {"name": "trial", "label": "Trial", "type": "reference", "mandatory": false, "reference_type": "document", "target_templates": ["CT_TRIAL"]},
+    {"name": "outcome_type", "label": "Outcome Type", "type": "term", "mandatory": true, "terminology_ref": "CT_OUTCOME_TYPE"},
+    {"name": "sequence", "label": "Sequence", "type": "integer", "mandatory": true},
+    {"name": "measure", "label": "Measure", "type": "string", "mandatory": false},
+    {"name": "time_frame", "label": "Time Frame", "type": "string", "mandatory": false},
+    {"name": "description", "label": "Description", "type": "string", "mandatory": false},
+    {"name": "param_type", "label": "Parameter Type", "type": "string", "mandatory": false},
+    {"name": "dispersion_type", "label": "Dispersion Type", "type": "string", "mandatory": false},
+    {"name": "unit_of_measure", "label": "Unit of Measure", "type": "string", "mandatory": false},
+    {"name": "result_groups", "label": "Result Groups", "type": "array", "mandatory": false, "items": {"type": "object"}},
+    {"name": "analyses", "label": "Analyses", "type": "array", "mandatory": false, "items": {"type": "object"}}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}

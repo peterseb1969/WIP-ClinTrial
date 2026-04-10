@@ -1,0 +1,19 @@
+{
+  "value": "CT_CLASSIFICATION_RULE",
+  "label": "Classification Rule",
+  "description": "User-defined rules for mapping trial conditions to therapeutic areas and other classifications",
+  "namespace": "clintrial",
+  "identity_fields": ["rule_type", "pattern", "target_ta"],
+  "fields": [
+    {"name": "rule_type", "label": "Rule Type", "type": "term", "mandatory": true, "terminology_ref": "CT_RULE_TYPE"},
+    {"name": "pattern", "label": "Pattern", "type": "string", "mandatory": true},
+    {"name": "match_type", "label": "Match Type", "type": "term", "mandatory": true, "terminology_ref": "CT_MATCH_TYPE"},
+    {"name": "action", "label": "Action", "type": "term", "mandatory": true, "terminology_ref": "CT_RULE_ACTION"},
+    {"name": "target_ta", "label": "Target Therapeutic Area", "type": "string", "mandatory": true},
+    {"name": "priority", "label": "Priority", "type": "integer", "mandatory": false},
+    {"name": "enabled", "label": "Enabled", "type": "boolean", "mandatory": false},
+    {"name": "notes", "label": "Notes", "type": "string", "mandatory": false},
+    {"name": "trial_nct_id", "label": "Trial NCT ID", "type": "string", "mandatory": false}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}

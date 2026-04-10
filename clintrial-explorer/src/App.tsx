@@ -16,6 +16,7 @@ import { ImportPage } from '@/pages/ImportPage'
 import { AdverseEventsPage } from '@/pages/AdverseEventsPage'
 import { MoleculeComparePage } from '@/pages/MoleculeComparePage'
 import { ClassificationRulesPage } from '@/pages/ClassificationRulesPage'
+import { BootstrapGate } from '@/pages/BootstrapPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ const queryClient = new QueryClient({
 
 export default function App() {
   return (
+    <BootstrapGate>
     <QueryClientProvider client={queryClient}>
       <WipProvider client={wipClient}>
         <BrowserRouter basename={config.basePath}>
@@ -51,5 +53,6 @@ export default function App() {
         </BrowserRouter>
       </WipProvider>
     </QueryClientProvider>
+    </BootstrapGate>
   )
 }

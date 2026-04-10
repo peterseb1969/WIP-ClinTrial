@@ -1,0 +1,11 @@
+{
+  "value": "CT_OUTCOME_TYPE",
+  "label": "Outcome Type",
+  "description": "Classification of study endpoints: primary, secondary, other",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "PRIMARY", "label": "Primary Outcome", "aliases": []},
+    {"value": "SECONDARY", "label": "Secondary Outcome", "aliases": []},
+    {"value": "OTHER", "label": "Other Outcome", "aliases": ["Exploratory", "Tertiary"]}
+  ]
+}

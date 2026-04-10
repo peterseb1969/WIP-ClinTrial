@@ -145,11 +145,11 @@ async function loadPinnedTrials(): Promise<void> {
 
 async function loadCountryTerms(): Promise<void> {
   try {
-    countryTerminologyId = await resolveTerminologyId('COUNTRY', 'wip')
+    countryTerminologyId = await resolveTerminologyId('COUNTRY')
     const result = await reportQuery<{ value: string }>(
       `SELECT t.value FROM terms t
        JOIN terminologies tt ON t.terminology_id = tt.terminology_id
-       WHERE tt.value = 'COUNTRY' AND tt.namespace = 'wip' AND t.status = 'active'`,
+       WHERE tt.value = 'COUNTRY' AND tt.namespace = 'clintrial' AND t.status = 'active'`,
     )
     knownCountryTerms = new Set(result.rows.map((r) => r.value))
   } catch (err) {

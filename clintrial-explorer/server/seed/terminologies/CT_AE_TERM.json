@@ -1,0 +1,7 @@
+{
+  "value": "CT_AE_TERM",
+  "label": "Adverse Event Terms",
+  "description": "Mutable terminology for normalizing adverse event terms. Terms are auto-populated from imported AE data and can be merged/aliased via the in-app term manager.",
+  "extensible": true,
+  "terms": []
+}

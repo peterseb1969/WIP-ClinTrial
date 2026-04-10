@@ -1,0 +1,11 @@
+{
+  "value": "CT_STUDY_TYPE",
+  "label": "Study Type",
+  "description": "Types of clinical studies: interventional, observational, expanded access",
+  "namespace": "clintrial",
+  "terms": [
+    {"value": "INTERVENTIONAL", "label": "Interventional", "aliases": ["Clinical Trial", "Treatment Study"]},
+    {"value": "OBSERVATIONAL", "label": "Observational", "aliases": ["Cohort Study", "Registry Study"]},
+    {"value": "EXPANDED_ACCESS", "label": "Expanded Access", "aliases": ["Compassionate Use", "EAP"]}
+  ]
+}
