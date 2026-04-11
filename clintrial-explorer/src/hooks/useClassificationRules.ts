@@ -25,7 +25,7 @@ export function useClassificationRules() {
       if (!templateId) return []
 
       const res = await fetch(
-        `/api/document-store/documents/query`,
+        wipProxyUrl('/api/document-store/documents/query'),
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
