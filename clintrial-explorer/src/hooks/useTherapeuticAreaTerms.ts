@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { wipProxyUrl } from '@/lib/config'
 
 export interface TATerm {
   term_id: string
@@ -19,8 +20,7 @@ export function useTherapeuticAreaTerms() {
     queryFn: async () => {
       // Resolve terminology ID by value
       const lookupRes = await fetch(
-        '/api/def-store/terminologies/by-value/CT_THERAPEUTIC_AREA?namespace=clintrial',
-        { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
+        wipProxyUrl('/api/def-store/terminologies/by-value/CT_THERAPEUTIC_AREA?namespace=clintrial'),
       )
       if (!lookupRes.ok) return { terminologyId: null, terms: [] }
       const terminology = await lookupRes.json()
@@ -28,8 +28,7 @@ export function useTherapeuticAreaTerms() {
       if (!terminologyId) return { terminologyId: null, terms: [] }
 
       const res = await fetch(
-        `/api/def-store/terminologies/${terminologyId}/terms?page_size=500`,
-        { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
+        wipProxyUrl(`/api/def-store/terminologies/${terminologyId}/terms?page_size=500`),
       )
       if (!res.ok) return { terminologyId, terms: [] }
       const data = await res.json()

@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Pill, FlaskConical, AlertTriangle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { wipProxyUrl } from '@/lib/config'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -30,8 +31,7 @@ export function MoleculeDetailPage() {
     queryFn: async () => {
       // Resolve terminology ID by value
       const lookupRes = await fetch(
-        '/api/def-store/terminologies/by-value/CT_MOLECULE?namespace=clintrial',
-        { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
+        wipProxyUrl('/api/def-store/terminologies/by-value/CT_MOLECULE?namespace=clintrial'),
       )
       if (!lookupRes.ok) return null
       const terminology = await lookupRes.json()
@@ -39,8 +39,7 @@ export function MoleculeDetailPage() {
       if (!terminologyId) return null
 
       const res = await fetch(
-        `/api/def-store/terminologies/${terminologyId}/terms?search=${encodeURIComponent(moleculeName)}&page_size=50`,
-        { headers: { 'X-API-Key': import.meta.env.VITE_WIP_API_KEY } },
+        wipProxyUrl(`/api/def-store/terminologies/${terminologyId}/terms?search=${encodeURIComponent(moleculeName)}&page_size=50`),
       )
       if (!res.ok) return null
       const data = await res.json()

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { reportQuery } from '@/lib/reporting'
+import { wipProxyUrl } from '@/lib/config'
 
 export interface ClassificationRule {
   document_id: string
@@ -204,7 +205,7 @@ async function resolveTemplateId(): Promise<string | null> {
   if (_cachedTemplateId) return _cachedTemplateId
   try {
     const res = await fetch(
-      '/api/template-store/templates/by-value/CT_CLASSIFICATION_RULE?namespace=clintrial',
+      wipProxyUrl('/api/template-store/templates/by-value/CT_CLASSIFICATION_RULE?namespace=clintrial'),
     )
     if (!res.ok) return null
     const data = await res.json()
@@ -224,7 +225,7 @@ export function useCreateRule() {
       const templateId = await resolveTemplateId()
       if (!templateId) throw new Error('CT_CLASSIFICATION_RULE template not found')
 
-      const res = await fetch('/api/document-store/documents', {
+      const res = await fetch(wipProxyUrl('/api/document-store/documents'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -261,7 +262,7 @@ export function useDeleteRule() {
 
   return useMutation({
     mutationFn: async (documentId: string) => {
-      const res = await fetch('/api/document-store/documents/archive', {
+      const res = await fetch(wipProxyUrl('/api/document-store/documents/archive'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([{ id: documentId }]),

@@ -17,6 +17,13 @@ export function getConfig(): AppConfig {
   return _config
 }
 
+/** Build a URL for WIP API endpoints via the server proxy, respecting the base path */
+export function wipProxyUrl(path: string): string {
+  const { basePath } = getConfig()
+  const base = basePath.replace(/\/+$/, '')
+  return `${base}${path.startsWith('/') ? path : '/' + path}`
+}
+
 /** Build a URL for server-api endpoints, respecting the base path */
 export function serverApiUrl(path: string): string {
   const { basePath } = getConfig()

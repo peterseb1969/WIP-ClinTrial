@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { reportQuery } from '@/lib/reporting'
+import { wipProxyUrl } from '@/lib/config'
 
 const AE_TERM_TERMINOLOGY_VALUE = 'CT_AE_TERM'
 
@@ -10,8 +11,7 @@ function useAETermTerminologyId() {
     queryKey: ['clintrial', 'ae-term-terminology-id'],
     queryFn: async () => {
       const resp = await fetch(
-        `/api/def-store/terminologies/by-value/${AE_TERM_TERMINOLOGY_VALUE}?namespace=clintrial`,
-        { headers: { 'Content-Type': 'application/json' } },
+        wipProxyUrl(`/api/def-store/terminologies/by-value/${AE_TERM_TERMINOLOGY_VALUE}?namespace=clintrial`),
       )
       if (!resp.ok) return null
       const data = await resp.json()
