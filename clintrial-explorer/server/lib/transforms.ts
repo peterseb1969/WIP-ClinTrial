@@ -130,6 +130,17 @@ export function normalizeDate(dateStr: string | undefined | null): string | unde
 }
 
 /** Extract known molecule names from intervention list */
+/** Check if a molecule name is known */
+export function isMoleculeKnown(name: string): boolean {
+  return !!moleculeMap[name.toLowerCase().trim()]
+}
+
+/** Add a newly created molecule to the in-memory map */
+export function registerMolecule(value: string, label: string): void {
+  moleculeMap[value.toLowerCase()] = value
+  moleculeMap[label.toLowerCase()] = value
+}
+
 export function resolveMolecules(interventions: Array<{ name?: string }>): string[] {
   const found: string[] = []
   const seen = new Set<string>()

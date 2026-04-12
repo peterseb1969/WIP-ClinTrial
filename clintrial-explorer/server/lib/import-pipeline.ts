@@ -17,6 +17,8 @@ import {
 import {
   COUNTRY_MAP,
   resolveMolecules,
+  isMoleculeKnown,
+  registerMolecule,
   classifyTherapeuticAreas,
   loadTAKeywordMap,
   loadMoleculeMap,
@@ -41,6 +43,9 @@ let pinnedTrials: Map<string, string[]> = new Map()
 /** Known valid country term values — populated from WIP at pipeline init */
 let knownCountryTerms: Set<string> = new Set()
 let countryTerminologyId: string | null = null
+
+/** CT_MOLECULE terminology ID — for auto-creating missing molecule terms */
+let moleculeTerminologyId: string | null = null
 
 export interface ImportCounts {
   orgs_created: number
@@ -117,6 +122,7 @@ export async function initPipeline(): Promise<void> {
     loadTAKeywords(),
     loadMoleculeMap().catch((err) => console.warn('Could not load molecule map:', err)),
     loadCountryMap().catch((err) => console.warn('Could not load country map:', err)),
+    resolveTerminologyId('CT_MOLECULE').then((id) => { moleculeTerminologyId = id }).catch(() => {}),
   ])
 
   // Load pinned trials
@@ -160,6 +166,47 @@ async function loadCountryTerms(): Promise<void> {
     knownCountryTerms = new Set(result.rows.map((r) => r.value))
   } catch (err) {
     console.warn('Could not load country terms:', err)
+  }
+}
+
+/** Pre-scan interventions, auto-create unknown DRUG/BIOLOGICAL molecules in CT_MOLECULE.
+ *  Call ONCE before processing trials. */
+export async function ensureMoleculeTerms(
+  allInterventions: Array<{ name?: string; type?: string }>,
+  counts: ImportCounts,
+): Promise<void> {
+  if (!moleculeTerminologyId) return
+
+  const missing: Array<{ value: string; label: string }> = []
+  const seen = new Set<string>()
+
+  for (const intv of allInterventions) {
+    const name = intv.name?.trim()
+    if (!name) continue
+    const type = intv.type?.toUpperCase()
+    if (type !== 'DRUG' && type !== 'BIOLOGICAL') continue
+
+    const nameLower = name.toLowerCase()
+    if (seen.has(nameLower)) continue
+    seen.add(nameLower)
+
+    if (isMoleculeKnown(name)) continue
+
+    // Use UPPER_SNAKE_CASE for the term value
+    const value = name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '')
+    missing.push({ value, label: name })
+  }
+
+  if (!missing.length) return
+
+  try {
+    await createTerms(moleculeTerminologyId, missing)
+    for (const t of missing) {
+      registerMolecule(t.value, t.label)
+    }
+    logWarning(counts, `Auto-created ${missing.length} molecule terms: ${missing.slice(0, 5).map((m) => m.label).join(', ')}${missing.length > 5 ? '...' : ''}`)
+  } catch (err) {
+    logError(counts, `Failed to batch-create molecule terms: ${(err as Error).message}`)
   }
 }
 
@@ -644,6 +691,7 @@ export function clearCaches(): void {
   pinnedTrials = new Map()
   knownCountryTerms = new Set()
   countryTerminologyId = null
+  moleculeTerminologyId = null
   TEMPLATES = {}
   clearTemplateCache()
 }

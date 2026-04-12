@@ -10,6 +10,7 @@ import {
   initPipeline,
   createOrganizationsBulk,
   ensureCountryTerms,
+  ensureMoleculeTerms,
   createTrial,
   createOutcomes,
   createSites,
@@ -186,6 +187,16 @@ export async function runImport(
       }
     }
     await ensureCountryTerms(allCountries, counts)
+
+    // Phase 2c: Ensure all molecule terms exist before processing trials
+    progress('molecules', 'Checking molecule terms...', 0, total)
+    const allInterventions: Array<{ name?: string; type?: string }> = []
+    for (const data of extractedData) {
+      for (const intv of data.interventions_raw) {
+        allInterventions.push(intv)
+      }
+    }
+    await ensureMoleculeTerms(allInterventions, counts)
 
     // Phase 3: Process trials
     for (let i = 0; i < limited.length; i++) {
