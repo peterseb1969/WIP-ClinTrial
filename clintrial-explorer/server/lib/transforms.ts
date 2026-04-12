@@ -36,196 +36,70 @@ export async function loadTAKeywordMap(): Promise<Map<string, Set<string>>> {
   return keywords
 }
 
-/** Known molecules in CT_MOLECULE terminology — canonical values and brand-name aliases */
-export const KNOWN_MOLECULES: Record<string, string> = {
-  // Canonical values (lowercase)
-  atezolizumab: 'atezolizumab',
-  rituximab: 'rituximab',
-  bevacizumab: 'bevacizumab',
-  trastuzumab: 'trastuzumab',
-  pertuzumab: 'pertuzumab',
-  ocrelizumab: 'ocrelizumab',
-  tocilizumab: 'tocilizumab',
-  emicizumab: 'emicizumab',
-  fenebrutinib: 'fenebrutinib',
-  tiragolumab: 'tiragolumab',
-  cevostamab: 'cevostamab',
-  glofitamab: 'glofitamab',
-  mosunetuzumab: 'mosunetuzumab',
-  'polatuzumab vedotin': 'polatuzumab_vedotin',
-  polatuzumab_vedotin: 'polatuzumab_vedotin',
-  entrectinib: 'entrectinib',
-  alectinib: 'alectinib',
-  cobimetinib: 'cobimetinib',
-  vemurafenib: 'vemurafenib',
-  pirfenidone: 'pirfenidone',
-  satralizumab: 'satralizumab',
-  faricimab: 'faricimab',
-  gantenerumab: 'gantenerumab',
-  trontinemab: 'trontinemab',
-  afimkibart: 'afimkibart',
-  pembrolizumab: 'pembrolizumab',
-  nivolumab: 'nivolumab',
-  durvalumab: 'durvalumab',
-  ipilimumab: 'ipilimumab',
-  osimertinib: 'osimertinib',
-  carboplatin: 'carboplatin',
-  cisplatin: 'cisplatin',
-  pemetrexed: 'pemetrexed',
-  paclitaxel: 'paclitaxel',
-  methotrexate: 'methotrexate',
-  // Brand name aliases
-  tecentriq: 'atezolizumab',
-  rituxan: 'rituximab',
-  mabthera: 'rituximab',
-  avastin: 'bevacizumab',
-  herceptin: 'trastuzumab',
-  kadcyla: 'trastuzumab',
-  perjeta: 'pertuzumab',
-  ocrevus: 'ocrelizumab',
-  actemra: 'tocilizumab',
-  hemlibra: 'emicizumab',
-  columvi: 'glofitamab',
-  lunsumio: 'mosunetuzumab',
-  polivy: 'polatuzumab_vedotin',
-  rozlytrek: 'entrectinib',
-  alecensa: 'alectinib',
-  cotellic: 'cobimetinib',
-  zelboraf: 'vemurafenib',
-  esbriet: 'pirfenidone',
-  enspryng: 'satralizumab',
-  vabysmo: 'faricimab',
-  keytruda: 'pembrolizumab',
-  opdivo: 'nivolumab',
-  imfinzi: 'durvalumab',
-  yervoy: 'ipilimumab',
-  tagrisso: 'osimertinib',
-  alimta: 'pemetrexed',
-  taxol: 'paclitaxel',
-  abraxane: 'paclitaxel',
-  'nab-paclitaxel': 'paclitaxel',
-  'trastuzumab emtansine': 'trastuzumab',
-  'ado-trastuzumab emtansine': 'trastuzumab',
+/** Molecule lookup map — loaded dynamically from CT_MOLECULE terminology */
+let moleculeMap: Record<string, string> = {}
+
+/** Load molecule map from WIP terminology (term values + labels + aliases) */
+export async function loadMoleculeMap(): Promise<void> {
+  const result = await reportQuery<{ value: string; label: string; aliases: string | null }>(
+    `SELECT t.value, t.label, t.aliases
+     FROM terms t
+     JOIN terminologies tt ON t.terminology_id = tt.terminology_id
+     WHERE tt.value = 'CT_MOLECULE' AND tt.namespace = 'clintrial' AND t.status = 'active'`,
+  )
+
+  const map: Record<string, string> = {}
+  for (const row of result.rows) {
+    const canonical = row.value
+    // Map value, label, and all aliases to the canonical term value
+    map[canonical.toLowerCase()] = canonical
+    map[row.label.toLowerCase()] = canonical
+    if (row.aliases) {
+      try {
+        const aliases = JSON.parse(row.aliases) as string[]
+        for (const a of aliases) {
+          if (a.trim()) map[a.toLowerCase().trim()] = canonical
+        }
+      } catch { /* skip invalid JSON */ }
+    }
+  }
+  moleculeMap = map
 }
 
-/** Country name to ISO code mapping */
-export const COUNTRY_MAP: Record<string, string> = {
-  'United States': 'US',
-  'United Kingdom': 'GB',
-  Germany: 'DE',
-  France: 'FR',
-  Italy: 'IT',
-  Spain: 'ES',
-  Switzerland: 'CH',
-  Australia: 'AU',
-  Canada: 'CA',
-  Japan: 'JP',
-  China: 'CN',
-  'South Korea': 'KR',
-  'Korea, Republic of': 'KR',
-  Taiwan: 'TW',
-  Brazil: 'BR',
-  Mexico: 'MX',
-  Argentina: 'AR',
-  India: 'IN',
-  Russia: 'RU',
-  'Russian Federation': 'RU',
-  Poland: 'PL',
-  Netherlands: 'NL',
-  Belgium: 'BE',
-  Austria: 'AT',
-  Sweden: 'SE',
-  Denmark: 'DK',
-  Norway: 'NO',
-  Finland: 'FI',
-  'Czech Republic': 'CZ',
-  Czechia: 'CZ',
-  Hungary: 'HU',
-  Greece: 'GR',
-  Portugal: 'PT',
-  Israel: 'IL',
-  Turkey: 'TR',
-  Türkiye: 'TR',
-  'Turkey (Türkiye)': 'TR',
-  'South Africa': 'ZA',
-  'New Zealand': 'NZ',
-  Singapore: 'SG',
-  'Hong Kong': 'HK',
-  Ireland: 'IE',
-  Romania: 'RO',
-  Bulgaria: 'BG',
-  Croatia: 'HR',
-  Slovakia: 'SK',
-  Ukraine: 'UA',
-  Thailand: 'TH',
-  Malaysia: 'MY',
-  Philippines: 'PH',
-  Colombia: 'CO',
-  Chile: 'CL',
-  Peru: 'PE',
-  Egypt: 'EG',
-  'Saudi Arabia': 'SA',
-  'Puerto Rico': 'US',
-  Guam: 'US',
-  'Virgin Islands (U.S.)': 'US',
-  'American Samoa': 'US',
-  Georgia: 'GE',
-  Moldova: 'MD',
-  'Moldova, Republic of': 'MD',
-  Morocco: 'MA',
-  Serbia: 'RS',
-  Indonesia: 'ID',
-  Vietnam: 'VN',
-  'Viet Nam': 'VN',
-  Pakistan: 'PK',
-  'United Arab Emirates': 'AE',
-  Latvia: 'LV',
-  Lithuania: 'LT',
-  Estonia: 'EE',
-  Slovenia: 'SI',
-  'Bosnia and Herzegovina': 'BA',
-  'North Macedonia': 'MK',
-  Montenegro: 'ME',
-  Albania: 'AL',
-  Tunisia: 'TN',
-  Lebanon: 'LB',
-  Jordan: 'JO',
-  Kenya: 'KE',
-  Nigeria: 'NG',
-  Ghana: 'GH',
-  Uganda: 'UG',
-  Ethiopia: 'ET',
-  Tanzania: 'TZ',
-  Bangladesh: 'BD',
-  'Sri Lanka': 'LK',
-  Nepal: 'NP',
-  Cambodia: 'KH',
-  Myanmar: 'MM',
-  'Costa Rica': 'CR',
-  Panama: 'PA',
-  Guatemala: 'GT',
-  Ecuador: 'EC',
-  Uruguay: 'UY',
-  'Dominican Republic': 'DO',
-  Jamaica: 'JM',
-  'Trinidad and Tobago': 'TT',
-  Cuba: 'CU',
-  Iceland: 'IS',
-  Luxembourg: 'LU',
-  Malta: 'MT',
-  Cyprus: 'CY',
-  Qatar: 'QA',
-  Kuwait: 'KW',
-  Bahrain: 'BH',
-  Oman: 'OM',
-  Iraq: 'IQ',
-  Iran: 'IR',
-  'Iran, Islamic Republic of': 'IR',
-  Algeria: 'DZ',
-  Venezuela: 'VE',
-  Kazakhstan: 'KZ',
-  Paraguay: 'PY',
+/** Country name/alias to ISO code mapping — loaded dynamically from COUNTRY terminology */
+export let COUNTRY_MAP: Record<string, string> = {}
+
+/** Load country map from WIP terminology (term values + labels + aliases) */
+export async function loadCountryMap(): Promise<void> {
+  const result = await reportQuery<{ value: string; label: string; aliases: string | null }>(
+    `SELECT t.value, t.label, t.aliases
+     FROM terms t
+     JOIN terminologies tt ON t.terminology_id = tt.terminology_id
+     WHERE tt.value = 'COUNTRY' AND tt.namespace = 'clintrial' AND t.status = 'active'`,
+  )
+
+  const map: Record<string, string> = {}
+  for (const row of result.rows) {
+    const isoCode = row.value
+    map[row.label] = isoCode
+    if (row.aliases) {
+      try {
+        const aliases = JSON.parse(row.aliases) as string[]
+        for (const a of aliases) {
+          if (a.trim()) map[a.trim()] = isoCode
+        }
+      } catch { /* skip invalid JSON */ }
+    }
+  }
+  // CT.gov-specific variants not in standard aliases
+  map['Turkey (Türkiye)'] = 'TR'
+  map['Puerto Rico'] = 'US'
+  map['Guam'] = 'US'
+  map['Virgin Islands (U.S.)'] = 'US'
+  map['American Samoa'] = 'US'
+  COUNTRY_MAP = map
 }
+
 
 const MONTHS: Record<string, string> = {
   january: '01', february: '02', march: '03', april: '04',
@@ -265,8 +139,8 @@ export function resolveMolecules(interventions: Array<{ name?: string }>): strin
     const nameLower = name.toLowerCase().trim()
 
     // Try exact match
-    if (KNOWN_MOLECULES[nameLower]) {
-      const canonical = KNOWN_MOLECULES[nameLower]
+    if (moleculeMap[nameLower]) {
+      const canonical = moleculeMap[nameLower]
       if (!seen.has(canonical)) {
         found.push(canonical)
         seen.add(canonical)
@@ -277,8 +151,8 @@ export function resolveMolecules(interventions: Array<{ name?: string }>): strin
     // Try matching individual tokens
     for (const token of nameLower.split(/[\s,;/+]+/)) {
       const t = token.trim()
-      if (t && KNOWN_MOLECULES[t]) {
-        const canonical = KNOWN_MOLECULES[t]
+      if (t && moleculeMap[t]) {
+        const canonical = moleculeMap[t]
         if (!seen.has(canonical)) {
           found.push(canonical)
           seen.add(canonical)

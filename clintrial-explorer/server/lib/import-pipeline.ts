@@ -19,6 +19,8 @@ import {
   resolveMolecules,
   classifyTherapeuticAreas,
   loadTAKeywordMap,
+  loadMoleculeMap,
+  loadCountryMap,
 } from './transforms.js'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,8 +112,12 @@ export async function initPipeline(): Promise<void> {
     'CT_TRIAL_BASELINE',
   ])
 
-  // Load TA keywords from WIP reporting
-  await loadTAKeywords()
+  // Load lookup maps from WIP terminologies
+  await Promise.all([
+    loadTAKeywords(),
+    loadMoleculeMap().catch((err) => console.warn('Could not load molecule map:', err)),
+    loadCountryMap().catch((err) => console.warn('Could not load country map:', err)),
+  ])
 
   // Load pinned trials
   await loadPinnedTrials()
