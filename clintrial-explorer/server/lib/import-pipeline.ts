@@ -204,11 +204,7 @@ export async function ensureCountryTerms(
     for (const t of missing) knownCountryTerms.add(t.value)
   } catch (err) {
     logError(counts, `Failed to batch-create country terms: ${(err as Error).message}`)
-    return
   }
-
-  // Wait for WIP term cache to refresh (PoNIF #6)
-  await new Promise((resolve) => setTimeout(resolve, 6000))
 }
 
 /** Create organizations in bulk. Caches document IDs. */
