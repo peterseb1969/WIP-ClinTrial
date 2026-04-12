@@ -146,6 +146,7 @@ export const COUNTRY_MAP: Record<string, string> = {
   Israel: 'IL',
   Turkey: 'TR',
   Türkiye: 'TR',
+  'Turkey (Türkiye)': 'TR',
   'South Africa': 'ZA',
   'New Zealand': 'NZ',
   Singapore: 'SG',
@@ -220,6 +221,10 @@ export const COUNTRY_MAP: Record<string, string> = {
   Iraq: 'IQ',
   Iran: 'IR',
   'Iran, Islamic Republic of': 'IR',
+  Algeria: 'DZ',
+  Venezuela: 'VE',
+  Kazakhstan: 'KZ',
+  Paraguay: 'PY',
 }
 
 const MONTHS: Record<string, string> = {
