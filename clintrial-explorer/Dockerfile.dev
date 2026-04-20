@@ -1,0 +1,18 @@
+FROM node:20-alpine
+WORKDIR /app
+
+# Bundle the WIP tarballs into the image. The entrypoint symlinks them to
+# whatever filenames the host's package.json references under ../libs/,
+# so npm ci can resolve `file:../libs/wip-*.tgz` paths without a build-time
+# sed-rewrite (which would be shadowed by the bind mount anyway).
+COPY .docker-libs/ /tmp/libs/
+
+COPY docker-entrypoint-dev.sh /entrypoint-dev.sh
+RUN chmod +x /entrypoint-dev.sh
+
+ENV CHOKIDAR_USEPOLLING=1
+
+EXPOSE 3001 5174
+
+ENTRYPOINT ["/entrypoint-dev.sh"]
+CMD ["npm", "run", "dev:all"]

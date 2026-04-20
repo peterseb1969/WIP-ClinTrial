@@ -32,7 +32,7 @@ npm run dev                    # http://localhost:3001/apps/clintrial
 | `VITE_WIP_HOST` | `https://localhost:8443` | WIP API base URL (used by Vite proxy, not sent to browser) |
 | `VITE_WIP_API_KEY` | `dev_master_key_for_testing` | API key for WIP authentication |
 | `VITE_BASE_PATH` | `/apps/clintrial` | URL prefix for gateway integration |
-| `VITE_APP_PORT` | `3001` | Dev server port |
+| `VITE_APP_PORT` | `5174` | Vite dev server + HMR port |
 
 The browser client always uses the same origin (empty `baseUrl`). Vite's dev proxy forwards `/api/*` requests to `VITE_WIP_HOST`.
 
