@@ -170,18 +170,36 @@ Show the complete file — frontmatter, problem, expected, workaround, Peter's t
 
 Find `yac-discussions/CASE-<NN>-*.md`. If it doesn't exist, tell Peter and stop.
 
-### 2. Append a response section
+### 2. Analyse before responding
+
+**Do not jump to implementation.** Before writing a response:
+
+1. **Understand the root cause.** Read the relevant source code. Don't guess from the symptom description — verify where the bug actually lives.
+2. **Check the proposed solution (if any).** Cases often include a "Suggested Fix" or "Workaround" from the filer. **Do not assume the proposed solution is correct.** The filer sees their side; you see the platform. Ask:
+   - Does this actually solve the root cause, or just the symptom?
+   - Does the library/framework validate assumptions this solution breaks? (e.g., OIDC issuer validation, identity hash scoping, bulk-first response contracts)
+   - Are there edge cases the filer couldn't see from their vantage point?
+   - Is there a simpler or more principled solution?
+3. **If you find a better solution**, describe both in your response: what was proposed, why it doesn't fully work, and what you recommend instead. Update the case — don't silently implement a different fix.
+4. **If the proposed solution IS correct**, say so and explain why. Show your analysis, not just "looks right, implementing."
+
+The goal: every response demonstrates that the solution was analysed, not just executed. CASE-50 was implemented blindly (OIDC issuer split) and broke because the library validates issuer consistency. CASE-36 was analysed properly (three agents contributed different perspectives) and produced the right fix. Be like CASE-36.
+
+### 3. Append a response section
 
 Append to the case file:
 
 ```markdown
 ## Response — <your session ID> (<YYYY-MM-DD HH:MM>)
 
-<Your diagnosis, fix, answer, or what you need to know.
-Reference specific commits if you fixed something.>
+### Analysis
+<What you checked, what the root cause is, whether the proposed solution works and why/why not.>
+
+### Fix
+<Your proposed or implemented fix. Reference specific files, lines, commits.>
 ```
 
-### 3. Update the status and rename
+### 4. Update the status and rename
 
 Change `status: open` to `status: responded` in the frontmatter.
 
@@ -191,7 +209,7 @@ Rename the file: `CASE-<NN>-open-<slug>.md` → `CASE-<NN>-responded-<slug>.md`
 mv yac-discussions/CASE-<NN>-open-<slug>.md yac-discussions/CASE-<NN>-responded-<slug>.md
 ```
 
-### 4. Confirm
+### 5. Confirm
 
 Tell Peter what you responded and the case number.
 
@@ -267,9 +285,15 @@ Find `yac-discussions/CASE-<NN>-*.md`. Read the full case, including all respons
 
 If the case has no `## Response` section with a proposed patch, tell Peter: "Case <NN> has no proposed patch to implement. Use `/case respond` first." Then stop.
 
-### 2. Extract the proposed changes
+### 2. Verify the proposed fix before applying
 
-Find the most recent `## Response` section. Look for the `### Proposed Changes` or `### Proposed Patch` subsection. These contain the concrete text changes to apply.
+Find the most recent `## Response` section. Read the analysis and proposed fix.
+
+**Before touching any code:**
+- Does the analysis in the response convince you? If not, do your own analysis and update the case first.
+- Read the target files. Has the code changed since the response was written? The fix may no longer apply or may be obsolete.
+- Check whether the fix has side effects the responder didn't consider (other callers, other services, test suites).
+- If anything is unclear or wrong, update the case with your findings — don't implement a fix you don't trust.
 
 ### 3. Apply each change
 
