@@ -43,7 +43,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
         if (cancelled) return
         setParents(
           rels
-            .filter((r) => r.relationship_type === 'is_a')
+            .filter((r) => r.relation_type === 'is_a')
             .map((r) => ({
               term_id: r.target_term_id,
               value: r.target_term_value || '(unknown)',
@@ -138,12 +138,12 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
     setBusy(true)
     setError(null)
     try {
-      await client.defStore.createRelationships(
+      await client.defStore.createTermRelations(
         [
           {
             source_term_id: localTerm.term_id,
             target_term_id: parentTerm.term_id,
-            relationship_type: 'is_a',
+            relation_type: 'is_a',
           },
         ],
         'clintrial',
@@ -162,12 +162,12 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
     setBusy(true)
     setError(null)
     try {
-      await client.defStore.deleteRelationships(
+      await client.defStore.deleteTermRelations(
         [
           {
             source_term_id: localTerm.term_id,
             target_term_id: parent.term_id,
-            relationship_type: 'is_a',
+            relation_type: 'is_a',
           },
         ],
         'clintrial',
