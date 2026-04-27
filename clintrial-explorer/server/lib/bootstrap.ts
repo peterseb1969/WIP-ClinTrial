@@ -108,24 +108,26 @@ export async function runBootstrap(
     }
     progress('terms', `Created ${totalTerms} terms across ${terminologies.length} terminologies`)
 
-    // Step 4: Create ontology relationships
-    const allRelationships: AnyObj[] = []
+    // Step 4: Create term relations (ontology edges)
+    // Seed-file format key remains `ontology.relationships` for back-compat with existing
+    // seed JSON; the WIP API was renamed to `term-relations` in def-store Phase 0 (CASE-65).
+    const allRelations: AnyObj[] = []
     for (const termData of terminologies) {
       const rels = termData.ontology?.relationships || []
       for (const rel of rels) {
-        allRelationships.push({
+        allRelations.push({
           source_term_id: rel.source,
           target_term_id: rel.target,
-          relationship_type: rel.type,
+          relation_type: rel.type,
         })
       }
     }
 
-    if (allRelationships.length) {
-      progress('relationships', `Creating ${allRelationships.length} ontology relationships...`)
+    if (allRelations.length) {
+      progress('relationships', `Creating ${allRelations.length} term relations...`)
       await wipPost(
-        `/api/def-store/ontology/relationships?namespace=${NAMESPACE}`,
-        allRelationships,
+        `/api/def-store/ontology/term-relations?namespace=${NAMESPACE}`,
+        allRelations,
       )
     }
 

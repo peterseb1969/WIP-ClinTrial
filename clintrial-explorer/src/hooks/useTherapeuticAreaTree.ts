@@ -13,8 +13,8 @@ const TA_TERMINOLOGY_SQL = `SELECT DISTINCT terminology_id FROM terms
          LIMIT 1`
 
 const TA_RELATIONSHIPS_SQL = `SELECT DISTINCT source_term_value as source, target_term_value as target
-         FROM term_relationships
-         WHERE relationship_type = 'is_a'
+         FROM term_relations
+         WHERE relation_type = 'is_a'
          AND source_terminology_id = target_terminology_id
          AND source_terminology_id = $1`
 
@@ -23,7 +23,7 @@ export const taTreeQueries: SqlQuery[] = [
   { label: 'TA Ontology Relationships', sql: TA_RELATIONSHIPS_SQL, params: ['(resolved terminology_id)'] },
 ]
 
-/** Fetch the therapeutic area ontology tree from term_relationships */
+/** Fetch the therapeutic area ontology tree from term_relations */
 export function useTherapeuticAreaTree() {
   return useQuery<TANode[]>({
     queryKey: ['clintrial', 'ta-tree'],

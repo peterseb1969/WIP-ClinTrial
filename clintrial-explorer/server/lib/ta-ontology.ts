@@ -1,7 +1,7 @@
 /**
  * Therapeutic Area ontology loader.
  *
- * Reads is_a relationships from the reporting SQL term_relationships table
+ * Reads is_a relationships from the reporting SQL term_relations table
  * and builds a transitive-closure ancestor map keyed by child TA value.
  *
  * Used by the classifier to propagate matched leaf TAs to their ancestors
@@ -15,8 +15,8 @@ const TA_TERMINOLOGY_SQL = `SELECT DISTINCT terminology_id FROM terms
          LIMIT 1`
 
 const TA_RELATIONSHIPS_SQL = `SELECT DISTINCT source_term_value AS source, target_term_value AS target
-         FROM term_relationships
-         WHERE relationship_type = 'is_a'
+         FROM term_relations
+         WHERE relation_type = 'is_a'
          AND source_terminology_id = target_terminology_id
          AND source_terminology_id = $1`
 
