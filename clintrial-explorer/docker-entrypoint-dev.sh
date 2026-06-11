@@ -9,8 +9,8 @@
 # re-install. Self-healing across host dep changes.
 #
 # Tarball resolution needs no shim: package.json pins
-# `file:.docker-libs/wip-*.tgz`, which resolves inside the /app bind
-# mount (CASE-442 consolidated the tarballs into .docker-libs).
+# `file:libs/wip-*.tgz`, which resolves inside the /app bind mount
+# (CASE-442 consolidated the tarballs into the app's libs/).
 set -e
 
 NODE_MODULES=/app/node_modules

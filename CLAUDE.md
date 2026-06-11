@@ -140,7 +140,7 @@ For Phase 4 (app building), use @wip/client, @wip/react, and @wip/proxy:
 - `libs/wip-react-README.md` — React hooks (TanStack Query, 30+ hooks)
 - `libs/wip-proxy-README.md` — Express middleware for WIP API proxying with auth injection
 
-**Tarball location (CASE-442):** the app's pinned tarballs live in `clintrial-explorer/.docker-libs/` — the single source of truth, referenced by `package.json` (`file:.docker-libs/...`) and copied into the Docker build context. `libs/` holds only the READMEs and the wip-toolkit wheel. `@tanstack/react-query` is the peer dependency that powers `@wip/react`'s hooks.
+**Tarball location (CASE-442):** the app's pinned tarballs live in `clintrial-explorer/libs/` (gene-pool convention: versioned, immutable tarballs inside the app dir), referenced by `package.json` as `file:libs/wip-<name>-<version>.tgz` and copied into the Docker build context. The repo-root `libs/` holds only the READMEs and the wip-toolkit wheel. Current pins: client 0.21.0, react 0.13.0, proxy 0.2.0. `@tanstack/react-query` is the peer dependency that powers `@wip/react`'s hooks.
 
 ## Dev Setup Gotchas
 

@@ -2,16 +2,12 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install WIP libraries from tarballs
-COPY .docker-libs/ /tmp/libs/
-COPY package.json ./
-RUN WCLIENT=$(ls /tmp/libs/wip-client-*.tgz 2>/dev/null | head -1) && \
-    WREACT=$(ls /tmp/libs/wip-react-*.tgz 2>/dev/null | head -1) && \
-    WPROXY=$(ls /tmp/libs/wip-proxy-*.tgz 2>/dev/null | head -1) && \
-    sed -i "s|\"file:[^\"]*wip-client[^\"]*\"|\"file:${WCLIENT}\"|" package.json && \
-    sed -i "s|\"file:[^\"]*wip-proxy[^\"]*\"|\"file:${WPROXY}\"|" package.json && \
-    sed -i "s|\"file:[^\"]*wip-react[^\"]*\"|\"file:${WREACT}\"|" package.json && \
-    npm install --ignore-scripts
+# Install dependencies. The @wip/* tarballs live in libs/ inside the build
+# context, pinned by package.json as file:libs/<name>-<version>.tgz
+# (CASE-442 single source of truth) — no path rewriting needed.
+COPY package.json package-lock.json ./
+COPY libs/ ./libs/
+RUN npm ci --ignore-scripts
 
 COPY . .
 ARG VITE_BASE_PATH=/
