@@ -43,3 +43,6 @@ clintrial-raw/
 
 # Cross-agent case store (symlinked to shared directory)
 yac-discussions
+
+# Session identity — minted per session by /wip-setup//wip-wake, never committed
+.claude/.session-id

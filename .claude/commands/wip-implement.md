@@ -5,10 +5,12 @@ Phase 2 must be complete with **explicit user approval** of the data model.
 The WIP MCP server must be connected.
 
 ### Before Any MCP Calls
-Read `docs/WIP_PoNIFs.md` — the 6 PoNIFs describe non-intuitive WIP behaviours that will cause silent failures if you rely on conventional assumptions. Pay special attention to:
+Read `docs/WIP_PoNIFs.md` — the 8 PoNIFs describe non-intuitive WIP behaviours that will cause silent failures if you rely on conventional assumptions. Pay special attention to:
 - PoNIF #2: Template update does NOT replace the old version — both stay active
 - PoNIF #3: Identity fields control create-vs-update via hash — get them wrong and versioning breaks silently
 - PoNIF #4: Bulk API returns 200 OK even when items fail — check per-item results
+- PoNIF #7: Edge types are templates with `usage: "relationship"` — different validation, different query endpoints; reference fields must be named exactly `source_ref` and `target_ref`
+- PoNIF #8: `versioned: false` edge types overwrite in place — no version history
 
 ### Steps — Strict Order, Using MCP Tools
 
@@ -18,9 +20,9 @@ For each terminology in the approved data model:
 - Create the terminology: `create_terminology(value, label, description)`
 - Create all terms: `create_terms(terminology_id, [{value, label, aliases, description}, ...])`
 - Verify: `list_terms(terminology_id)` — confirm all terms are present
-- **If the data model specifies ontology relationships** (hierarchical terminologies):
-  - Create relationships: `create_relationships([{source_term_id, target_term_id, relationship_type}, ...])`
-  - Relationship types: is_a, part_of, has_part, regulates, positively_regulates, negatively_regulates
+- **If the data model specifies ontology relations** (hierarchical terminologies):
+  - Create relations: `create_relations([{source_term_id, target_term_id, relation_type}, ...])`
+  - Relation types: is_a, part_of, has_part, regulates, positively_regulates, negatively_regulates
   - Verify: `get_term_hierarchy(term_id, direction="children")` — confirm the hierarchy is correct
   - For bulk ontology loading, use `import_terminology` with OBO Graph JSON format
 - Log: record the terminology ID and value

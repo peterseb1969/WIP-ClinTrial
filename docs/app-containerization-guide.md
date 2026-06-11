@@ -154,10 +154,10 @@ cd /path/to/wip-repo/libs/wip-proxy && npm pack --pack-destination /path/to/app/
 
 # Build
 cd /path/to/app
-podman build --build-arg VITE_BASE_PATH=/apps/<slug>/ -t gitea.local:3000/peter/<name>:<tag> .
+podman build --build-arg VITE_BASE_PATH=/apps/<slug>/ -t gitea.internal:3000/peter/<name>:<tag> .
 
 # Push
-podman push --tls-verify=false gitea.local:3000/peter/<name>:<tag>
+podman push --tls-verify=false gitea.internal:3000/peter/<name>:<tag>
 
 # Clean up
 rm -rf .docker-libs/

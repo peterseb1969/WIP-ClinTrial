@@ -22,7 +22,7 @@ You must have a session ID (see YAC Reporting section in CLAUDE.md).
 
 Case files are named: `CASE-<NN>-<status>-<slug>.md`
 
-- `<NN>` — a short number (zero-padded to 2 digits), unique within the directory. Assigned at filing time as the next available number.
+- `<NN>` — a short number, unique within the directory. **Server-assigned** at allocation (the `CASE-<n>` Registry synonym of the case's UUID; `case_helper.sh claim` retired — see `/case file`). The flat filename carries it for the FS record; identity lives in kb.
 - `<status>` — one of: `open`, `responded`, `closed`, `implemented`
 - `<slug>` — 2-4 word kebab-case topic
 
@@ -48,29 +48,35 @@ ls yac-discussions/CASE-03-*.md 2>/dev/null
 
 ## Handling `/case file`
 
+> **Filing discipline (do not skip).** Filing a NEW case ALWAYS goes through the **served allocator** `case_allocate.py` (step 3 below) — never the `Write` tool, never hand-picking a number. The number is server-assigned: `case_allocate` reads the current max, then **claims the `CASE-<n>` Registry synonym atomically** and creates the CASE_RECORD; a concurrent filer who grabbed `CASE-<n>` first causes a `synonym_conflict`, and the allocator advances to `<n>+1` and retries. **The atomic synonym claim is the serializer** (CASE-427/436) — no FS lock, no client-side number reasoning, distinct numbers by construction. If you find yourself reasoning about case numbers ("what's the next available?", "is N taken?"), stop — `case_allocate` does it. This replaces the old FS `case-helper.sh claim` (CASE-67/CASE-301 collisions, CASE-306 discipline) with server-side allocation per CASE-425/437; the FS claim is retired.
+
 ### 1. Get the current time
 
 ```bash
-date '+%Y%m%d-%H%M'
+date '+%Y-%m-%d %H:%M'
 ```
 
-### 2. Assign a case number
+### 2. Create a slug
 
-Find the highest existing case number and add 1:
+Infer a short slug from context: `unknown-fields`, `relative-baseurl`, `template-update-missing`. 2-4 words, lowercase kebab-case (matches the regex `^[a-z0-9]+(-[a-z0-9]+)*$`).
+
+### 3. Allocate a case number (server-side, atomic)
 
 ```bash
-ls yac-discussions/CASE-*.md 2>/dev/null | sed 's/.*CASE-\([0-9]*\)-.*/\1/' | sort -n | tail -1
+bash ../FR-YAC/tools/kb-client.sh case_allocate.py \
+  --title "<short case title>" --filed-by "<your session ID>" \
+  --type <bug|question|request|platform-gap> --severity <blocks-me|annoying|fyi> \
+  --component <document-store|registry|scaffold|mcp-server|wip-client|wip-react|wip-proxy|wip-auth|reporting-sync|other>
+# Prints: CASE-<n> <document_id>
 ```
 
-If no cases exist, start at 01. Zero-pad to 2 digits (01–99). If you somehow reach 100+, use 3 digits.
+`kb-client.sh` fetches the version-matched KB client from the running instance (the loaders are APP-KB-owned and served — CASE-437) and runs the allocator. `case_allocate` reserves `<n>` by **atomically claiming the `CASE-<n>` synonym** and creating the CASE_RECORD (`data.case_number=<n>`, `data.status=open`). On `synonym_conflict` it advances `<n>+1` and retries — concurrent filers get distinct numbers by construction. Note the printed `<n>`; it is the assigned case number.
 
-### 3. Create a slug
+(Path to `kb-client.sh` is from your YAC's repo root; the wrapper itself is the one client-side bootstrap — it fetches the served client. Adjust the path if your repo layout differs.)
 
-Infer a short slug from context: `unknown-fields`, `relative-baseurl`, `template-update-missing`. 2-4 words, kebab-case.
+### 4. Write the case file (the FS record)
 
-### 4. Write the case file
-
-Create `yac-discussions/CASE-<NN>-open-<slug>.md`:
+`case_allocate` has created the kb record + reserved the number. Now write the flat file `yac-discussions/CASE-<n>-open-<slug>.md` (the git-tracked FS record), filling the assigned `<n>` into the frontmatter `case:` field:
 
 ```markdown
 ---
@@ -102,9 +108,25 @@ Be specific enough that a BE-YAC with no knowledge of your app can understand.>
 <If Peter provided a comment with `/case file`, put it here verbatim. If no comment, omit this section entirely.>
 ```
 
-### 5. Confirm
+### 5. Sync the body to wip-kb (resolve-then-update)
 
-Tell Peter the case number, slug, and file path.
+`case_allocate` already created the record (step 3). Now push the full file body into it — `add-to-kb` **resolves the `CASE-<n>` synonym to the document_id and updates in place** (v2 resolve-then-update; it does NOT create — the doc already exists):
+
+```bash
+bash ../FR-YAC/tools/kb-client.sh add-to-kb.py yac-discussions/CASE-<n>-open-<slug>.md
+```
+
+The served client:
+- Resolves `CASE-<n>` → document_id and updates `data.body` with the full file content (JSON Merge Patch, a new version; no duplicate — v2 CASE_RECORD has `identity_fields:[]`, so a create would append — resolve-then-update is mandatory).
+- Derives `REFERENCES` edges from your frontmatter `related:` field (each `CASE-N` mention → an outbound edge to the matching CASE_RECORD via its synonym; targets not yet in KB are silently skipped).
+- Handshakes against the instance manifest and refuses to write on `schema_version` skew (no-skew guarantee).
+- Writes one canonical instance (the one that served the client) — no local+remote dual-write.
+
+This step is **not optional** — without it the record carries only the title/metadata from allocation, not the body. CASE-307 names the dual-write; CASE-425/437 the v2 resolve-then-update.
+
+### 6. Confirm
+
+Tell Peter the case number, slug, file path, and the kb document_id printed by the script.
 
 ---
 
@@ -199,7 +221,7 @@ Append to the case file:
 <Your proposed or implemented fix. Reference specific files, lines, commits.>
 ```
 
-### 4. Update the status and rename
+### 3. Update the status and rename
 
 Change `status: open` to `status: responded` in the frontmatter.
 
@@ -208,6 +230,16 @@ Rename the file: `CASE-<NN>-open-<slug>.md` → `CASE-<NN>-responded-<slug>.md`
 ```bash
 mv yac-discussions/CASE-<NN>-open-<slug>.md yac-discussions/CASE-<NN>-responded-<slug>.md
 ```
+
+### 4. Mirror to wip-kb
+
+Re-run the loader to refresh the kb record body (idempotent — updates the existing CASE_RECORD via JSON Merge Patch, no duplicates):
+
+```bash
+bash ../FR-YAC/tools/kb-client.sh add-to-kb.py yac-discussions/CASE-<NN>-responded-<slug>.md
+```
+
+This step is **not optional** — without it, the kb body drifts from the flat-file source. CASE-307 names the design.
 
 ### 5. Confirm
 
@@ -241,7 +273,17 @@ Append to the case file:
 
 If the user provided text with the command (e.g., `/case comment 3 This is urgent`), use that as the comment body. Otherwise, infer from the current conversation context.
 
-### 4. Confirm
+### 4. Mirror to wip-kb
+
+Re-run the loader to refresh the kb record body (idempotent — comments don't change status, but the appended body must propagate to kb):
+
+```bash
+bash ../FR-YAC/tools/kb-client.sh add-to-kb.py yac-discussions/CASE-<NN>-*.md
+```
+
+This step is **not optional** — without it, the kb body drifts from the flat-file source. CASE-307 names the design.
+
+### 5. Confirm
 
 Tell Peter the comment was added.
 
@@ -269,7 +311,17 @@ Change `status:` to `status: closed` in the frontmatter.
 
 Rename: `CASE-<NN>-<old-status>-<slug>.md` → `CASE-<NN>-closed-<slug>.md`
 
-### 4. Confirm
+### 4. Mirror to wip-kb
+
+Re-run the loader to refresh the kb record body and status:
+
+```bash
+bash ../FR-YAC/tools/kb-client.sh add-to-kb.py yac-discussions/CASE-<NN>-closed-<slug>.md
+```
+
+This step is **not optional** — without it, the kb body drifts from the flat-file source. CASE-307 names the design.
+
+### 5. Confirm
 
 Tell Peter the case is closed and why.
 
@@ -327,7 +379,17 @@ Applied N of M proposed changes. <Note any skipped changes and why.>
 
 Rename: `CASE-<NN>-<old-status>-<slug>.md` → `CASE-<NN>-implemented-<slug>.md`
 
-### 6. Confirm
+### 6. Mirror to wip-kb
+
+Re-run the loader to refresh the kb record body and status:
+
+```bash
+bash ../FR-YAC/tools/kb-client.sh add-to-kb.py yac-discussions/CASE-<NN>-implemented-<slug>.md
+```
+
+This step is **not optional** — without it, the kb body drifts from the flat-file source. CASE-307 names the design.
+
+### 7. Confirm
 
 Tell Peter the case is implemented. Do NOT commit — Peter decides when to commit.
 
