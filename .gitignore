@@ -7,6 +7,17 @@ data/raw/
 # MCP config — contains local paths and dev API keys
 .mcp.json
 
+# kb client config — contains a machine-specific key-file path + internal URL
+.claude/kb.json
+
+# CLAUDE.md regeneration sidecar — transient review artifact from --refresh
+CLAUDE.md.refresh
+
+# Root-level gene-pool lib tarballs — reference drops from --refresh; the app's
+# real pins live in clintrial-explorer/libs/ (CASE-442 single source of truth).
+# Repo-root libs/ tracks only the READMEs and the wip-toolkit wheel.
+libs/*.tgz
+
 # Python
 __pycache__/
 *.pyc

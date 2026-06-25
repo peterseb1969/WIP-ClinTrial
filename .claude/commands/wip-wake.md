@@ -9,13 +9,13 @@ Identity is **local-first**: `.claude/.session-id` is the single source of truth
 
    Let `<prior-id>` be the sentinel value.
 
-2. **Close the prior session** (load-bearing). All report paths below are under `/Users/peter/Development/FR-YAC/`:
-   - **Prior dir missing** — if `reports/<prior-id>/` doesn't exist, **stop** (don't fabricate state):
-     > Error: prior session dir `reports/<prior-id>/` not found. `/wip-wake` won't fabricate state. Restore the dir, or `rm .claude/.session-id` and run `/wip-setup` for a fresh discontinuous start.
+2. **Close the prior session** (load-bearing). Report paths below are **project-local** to this repo — `reports/<prior-id>/`, never the shared FR-YAC checkout:
+   - **Prior dir missing** — if `reports/<prior-id>/` doesn't exist, **stop** (don't fabricate state). **Transition note:** a session staged *before* this change lives in the legacy shared `/Users/peter/Development/FR-YAC/reports/<prior-id>/`. To carry such a session forward cleanly, do ONE of these *before* this `/wip-wake`: run `/wip-report session-end` under the old body (final state mirrors to kb), **or** move that legacy dir into this repo's `reports/`. New sessions never touch the shared path; this note retires once no legacy shared-path sessions remain.
+     > Error: prior session dir `reports/<prior-id>/` not found. `/wip-wake` won't fabricate state. If this session was staged before this change, see the transition note above. Otherwise restore the dir, or `rm .claude/.session-id` and run `/wip-setup` for a fresh discontinuous start.
    - Read the `status:` field from `reports/<prior-id>/session.md` frontmatter (local read). Missing or malformed frontmatter → treat as `active` (conservative default; the rewrite below regenerates well-formed frontmatter).
    - **Already `status: closed`** (operator ran `/wip-report session-end`, or a previous `/wip-wake` already closed it) → **skip the close phase**: do NOT recompose the body, do NOT touch `ended_at`, do NOT overwrite the hand-written `## Session Summary`. Go to step 3.
    - **Otherwise** (`active` or missing) — compute `<close_ts>` once (`date '+%Y-%m-%dT%H:%M:%S'` — naive, NO timezone suffix), then **atomically rewrite** `reports/<prior-id>/session.md` (read full content, modify, write to a temp file, `mv` over the original — POSIX-atomic; never truncate-in-place): set `status: closed` + `ended_at: <close_ts>` in frontmatter (regenerating `session_id` / `role` / `started_at` from `<prior-id>` if frontmatter was absent — `continues_from` cannot be recovered this way; that loss is acknowledged), preserve the existing body, and append `## Session Summary — auto-closed by /wip-wake (<close_ts>)`. The frontmatter flip and the summary append are **one** atomic write so a partial failure can't leave a half-state.
-   - Mirror the now-closed prior to kb: `python3 /Users/peter/Development/FR-YAC/tools/add-to-kb.py "/Users/peter/Development/FR-YAC/reports/<prior-id>/session.md"`. **kb-unreachable → warn-and-continue** — the local write already flipped `status: closed`, so a later re-run sees `closed` and skips; the manual retry is the same `add-to-kb.py` command.
+   - Mirror the now-closed prior to kb (tier 3 only — skip silently if `.claude/kb.json` is absent): `KB_URL="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_app_url"])')"; KB_KEYFILE="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_api_key_file"])')"; ( cd reports/<prior-id> && python3 -c 'import json,glob; print(json.dumps({"session_id":"<prior-id>","files":{f:open(f).read() for f in sorted(glob.glob("*.md"))}}))' | curl -fsSk -X POST "$KB_URL/apps/kb/server-api/kb/sessions/mirror" -H "X-API-Key: $(cat "$KB_KEYFILE")" -H "Content-Type: application/json" -d @- )`. **kb-unreachable → warn-and-continue** — the local write already flipped `status: closed`, so a later re-run sees `closed` and skips; the manual retry is re-running the same POST.
 
 3. **Mint the new session** — `ROLE="$(cat "$CLAUDE_PROJECT_DIR/.claude/.session-role")"; NEW_ID="$ROLE-$(date '+%Y%m%d-%H%M%S')"`. (Role source is identical to `/wip-setup`. If `.session-role` is missing, stop and re-run `create-app-project.sh --refresh --prefix APP-<X>`.)
 
@@ -32,7 +32,7 @@ Identity is **local-first**: `.claude/.session-id` is the single source of truth
 
 5. **Overwrite the sentinel atomically** — write `<NEW_ID>` as a single line to a temp file under `.claude/`, then `mv` over `.claude/.session-id`.
 
-6. **Mirror the new session to kb (warn-and-continue)** — `python3 /Users/peter/Development/FR-YAC/tools/add-to-kb.py "/Users/peter/Development/FR-YAC/reports/$NEW_ID/session.md"`. The loader derives the `CONTINUES_FROM` edge (new → prior) from the `continues_from:` frontmatter; if the prior isn't in kb yet, the edge silently skips and lands on a re-run. Both kb writes (step 2 close + step 6 create) are idempotent — re-running `/wip-wake` after a partial failure converges.
+6. **Mirror the new session to kb (tier 3 only, warn-and-continue)** — **Tier gate:** kb mirrors run only in tier-3 repos — if `.claude/kb.json` is absent, skip this step silently and continue (tier-2 solo mode is by design; nothing to warn about). Then: `KB_URL="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_app_url"])')"; KB_KEYFILE="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_api_key_file"])')"; ( cd reports/$NEW_ID && python3 -c 'import json,glob; print(json.dumps({"session_id":"$NEW_ID","files":{f:open(f).read() for f in sorted(glob.glob("*.md"))}}))' | curl -fsSk -X POST "$KB_URL/apps/kb/server-api/kb/sessions/mirror" -H "X-API-Key: $(cat "$KB_KEYFILE")" -H "Content-Type: application/json" -d @- )`. The gateway derives the `CONTINUES_FROM` edge (new → prior) from the `continues_from:` frontmatter; if the prior isn't in kb yet, the edge silently skips and lands on a re-run. Both kb writes (step 2 close + step 6 create) are idempotent — re-running `/wip-wake` after a partial failure converges.
 
 After Step A, `.claude/.session-id` holds `<NEW_ID>`. Every **write** from here on goes to the new session's dir; the continuity **reads** in Step B target the **prior** session's reports.
 
@@ -52,18 +52,20 @@ This command relies ONLY on durable artifacts — files on disk, git history, WI
 
 #### 1. Reload baseline context (mandatory)
 
-Compaction wipes prior reads. As an APP-YAC, you must reload baseline context as concrete tool calls — do not substitute "I remember from training" for actually running the reads:
+Compaction wipes prior reads. As an APP-YAC, you must reload baseline context as concrete tool calls — do not substitute "I remember from training" for actually running the reads. This list is the **same baseline `/wip-setup` forces at creation** — wake must reload it, not a narrower subset, or you recover into a thinner context than you were born with:
 
+- `Read` `/Users/peter/Development/World-in-a-Pie/docs/Vision.md` — WIP's theses and design principles. **This is the drift-correction mechanism**: if any work has bent toward a specific use case at the expense of WIP's generic engine (the failure mode that builds sidecar models instead of using the primitives), this is what catches it. It is exactly the doc a long, feature-pressured session loses sight of — which is why reloading it on every wake is non-negotiable, not just at birth.
 - `ReadMcpResourceTool server=wip uri=wip://development-guide` — the four-phase process for building on WIP. **Golden Rule: Never modify WIP. Only consume its APIs.** This is the single most important boundary for an APP-YAC; reload it.
 - `ReadMcpResourceTool server=wip uri=wip://ponifs` — the eight PoNIFs (#7 Edge Types and #8 `versioned: false` added 2026-04-25). Conventional assumptions cause silent failures.
 - `ReadMcpResourceTool server=wip uri=wip://data-model` — entity shapes in WIP.
 - `ReadMcpResourceTool server=wip uri=wip://conventions` — bulk-first 200 OK, PATCH semantics, idempotent bootstrap, template cache, namespace/authorization rules.
+- `Read` `/Users/peter/Development/FR-YAC/papers/wip-deployable-app-contract.md` — what your app must satisfy to ship under `wip-deploy install`. Reload it so deploy-contract drift doesn't creep in across a long build.
 
 Output one line per source confirming it was loaded. This step is non-optional; recovery without baseline context is recovery into the same drift the previous session ended in.
 
 #### 2. Check session reports
 
-Read the **prior** session's report dir at `/Users/peter/Development/FR-YAC/reports/<prior-id>/` (the session you just closed in Step A — that's where the continuity lives; the new session's dir is still empty). Three files together rebuild the session's working memory:
+Read the **prior** session's report dir at `reports/<prior-id>/` (the session you just closed in Step A — that's where the continuity lives; the new session's dir is still empty). Three files together rebuild the session's working memory:
 
 - `session.md` — current state (last `/wip-report session-end` snapshot or initial frontmatter).
 - `commits.md` — append-only commit log since session start.
@@ -145,7 +147,7 @@ Ask the user to confirm before proceeding. They may have context you can't recov
 
 ### When to use this
 
-- **After context compaction** — you notice gaps in your understanding of the current work
+- **ALWAYS after a compaction — no exceptions.** Run `/wip-wake` the moment context is compacted (manual `/compact`, auto-compaction, or built-in `/resume`), *even when the work feels like a seamless continuation of a long-running plan.* That "seamless continuation" feeling is the trap: it is precisely when the baseline reload (Step B.1) is skipped that an agent drifts — runs on evicted context, loses the vision, and starts taking the cheapest route (e.g. a sidecar model in metadata) instead of using WIP's primitives. The reload is cheap; the drift is not. Do not judge whether you "still remember" — you cannot reliably tell what compaction dropped.
 - **At the start of any session** — especially if you're not sure what was done previously
 - **When confused** — if something doesn't make sense, recover context before guessing
 - **Proactively** — if a session is getting long and you want to checkpoint your understanding

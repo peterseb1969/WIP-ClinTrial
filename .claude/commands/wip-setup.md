@@ -6,13 +6,13 @@ First-run session-identity mint, environment check, guided setup, and **mandator
 
 `/wip-setup` mints this session's identity. Identity is a **local-first** contract: the sentinel file `.claude/.session-id` is the single source of truth for "who am I"; kb is a derived mirror that catches up later. Control-flow decisions here read local files only — never query kb (it may be unreachable).
 
-1. **Precondition** — `test -d /Users/peter/Development/FR-YAC/reports/`. If it doesn't exist, stop with: *"Clone FR-YAC first: `git clone <gitea-or-origin> ~/Development/FR-YAC`. `/wip-setup` writes session reports to `FR-YAC/reports/<session-id>/`."*
+1. **Precondition** — ensure the project-local staging dir exists: `mkdir -p reports`. Sessions stage to `reports/<session-id>/` **inside this repo** (never a shared FR-YAC checkout); the durable record is the kb mirror (tier-3, `POST /sessions/mirror`). No external clone is required, and tier-2 (no-KB) repos keep their full session history locally here.
 
 2. **Read the role** — `cat "$CLAUDE_PROJECT_DIR/.claude/.session-role"` (fall back to `$PWD/.claude/.session-role` if `$CLAUDE_PROJECT_DIR` is unset). This file is written at scaffold time — `BE-YAC` by `setup-backend-agent.sh`, `APP-<X>` (e.g. `APP-KB`, `APP-RC`) by `create-app-project.sh --prefix`. If it's missing, stop and tell the operator to re-run `create-app-project.sh --refresh --prefix APP-<X>`; do **not** guess the role.
 
 3. **Check for an existing session** — read `$CLAUDE_PROJECT_DIR/.claude/.session-id`:
    - **Absent** → clean fresh start; go to step 4.
-   - **Present** → read `<prior-id>` from it, then read the `status:` field from `/Users/peter/Development/FR-YAC/reports/<prior-id>/session.md` frontmatter (local read — do NOT query kb):
+   - **Present** → read `<prior-id>` from it, then read the `status:` field from `reports/<prior-id>/session.md` frontmatter (local read — do NOT query kb):
      - `status: closed` → the operator deliberately ended the prior session; go to step 4 and mint with **no** `continues_from` (discontinuous restart). The old sentinel is overwritten in step 5.
      - `status: active` (or any non-closed / missing) → **stop**; refuse to rotate identity silently:
        > Error: active session `<prior-id>` found at `.claude/.session-id`. Run `/wip-wake` to start a new linked session, or `/wip-report session-end` first, then `/wip-setup` for a clean discontinuous restart.
@@ -21,7 +21,7 @@ First-run session-identity mint, environment check, guided setup, and **mandator
 
 5. **Write the sentinel atomically** — write `$ID` as a single line (no trailing content) to a temp file under `.claude/`, then `mv` it over `.claude/.session-id`. Truncate-in-place is not atomic; use tempfile + `mv`.
 
-6. **Create the report dir** — `mkdir "/Users/peter/Development/FR-YAC/reports/$ID"` (plain `mkdir`, **not** `-p`; with seconds precision a collision is near-zero, and if `mkdir` fails because the dir exists, surface it and let the operator retry). Write the initial `reports/$ID/session.md` with this frontmatter:
+6. **Create the report dir** — `mkdir "reports/$ID"` (plain `mkdir`, **not** `-p`; with seconds precision a collision is near-zero, and if `mkdir` fails because the dir exists, surface it and let the operator retry). Write the initial `reports/$ID/session.md` with this frontmatter:
    ```yaml
    ---
    session_id: <ID>
@@ -32,8 +32,8 @@ First-run session-identity mint, environment check, guided setup, and **mandator
    ```
    `continues_from` and `ended_at` are absent — `/wip-setup` never sets them (that's `/wip-wake`'s and `/wip-report session-end`'s job). Add a short body stub (task list, phase) as work begins.
 
-7. **Mirror to kb (warn-and-continue)** — `python3 /Users/peter/Development/FR-YAC/tools/add-to-kb.py "/Users/peter/Development/FR-YAC/reports/$ID/session.md"`. If kb is unreachable, log to stderr and **PROCEED** — local state is authoritative; the mirror retries at the next `/wip-wake` or `/wip-report session-end`:
-   > Warning: kb mirror failed for `<ID>`; SESSION record not yet in kb. Will retry at next `/wip-wake`, `/wip-report session-end`, or manually via `python3 /Users/peter/Development/FR-YAC/tools/add-to-kb.py /Users/peter/Development/FR-YAC/reports/<ID>/session.md`.
+7. **Mirror to kb (tier 3 only, warn-and-continue)** — **Tier gate:** kb mirrors run only in tier-3 repos — if `.claude/kb.json` is absent, skip this step silently and continue (tier-2 solo mode is by design; nothing to warn about). Then: `KB_URL="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_app_url"])')"; KB_KEYFILE="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_api_key_file"])')"; ( cd reports/$ID && python3 -c 'import json,glob; print(json.dumps({"session_id":"$ID","files":{f:open(f).read() for f in sorted(glob.glob("*.md"))}}))' | curl -fsSk -X POST "$KB_URL/apps/kb/server-api/kb/sessions/mirror" -H "X-API-Key: $(cat "$KB_KEYFILE")" -H "Content-Type: application/json" -d @- )`. If kb is unreachable, log to stderr and **PROCEED** — local state is authoritative; the mirror retries at the next `/wip-wake` or `/wip-report session-end`:
+   > Warning: kb mirror failed for `<ID>`; SESSION record not yet in kb. Will retry at next `/wip-wake`, `/wip-report session-end`, or manually via `KB_URL="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_app_url"])')"; KB_KEYFILE="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_api_key_file"])')"; ( cd reports/<ID> && python3 -c 'import json,glob; print(json.dumps({"session_id":"<ID>","files":{f:open(f).read() for f in sorted(glob.glob("*.md"))}}))' | curl -fsSk -X POST "$KB_URL/apps/kb/server-api/kb/sessions/mirror" -H "X-API-Key: $(cat "$KB_KEYFILE")" -H "Content-Type: application/json" -d @- )`.
 
 After Step 0, `.claude/.session-id` is the canonical identity for every subsequent `/wip-case`, `/wip-report`, and commit attribution. Proceed to the environment checks below.
 
@@ -41,8 +41,8 @@ After Step 0, `.claude/.session-id` is the canonical identity for every subseque
 
 1. **Node version** — `node --version`. Expect 20.x+ (matches the canonical `node:20-alpine` Dockerfile.dev base). Older versions may work but are off-contract.
 2. **Package manager + deps** — `command -v npm` then check `node_modules/` exists and is non-empty. If missing, suggest `npm ci` (or `npm install` if no `package-lock.json` yet).
-3. **`.env` file** — `test -f .env`. If missing, point at this app's CLAUDE.md "API Key" section and ask Peter for the runtime key. Confirm `WIP_API_KEY` is set (don't print the value).
-4. **WIP reachable** — `curl -sk -m 3 https://localhost:8443/api/registry/namespaces -H "X-API-Key: $(grep ^WIP_API_KEY .env | cut -d= -f2)"` (or the install host this app targets). If unreachable, point at `wip-deploy install` or `wip-deploy restart`.
+3. **`.env` file** — `test -f .env`. If missing, point at this app's CLAUDE.md "API Key" section. The runtime key SOURCE is the **live wip-deploy secrets file** (CASE-495), referenced as `WIP_API_KEY_FILE` — not a baked `WIP_API_KEY`. Confirm `WIP_API_KEY_FILE` is set and the file it points at exists and is non-empty: `KF="$(grep ^WIP_API_KEY_FILE .env | cut -d= -f2)"; test -s "$KF"` (don't print the contents). A literal `WIP_API_KEY` is a legacy/local fallback — accept it if present, but prefer the file.
+4. **WIP reachable** — resolve the key from the live file, not a baked value: `KEY="$(cat "$(grep ^WIP_API_KEY_FILE .env | cut -d= -f2)" 2>/dev/null || grep ^WIP_API_KEY .env | cut -d= -f2)"; curl -sk -m 3 https://localhost:8443/api/registry/namespaces -H "X-API-Key: $KEY"` (or the install host this app targets). If unreachable, point at `wip-deploy install` or `wip-deploy restart`.
 5. **MCP connectivity** — call `get_wip_status` via MCP tools. If MCP tools aren't available, suggest restarting Claude Code and checking `.mcp.json`. If the call fails, suggest checking containers / network.
 
 ### Step 6 — Mandatory context loading (required on all-pass)
