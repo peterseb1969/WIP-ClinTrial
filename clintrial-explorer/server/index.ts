@@ -9,6 +9,8 @@ import classifyRoutes from './routes/classify.js'
 import importRoutes from './routes/import.js'
 import aeCleanupRoutes from './routes/ae-cleanup.js'
 import bootstrapRoutes from './routes/bootstrap.js'
+import settingsRoutes from './routes/settings.js'
+import { startAutoSync } from './lib/auto-sync.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -32,6 +34,7 @@ router.use('/server-api', classifyRoutes)
 router.use('/server-api', importRoutes)
 router.use('/server-api', aeCleanupRoutes)
 router.use('/server-api', bootstrapRoutes)
+router.use('/server-api', settingsRoutes)
 
 // Proxy /api/* and /files/* to WIP backend (injects API key server-side)
 router.use(wipProxy({ baseUrl: WIP_BASE_URL, apiKey: WIP_API_KEY }))
@@ -53,4 +56,5 @@ app.use(BASE_PATH, router)
 
 app.listen(PORT, () => {
   console.log(`ClinTrial Explorer server running on port ${PORT}${BASE_PATH ? ` (base: ${BASE_PATH})` : ''}`)
+  startAutoSync().catch((err) => console.warn('[auto-sync] Startup error:', err))
 })

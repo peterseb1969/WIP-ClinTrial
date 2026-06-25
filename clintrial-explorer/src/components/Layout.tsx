@@ -26,7 +26,7 @@ const navItems = [
   { to: '/adverse-events', icon: AlertTriangle, label: 'Adverse Events' },
   { to: '/sites', icon: MapPin, label: 'Sites' },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
-  { to: '/settings/rules', icon: Settings, label: 'Rules' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
   { to: '/import', icon: Upload, label: 'Import' },
 ] as const
 

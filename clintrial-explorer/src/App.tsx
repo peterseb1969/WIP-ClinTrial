@@ -16,6 +16,7 @@ import { ImportPage } from '@/pages/ImportPage'
 import { AdverseEventsPage } from '@/pages/AdverseEventsPage'
 import { MoleculeComparePage } from '@/pages/MoleculeComparePage'
 import { ClassificationRulesPage } from '@/pages/ClassificationRulesPage'
+import { SettingsPage } from '@/pages/SettingsPage'
 import { BootstrapGate } from '@/pages/BootstrapPage'
 
 const queryClient = new QueryClient({
@@ -45,6 +46,7 @@ export default function App() {
               <Route path="adverse-events" element={<AdverseEventsPage />} />
               <Route path="sites" element={<SitesPage />} />
               <Route path="bookmarks" element={<BookmarksPage />} />
+              <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/rules" element={<ClassificationRulesPage />} />
               <Route path="import" element={<ImportPage />} />
               <Route path="sync" element={<ImportPage />} />

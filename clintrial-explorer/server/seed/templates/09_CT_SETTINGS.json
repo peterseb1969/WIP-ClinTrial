@@ -1,0 +1,13 @@
+{
+  "value": "CT_SETTINGS",
+  "label": "App Settings",
+  "description": "Singleton settings document for the ClinTrial Explorer application",
+  "namespace": "clintrial",
+  "identity_fields": ["settings_key"],
+  "fields": [
+    {"name": "settings_key", "label": "Settings Key", "type": "string", "mandatory": true},
+    {"name": "sync_enabled", "label": "Auto-Sync Enabled", "type": "boolean", "mandatory": false},
+    {"name": "sync_interval_hours", "label": "Sync Interval (hours)", "type": "number", "mandatory": false}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}
