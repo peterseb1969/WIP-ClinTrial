@@ -10,6 +10,8 @@ import importRoutes from './routes/import.js'
 import aeCleanupRoutes from './routes/ae-cleanup.js'
 import bootstrapRoutes from './routes/bootstrap.js'
 import settingsRoutes from './routes/settings.js'
+import configRoutes from './routes/config.js'
+import { requireAdmin } from './lib/admin.js'
 import { startAutoSync } from './lib/auto-sync.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -35,6 +37,8 @@ router.use('/server-api', importRoutes)
 router.use('/server-api', aeCleanupRoutes)
 router.use('/server-api', bootstrapRoutes)
 router.use('/server-api', settingsRoutes)
+// Secret-writing config endpoints are admin-gated (pass-through in open/dev mode)
+router.use('/server-api', requireAdmin(), configRoutes)
 
 // Proxy /api/* and /files/* to WIP backend (injects API key server-side)
 router.use(wipProxy({ baseUrl: WIP_BASE_URL, apiKey: WIP_API_KEY }))

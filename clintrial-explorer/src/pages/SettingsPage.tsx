@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Settings, RefreshCw, Clock, ChevronRight, Check, Loader2, AlertCircle } from 'lucide-react'
+import { Settings, RefreshCw, Clock, ChevronRight, Check, Loader2, AlertCircle, KeyRound } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { Badge } from '@/components/Badge'
-import { useSettings, useUpdateSettings } from '@/hooks/useSettings'
+import {
+  useSettings,
+  useUpdateSettings,
+  useAnthropicKeyStatus,
+  useSetAnthropicKey,
+} from '@/hooks/useSettings'
 import { useSyncState } from '@/hooks/useImport'
 import { PageLoading } from '@/components/LoadingSpinner'
 
@@ -161,6 +166,9 @@ export function SettingsPage() {
         </div>
       </Card>
 
+      {/* Anthropic API key (admin-only runtime config) */}
+      <AnthropicKeySection />
+
       {/* Link to Classification Rules */}
       <Link
         to="/settings/rules"
@@ -175,5 +183,108 @@ export function SettingsPage() {
         <ChevronRight className="h-4 w-4 text-text-muted" />
       </Link>
     </div>
+  )
+}
+
+/**
+ * Admin-only runtime control to set/rotate the Anthropic API key that powers
+ * the AI-assisted AE cleanup features — no redeploy needed. The key is
+ * write-only: the server returns only configured/source/last-4, never the key.
+ */
+function AnthropicKeySection() {
+  const { data: status, isLoading } = useAnthropicKeyStatus()
+  const setKey = useSetAnthropicKey()
+  const [keyInput, setKeyInput] = useState('')
+  const [persist, setPersist] = useState(true)
+
+  if (isLoading) return null
+  if (status && 'forbidden' in status) return null // non-admins don't see the control
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!keyInput.trim()) return
+    setKey.mutate(
+      { key: keyInput.trim(), persist },
+      { onSuccess: () => setKeyInput('') },
+    )
+  }
+
+  const configured = status && 'configured' in status ? status : null
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4" />
+          Anthropic API key
+        </CardTitle>
+      </CardHeader>
+      <div className="space-y-4 p-4 pt-0">
+        <p className="text-sm text-text-muted">
+          Powers the AI-assisted AE term cleanup. Set or rotate the key without a redeploy.
+          The key is never displayed.
+        </p>
+
+        {configured && (
+          <div className="flex items-center gap-2 rounded-lg bg-surface p-3 text-sm">
+            <span className="text-text-muted">Status:</span>
+            {configured.configured ? (
+              <span className="text-text">
+                Configured (…{configured.last4})
+              </span>
+            ) : (
+              <span className="text-text">Not configured</span>
+            )}
+            <Badge variant="muted" className="ml-auto">
+              source: {configured.source}
+            </Badge>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="password"
+            autoComplete="off"
+            value={keyInput}
+            onChange={(e) => setKeyInput(e.target.value)}
+            placeholder="sk-ant-…"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <label className="flex items-center gap-2 text-sm text-text-muted">
+            <input
+              type="checkbox"
+              checked={persist}
+              onChange={(e) => setPersist(e.target.checked)}
+            />
+            Persist to the key file (survives restart when ANTHROPIC_API_KEY_FILE is set)
+          </label>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={setKey.isPending || !keyInput.trim()}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+            >
+              {setKey.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              {setKey.isPending ? 'Validating…' : 'Set key'}
+            </button>
+            {setKey.isSuccess && (
+              <span className="text-sm text-green-600">
+                Key set{setKey.data?.persisted ? ' (persisted)' : ' (in-memory only)'}
+              </span>
+            )}
+            {setKey.isError && (
+              <span className="flex items-center gap-1 text-sm text-red-600">
+                <AlertCircle className="h-3.5 w-3.5" />
+                {setKey.error.message}
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
+    </Card>
   )
 }

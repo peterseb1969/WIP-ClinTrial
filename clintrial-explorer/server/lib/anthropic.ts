@@ -1,11 +1,104 @@
 /**
  * Minimal Anthropic API client using plain fetch (no SDK dependency).
- * Reads ANTHROPIC_API_KEY from process.env at call time.
+ *
+ * Key resolution (mirrors WIP-KB CASE-508): process.env is frozen at process
+ * start, so an env-only key can't be rotated without a redeploy. Resolve in
+ * priority order so the key is settable in a running system: runtime override
+ * (set via the admin config endpoint) -> key file (ANTHROPIC_API_KEY_FILE,
+ * mirroring the WIP apiKeyFile pattern) -> env. The key is a secret — it is
+ * never stored in a WIP document and never echoed back to a caller.
  */
+import { readFileSync, writeFileSync } from 'fs'
 
 const API_URL = 'https://api.anthropic.com/v1/messages'
 const API_VERSION = '2023-06-01'
 const DEFAULT_MODEL = 'claude-sonnet-4-6'
+// Cheap model for the liveness probe in validateKey — minimise cost per check.
+const VALIDATE_MODEL = 'claude-haiku-4-5'
+
+// ---------- Anthropic key resolution (runtime-settable) ----------
+let runtimeKeyOverride: string | null = null
+
+function keyFromFile(): string {
+  const f = process.env.ANTHROPIC_API_KEY_FILE
+  if (!f) return ''
+  try {
+    return readFileSync(f, 'utf-8').trim()
+  } catch {
+    return ''
+  }
+}
+
+/** Resolve the active Anthropic key: runtime override -> key file -> env. */
+function anthropicKey(): string {
+  return runtimeKeyOverride || keyFromFile() || process.env.ANTHROPIC_API_KEY || ''
+}
+
+function keySource(): 'override' | 'file' | 'env' | 'none' {
+  if (runtimeKeyOverride) return 'override'
+  if (keyFromFile()) return 'file'
+  if (process.env.ANTHROPIC_API_KEY) return 'env'
+  return 'none'
+}
+
+/** Masked status only — the key value is never returned to a caller. */
+export function getKeyStatus() {
+  const key = anthropicKey()
+  return {
+    configured: !!key,
+    source: keySource(),
+    last4: key ? key.slice(-4) : null,
+  }
+}
+
+/** Cheap liveness probe — confirm a key actually authenticates before accepting it. */
+export async function validateKey(key: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': API_VERSION,
+      },
+      body: JSON.stringify({
+        model: VALIDATE_MODEL,
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'ping' }],
+      }),
+    })
+    if (res.ok) return { ok: true }
+    let detail = `HTTP ${res.status}`
+    try {
+      const body = (await res.json()) as { error?: { message?: string } }
+      if (body?.error?.message) detail = body.error.message
+    } catch {
+      /* non-JSON error body */
+    }
+    return { ok: false, error: detail }
+  } catch (err) {
+    return { ok: false, error: (err as Error).message || 'validation failed' }
+  }
+}
+
+/**
+ * Set the key in the running system. Updates the in-memory override and, when
+ * persist is set and ANTHROPIC_API_KEY_FILE is configured, writes the key file
+ * 0600 so it survives a restart (and is picked up by the file-resolve path).
+ */
+export function setAnthropicKey(
+  key: string,
+  opts: { persist?: boolean } = {},
+): ReturnType<typeof getKeyStatus> & { persisted: boolean } {
+  runtimeKeyOverride = key
+  let persisted = false
+  const f = process.env.ANTHROPIC_API_KEY_FILE
+  if (opts.persist && f) {
+    writeFileSync(f, key, { mode: 0o600 })
+    persisted = true
+  }
+  return { ...getKeyStatus(), persisted }
+}
 
 export interface AnthropicMessage {
   role: 'user' | 'assistant'
@@ -31,9 +124,9 @@ export async function callClaude(opts: AnthropicCallOptions): Promise<{
   text: string
   usage: { input_tokens: number; output_tokens: number }
 }> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = anthropicKey()
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY not set in environment')
+    throw new Error('No Anthropic API key configured — set one in Settings')
   }
 
   const body = {
