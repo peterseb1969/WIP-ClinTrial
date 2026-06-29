@@ -14,6 +14,7 @@ import {
   Home,
   ChevronRight,
 } from 'lucide-react'
+import { WipFooter } from '@wip/react'
 import { cn } from '@/lib/utils'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { GlobalFilterBar } from '@/components/GlobalFilterBar'
@@ -144,6 +145,11 @@ export function Layout() {
             <GlobalFilterBar />
             <Outlet />
           </div>
+          <WipFooter
+            appName="Clinical Trials Explorer"
+            buildStamp={import.meta.env.VITE_BUILD_STAMP}
+            buildSha={import.meta.env.VITE_BUILD_SHA}
+          />
         </main>
       </div>
     </div>
