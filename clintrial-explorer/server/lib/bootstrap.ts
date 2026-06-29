@@ -55,6 +55,11 @@ export async function runBootstrap(
   const progress = (step: string, detail: string) =>
     onProgress({ step, detail, done: false })
 
+  // Captured for the BOOTSTRAP_RECORD audit doc written in Step 6.
+  const startedAt = new Date().toISOString()
+  const terminologiesCreated: string[] = []
+  const templatesCreated: string[] = []
+
   try {
     // Step 1: Create namespace (idempotent upsert)
     progress('namespace', 'Creating clintrial namespace...')
@@ -72,6 +77,7 @@ export async function runBootstrap(
     for (const file of termFiles) {
       const data = JSON.parse(readFileSync(join(SEED_DIR, 'terminologies', file), 'utf-8'))
       terminologies.push(data)
+      terminologiesCreated.push(data.value)
     }
 
     progress('terminologies', `Creating ${terminologies.length} terminologies...`)
@@ -153,11 +159,21 @@ export async function runBootstrap(
       if (data.reporting) template.reporting = data.reporting
 
       await wipPost('/api/template-store/templates?on_conflict=validate', [template])
+      // Track domain templates for the audit doc; the audit template itself
+      // is infrastructure, not a domain template, so don't list it.
+      if (data.value !== 'BOOTSTRAP_RECORD') templatesCreated.push(data.value)
     }
 
-    // Wait for template cache to refresh (PoNIF #6)
-    progress('done', 'Waiting for caches to refresh...')
+    // Wait for template cache to refresh (PoNIF #6) — without this the
+    // BOOTSTRAP_RECORD write below races the just-created template and may
+    // validate against an empty resolution.
+    progress('cache', 'Waiting for caches to refresh...')
     await new Promise((resolve) => setTimeout(resolve, 6000))
+
+    // Step 6: Write the BOOTSTRAP_RECORD audit doc (provenance trail —
+    // CLAUDE.md "Namespace Bootstrap on Launch", rule 3).
+    progress('audit', 'Writing BOOTSTRAP_RECORD audit doc...')
+    await writeBootstrapRecord({ startedAt, templatesCreated, terminologiesCreated })
 
     onProgress({ step: 'done', detail: 'Bootstrap complete', done: true })
   } catch (err) {
@@ -168,6 +184,57 @@ export async function runBootstrap(
       error: (err as Error).message,
     })
     throw err
+  }
+}
+
+/**
+ * Write the BOOTSTRAP_RECORD audit doc — one provenance record per
+ * user-initiated bootstrap. Resolves the template_id + version first (the
+ * document-store endpoint requires template_id, not template_value) and
+ * pins template_version so the doc validates against the version we just
+ * created rather than whatever the 5s "latest" cache resolves (PoNIF #6).
+ * No edge types in this app, so edge_types_created is always empty.
+ */
+async function writeBootstrapRecord(meta: {
+  startedAt: string
+  templatesCreated: string[]
+  terminologiesCreated: string[]
+}): Promise<void> {
+  const tmpl = (await wipGet(
+    `/api/template-store/templates/by-value/BOOTSTRAP_RECORD?namespace=${NAMESPACE}`,
+  )) as { template_id: string; version: number }
+
+  const doc = {
+    template_id: tmpl.template_id,
+    template_version: tmpl.version,
+    namespace: NAMESPACE,
+    data: {
+      bootstrap_id: `bootstrap-${meta.startedAt.replace(/[:.]/g, '-')}`,
+      app_version: appVersion(),
+      bootstrapped_at: meta.startedAt,
+      commit_sha: process.env.VITE_BUILD_SHA || process.env.GIT_COMMIT_SHA || 'unknown',
+      templates_created: meta.templatesCreated,
+      edge_types_created: [],
+      terminologies_created: meta.terminologiesCreated,
+    },
+  }
+
+  const result = (await wipPost('/api/document-store/documents', [doc])) as {
+    results?: Array<{ status: string; error?: string }>
+  }
+  const item = result.results?.[0]
+  if (item && item.status === 'error') {
+    throw new Error(`BOOTSTRAP_RECORD write failed: ${item.error || 'unknown error'}`)
+  }
+}
+
+/** App version from package.json (falls back to env, then 'unknown'). */
+function appVersion(): string {
+  try {
+    const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8'))
+    return pkg.version || process.env.APP_VERSION || 'unknown'
+  } catch {
+    return process.env.APP_VERSION || 'unknown'
   }
 }
 
