@@ -1,14 +1,24 @@
-name: Build & Push Image (x86)
+name: Build & Push Image (multi-arch)
 
 # Manually triggered: Actions tab -> Run workflow. Builds the production
-# image natively from the clintrial-explorer/ app dir and pushes it to GHCR
-# as ghcr.io/<owner>/clintrial-explorer:<tag>. Empty tag input falls back to
-# sha-<short>. VITE_BASE_PATH must match the platform manifest's
-# APP_BASE_PATH (apps/clintrial/wip-app.yaml in World-in-a-Pie).
+# clintrial-explorer image NATIVELY on per-arch runners (no QEMU), pushes a
+# ghcr.io/<owner>/clintrial-explorer:<tag>-<arch> image for each arch, then
+# stitches them into one multi-arch tag <tag> with buildx imagetools.
 #
-# Platforms: default native amd64. Set the platforms input to e.g.
-# "linux/amd64,linux/arm64" for a multi-arch manifest via buildx + QEMU
-# (emulated arm64 npm ci/build is slow).
+# Pattern: World-in-a-Pie .github/workflows/build.yaml — three-job native
+# dual-arch (resolve-tag -> build matrix -> stitch), validated 2026-07-03.
+# Do NOT reintroduce a single-job QEMU multi-arch build: emulated arm64
+# npm ci/build is slow, and pull+tag+push retagging silently flattens a
+# multi-arch index to the runner's architecture. imagetools create only.
+#
+# VITE_BASE_PATH must match the platform manifest's APP_BASE_PATH
+# (apps/clintrial/wip-app.yaml in World-in-a-Pie). Empty tag input falls back
+# to sha-<short-commit>. Deploys always pin the bare <tag>; the <tag>-<arch>
+# images stay in the registry as provenance. Version tags are write-once —
+# add a new tag, never re-point an existing one.
+#
+# Note: ubuntu-24.04-arm is GitHub's native arm64 runner (free for public
+# repos, billable for private).
 
 on:
   workflow_dispatch:
@@ -17,33 +27,48 @@ on:
         description: 'Image tag (e.g. 1.0.0). Leave empty for sha-<short-commit>.'
         required: false
         default: ''
-      platforms:
-        description: 'Comma-separated platforms. Default native amd64; e.g. linux/amd64,linux/arm64 for multi-arch (QEMU, slow).'
-        required: false
-        default: 'linux/amd64'
 
 jobs:
-  build-and-push:
+  # 1. Resolve the tag (and build metadata) ONCE so every job tags identically
+  #    and both arch builds bake byte-identical build args.
+  resolve-tag:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      sha: ${{ steps.meta.outputs.sha }}
+      stamp: ${{ steps.meta.outputs.stamp }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Resolve image tag
-        id: tag
+      - name: Resolve image tag and build metadata
+        id: meta
         run: |
           TAG="${{ inputs.tag }}"
           if [ -z "$TAG" ]; then
             TAG="sha-$(git rev-parse --short HEAD)"
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Building with tag: $TAG"
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "stamp=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
+          echo "Building tag: $TAG (arch images: $TAG-amd64, $TAG-arm64)"
 
-      - name: Set up QEMU (multi-arch only)
-        if: inputs.platforms != 'linux/amd64'
-        uses: docker/setup-qemu-action@v3
+  # 2. One NATIVE build per arch — no QEMU. fail-fast:false so one arch
+  #    failing doesn't cancel the other.
+  build:
+    needs: resolve-tag
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -53,12 +78,35 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | \
             docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Build and push
+      - name: Build and push (${{ matrix.arch }}, native)
         run: |
           docker buildx build \
-            --platform "${{ inputs.platforms }}" \
+            --platform "linux/${{ matrix.arch }}" \
             --build-arg VITE_BASE_PATH=/apps/clintrial/ \
-            --build-arg VITE_BUILD_STAMP="$(date -u +%FT%TZ)" \
-            --build-arg VITE_BUILD_SHA="$(git rev-parse --short HEAD)" \
-            -t "ghcr.io/${{ github.repository_owner }}/clintrial-explorer:${{ steps.tag.outputs.tag }}" \
+            --build-arg VITE_BUILD_STAMP="${{ needs.resolve-tag.outputs.stamp }}" \
+            --build-arg VITE_BUILD_SHA="${{ needs.resolve-tag.outputs.sha }}" \
+            -t "ghcr.io/${{ github.repository_owner }}/clintrial-explorer:${{ needs.resolve-tag.outputs.tag }}-${{ matrix.arch }}" \
             --push clintrial-explorer
+
+  # 3. Weld the two per-arch images into one multi-arch tag. Runs only when
+  #    BOTH arch builds succeeded (needs: build). imagetools create is
+  #    manifest-only: no rebuild, no layer transfer, same commit both halves.
+  stitch:
+    needs: [resolve-tag, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Stitch per-arch images into a multi-arch tag
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          TAG="${{ needs.resolve-tag.outputs.tag }}"
+          IMG="ghcr.io/${{ github.repository_owner }}/clintrial-explorer"
+          docker buildx imagetools create \
+            -t "$IMG:$TAG" \
+            "$IMG:$TAG-amd64" \
+            "$IMG:$TAG-arm64"
+          docker buildx imagetools inspect "$IMG:$TAG" | head -20
+          echo "Done: $TAG is a multi-arch index (amd64+arm64) for clintrial-explorer."
