@@ -34,6 +34,7 @@
       "Bash(podman:*)",
       "Bash(docker:*)",
       "Bash(wip-deploy:*)",
+      "Bash(kbc:*)",
       "Bash(curl:*)",
       "Bash(cd:*)",
       "Bash(echo:*)",
@@ -55,7 +56,8 @@
       "mcp__wip__describe_data_model",
       "mcp__wip__lookup_entry",
       "mcp__wip__validate_*",
-      "mcp__wip__export_*"
+      "mcp__wip__export_*",
+      "mcp__wip__run_report_query"
     ],
     "ask": [
       "Bash(wip-deploy nuke:*)",

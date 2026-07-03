@@ -73,12 +73,10 @@ Use for design decisions worth a permanent record.
 4. **Mirror the fireside to kb (tier 3 only, warn-and-continue)** — **Tier gate:** runs only in tier-3 repos; if `.claude/kb.json` is absent, skip this step silently (tier-2 solo mode is by design). A fireside is a **first-class, findable FIRESIDE entity** — not session-body sediment. Compose the file locally first (step 3), then:
 
    ```bash
-   KB_URL="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_app_url"])')"; KB_KEYFILE="$(python3 -c 'import json;print(json.load(open(".claude/kb.json"))["kb_api_key_file"])')"
-   python3 -c 'import json,sys; print(json.dumps({"body":open(sys.argv[1]).read(),"session_id":"<YOUR-SESSION-ID>"}))' "reports/<YOUR-SESSION-ID>/report-<topic-slug>.md" \
-     | curl -fsSk -X POST "$KB_URL/apps/kb/server-api/kb/firesides/mirror" -H "X-API-Key: $(cat "$KB_KEYFILE")" -H "Content-Type: application/json" -d @-
+   kbc kb-write.py FIRESIDE "reports/<YOUR-SESSION-ID>/report-<topic-slug>.md"
    ```
 
-   The gateway derives `title`/`topic`/`authored_by`/`chat_date` from the fireside frontmatter (`topic`, `participants`, `time`) and upserts by `title`, so re-running is idempotent (PoNIF #3). If kb is unreachable, log to stderr and **proceed** — the local file is authoritative; re-run the same POST to retry.
+   `kb-write.py`'s fireside extractor maps the frontmatter (`topic`→`title`, `participants`→`authored_by`, `time`→`chat_date`, default `doc_status: published`) and the gateway dedups by `title` (resolve-then-mint — a matching title versions the existing fireside in place), so re-running with the same title is idempotent. If kb is unreachable, log to stderr and **proceed** — the local file is authoritative; re-run the same `kb-write.py` call to retry.
 
 5. Tell Peter the report was written and what file it's in. Continue with the session's work.
 
@@ -136,7 +134,7 @@ Append-only running log. Distinct from session.md (overwritten at end) and repor
 After appending the entry, push the running log to kb so its kb copy is never stale — **every** update-session, not a selected subset. **Tier gate:** runs only in tier-3 repos; if `.claude/kb.json` is absent, skip silently (tier-2 keeps the log local by design). The session stays `active` — this re-mirrors the whole session dir (now carrying the fresh `session-updates.md`) without touching frontmatter; it is Mode 3's mirror minus the `status: closed` flip. Idempotent upsert by `session_id`.
 
 ```bash
-bash ~/.cache/wip-kb-client/kb-client.sh kb-write.py SESSION reports/<SESSION-ID>/session.md
+kbc kb-write.py SESSION reports/<SESSION-ID>/session.md
 ```
 
 If kb is unreachable, log to stderr and proceed — the local append is authoritative; the next mirror-emitting action (another update, wake, or session-end) re-pushes it.
@@ -161,7 +159,9 @@ Three things happen, in order:
 
 2. **Atomic local write** — in a *single* read-modify-write of `reports/<SESSION-ID>/session.md` (write a temp file, `mv` over the original — never truncate-in-place), do BOTH: (a) overwrite/insert the `## Session Summary` section in the body, and (b) set frontmatter `status: closed` and `ended_at: <now as a naive datetime, YYYY-MM-DDTHH:MM:SS, NO timezone suffix>`. Collapsing both into one atomic write means a partial failure can't leave a half-state (summary without the status flip, or vice-versa).
 
-3. **Mirror to kb (tier 3 only, warn-and-continue)** — **Tier gate:** kb mirrors run only in tier-3 repos — if `.claude/kb.json` is absent, skip this step silently and continue (tier-2 solo mode is by design; nothing to warn about). Then: `bash ~/.cache/wip-kb-client/kb-client.sh kb-write.py SESSION reports/<SESSION-ID>/session.md`. The client parses `session.md` (frontmatter → SESSION fields, body → the `body` field) and the gateway upserts by `session_id`; a closed frontmatter carries `status`/`ended_at` through. (Only `session.md` is written; `commits.md`/`session-updates.md` stay local recovery files.) If kb is unreachable, log to stderr and proceed — the local write is authoritative; the mirror retries at the next mirror-emitting action or via re-running the same `kb-write.py` call.
+3. **Mirror to kb (tier 3 only, warn-and-continue)** — **Tier gate:** kb mirrors run only in tier-3 repos — if `.claude/kb.json` is absent, skip this step silently and continue (tier-2 solo mode is by design; nothing to warn about). Then: `kbc kb-write.py SESSION reports/<SESSION-ID>/session.md`. The client parses `session.md` (frontmatter → SESSION fields, body → the `body` field) and the gateway upserts by `session_id`; a closed frontmatter carries `status`/`ended_at` through. (Only `session.md` is written; `commits.md`/`session-updates.md` stay local recovery files.) If kb is unreachable, log to stderr and proceed — the local write is authoritative; the mirror retries at the next mirror-emitting action or via re-running the same `kb-write.py` call.
+
+4. **Mirror this YAC's memory to kb** (same **tier-3 gate** + **warn-and-continue** as step 3) — beside the SESSION mirror, capture the memory this YAC has accrued: `MEMDIR="$HOME/.claude/projects/$(pwd | sed 's#/#-#g')/memory"; [ -d "$MEMDIR" ] && kbc kb-write.py YAC_MEMORY "$MEMDIR"`. The loader writes one record per `memory/*.md`, upserting by `(owner, mem_key = filename stem)` (owner from `.claude/.session-role`), normalizes the two frontmatter shapes, and skips `MEMORY.md`. It is idempotent — unchanged files come back `skipped`, so running it every session-end is delta-only — and **self-skips if the instance has no `YAC_MEMORY` type yet**, so it is safe to land before every instance has the schema. If kb is unreachable, log to stderr and proceed: best-effort, never blocks the close. This makes the YAC's memory cross-agent-visible in kb, the same way `session.md` already is.
 
 **Idempotent on an already-closed session.** If the frontmatter already says `status: closed` (you ran `/wip-report session-end` once, or `/wip-wake` auto-closed it), do NOT append a second `## Session Summary` and do NOT re-flip the frontmatter — both are no-ops. Only the kb mirror re-fires (surfaces as `skipped` if the body is unchanged, `updated` if it was edited since).
 
