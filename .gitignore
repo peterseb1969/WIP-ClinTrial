@@ -57,3 +57,6 @@ yac-discussions
 
 # Session identity — minted per session by /wip-setup//wip-wake, never committed
 .claude/.session-id
+
+# Local session reports (per-session working memory; KB-mirrored, not committed)
+reports/
