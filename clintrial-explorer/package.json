@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
-    "@wip/client": "file:libs/wip-client-0.27.0.tgz",
+    "@wip/client": "file:libs/wip-client-0.27.1.tgz",
     "@wip/proxy": "file:libs/wip-proxy-0.3.0.tgz",
     "@wip/react": "file:libs/wip-react-0.16.0.tgz",
     "class-variance-authority": "^0.7.0",
