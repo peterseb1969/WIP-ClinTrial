@@ -1,5 +1,10 @@
 import { getConfig } from './config'
 
+// Reporting tables live in per-namespace PG schemas (CASE-628/CASE-632);
+// passing namespace points search_path at our schema so unqualified
+// doc_* / terms / terminologies names keep resolving.
+const NAMESPACE = 'clintrial'
+
 interface QueryResult<T = Record<string, unknown>> {
   columns: string[]
   rows: T[]
@@ -22,6 +27,7 @@ export async function reportQuery<T = Record<string, unknown>>(
     },
     body: JSON.stringify({
       sql,
+      namespace: NAMESPACE,
       ...(params && params.length > 0 ? { params } : {}),
       max_rows: maxRows,
     }),

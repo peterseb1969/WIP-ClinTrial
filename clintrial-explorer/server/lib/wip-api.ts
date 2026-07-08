@@ -90,7 +90,9 @@ export async function reportQuery<T = Record<string, unknown>>(
   params: unknown[] = [],
   maxRows = 10000,
 ): Promise<ReportQueryResult<T>> {
-  const body: Record<string, unknown> = { sql, max_rows: maxRows }
+  // Reporting tables live in per-namespace PG schemas (CASE-628/CASE-632);
+  // namespace points search_path at our schema so unqualified names resolve.
+  const body: Record<string, unknown> = { sql, namespace: NAMESPACE, max_rows: maxRows }
   if (params.length > 0) body.params = params
   return wipPost('/api/reporting-sync/query', body) as Promise<ReportQueryResult<T>>
 }
