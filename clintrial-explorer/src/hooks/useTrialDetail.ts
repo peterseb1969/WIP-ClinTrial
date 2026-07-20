@@ -60,8 +60,44 @@ export function useTrialSites(nctId: string) {
   return useTrialRelated('doc_ct_trial_site', nctId, 'sites')
 }
 
+/**
+ * AEs are the one high-cardinality related table (1000+ rows for large
+ * trials), so select the flattened columns instead of parsing the full
+ * data_json blob per row (CASE-732; KNOWN_ISSUES #2). Only `stats` needs
+ * a JSON parse. Truncation at the 5000 cap is surfaced by the CASE-728
+ * warning in reportQuery.
+ */
 export function useTrialAEs(nctId: string) {
-  return useTrialRelated('doc_ct_trial_ae', nctId, 'aes')
+  return useQuery<DocLike[]>({
+    queryKey: ['clintrial', 'aes', nctId],
+    queryFn: async () => {
+      const result = await reportQuery<{
+        document_id: string
+        ae_category: string | null
+        term: string | null
+        organ_system: string | null
+        source_vocabulary: string | null
+        stats: string | unknown[] | null
+      }>(
+        `SELECT document_id, ae_category, term, organ_system, source_vocabulary, stats
+         FROM doc_ct_trial_ae WHERE nct_id = $1`,
+        [nctId],
+        5000,
+      )
+      return result.rows.map((row) => ({
+        document_id: row.document_id,
+        data: {
+          ae_category: row.ae_category ?? undefined,
+          term: row.term ?? undefined,
+          organ_system: row.organ_system ?? undefined,
+          source_vocabulary: row.source_vocabulary ?? undefined,
+          stats: typeof row.stats === 'string' ? JSON.parse(row.stats) : (row.stats ?? []),
+        },
+      }))
+    },
+    enabled: !!nctId,
+    staleTime: 5 * 60 * 1000,
+  })
 }
 
 export function useTrialBaselines(nctId: string) {
