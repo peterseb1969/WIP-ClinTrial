@@ -1,20 +1,28 @@
 # WIP Dependencies
 
-All entities are in the `clintrials` namespace.
+All entities are in the `clintrial` namespace.
+
+> Inventory verified against the live install on 2026-07-20 (CASE-729). Term
+> counts drift as imports run — treat them as order-of-magnitude, and verify
+> against the Registry (`list_terminologies`) before relying on exact numbers.
 
 ## Terminologies
 
 | Value | Label | Terms | Used For | Created By |
 |-------|-------|-------|----------|------------|
-| `CT_PHASE` | Study Phase | 6 | Trial phase badges, filter | Import script |
-| `CT_STATUS` | Study Status | 14 | Trial status badges, filter | Import script |
-| `CT_STUDY_TYPE` | Study Type | 3 | Trial detail chip | Import script |
-| `CT_OUTCOME_TYPE` | Outcome Type | 3 | Outcome tab grouping | Import script |
-| `CT_THERAPEUTIC_AREA` | Therapeutic Area | 37 | **Not yet populated** — see KNOWN_ISSUES.md | Import script (terms exist, not mapped to trials) |
-| `CT_DRUG_CLASS` | Drug Class | 22 | Not used in UI yet | Import script |
-| `CT_TARGET` | Molecular Targets | 30 | Not used in UI yet | Import script |
-| `CT_MOLECULE` | Molecules | 34 | Trial interventions, Molecules page | Import script |
-| `COUNTRY` | Countries | 50 | Site country codes, Sites page | Import script |
+| `CT_PHASE` | Study Phase | 6 | Trial phase badges, filter | Bootstrap seed |
+| `CT_STATUS` | Study Status | 14 | Trial status badges, filter | Bootstrap seed |
+| `CT_STUDY_TYPE` | Study Type | 3 | Trial detail chip | Bootstrap seed |
+| `CT_OUTCOME_TYPE` | Outcome Type | 3 | Outcome tab grouping | Bootstrap seed |
+| `CT_THERAPEUTIC_AREA` | Therapeutic Area | 43 | TA classification, filters, TA manager | Bootstrap seed + TA manager |
+| `CT_DRUG_CLASS` | Drug Class | 22 | Molecule pages | Bootstrap seed |
+| `CT_TARGET` | Molecular Target | 30 | Molecule pages | Bootstrap seed |
+| `CT_MOLECULE` | Molecule | 1650 | Trial interventions, Molecules page | Bootstrap seed + import (auto-extends) |
+| `COUNTRY` | Countries | 251 | Site country codes, Sites page | Bootstrap seed + import (auto-extends) |
+| `CT_AE_TERM` | Adverse Event Terms | 0 | AE term normalization (AE term manager) | Bootstrap seed |
+| `CT_MATCH_TYPE` | Match Type | 4 | Classification rule editor | Bootstrap seed |
+| `CT_RULE_ACTION` | Rule Action | 2 | Classification rule editor | Bootstrap seed |
+| `CT_RULE_TYPE` | Rule Type | 1 | Classification rule editor | Bootstrap seed |
 
 ## Templates
 
@@ -52,6 +60,26 @@ All entities are in the `clintrials` namespace.
 - **Fields read by app:** nct_id, measure_title, param_type, unit_of_measure, categories (array with measurements per group)
 - **Reference:** `trial` → CT_TRIAL (by nct_id)
 - **Reporting table:** `doc_ct_trial_baseline`
+
+### CT_CLASSIFICATION_RULE
+- **Identity fields:** `rule_type`, `pattern`, `target_ta`
+- **Used by:** classification engine + rules page (`/server-api/classify`, `useClassificationRules`)
+- **Reporting table:** `doc_ct_classification_rule`
+
+### CT_SETTINGS
+- **Identity fields:** `settings_key`
+- **Used by:** settings page / auto-sync configuration (`/server-api/settings`)
+- **Reporting table:** `doc_ct_settings`
+
+### CT_SYNC_STATE
+- **Identity fields:** `sync_key`
+- **Used by:** incremental import checkpointing (`import-orchestrator`)
+- **Reporting table:** `doc_ct_sync_state`
+
+### BOOTSTRAP_RECORD
+- **Identity fields:** `bootstrap_id`
+- **Used by:** namespace bootstrap provenance (BootstrapGate audit trail; write-once per bootstrap)
+- **Reporting table:** `doc_bootstrap_record`
 
 ## Reporting SQL API
 

@@ -35,14 +35,15 @@ Observations and lessons learned during development, useful for future sessions 
 
 **Lesson:** Free-text fields from external sources should always be resolved against a controlled vocabulary at import time, not just stored verbatim. The cost of curation increases with every session that builds on uncurated data.
 
-## 3. Reporting layer terms table is empty
+## 3. Reporting layer terms table is empty — SUPERSEDED
 
-**Date:** 2026-03-26
-**Context:** The WIP reporting-sync service mirrors documents to PostgreSQL but does not replicate terminology terms.
+**Date:** 2026-03-26 · **Superseded:** 2026-07-20 (CASE-729)
 
-**What happened:** Queries against the `terms` and `terminologies` tables return 0 rows. The `term_relationships` table IS populated (99 rows). This means terminology term data (aliases, labels, metadata) must be fetched from the WIP def-store API, not from reporting SQL.
+**Original claim (now false):** queries against `terms` and `terminologies` return 0 rows, so term data must come from the def-store API.
 
-**Lesson:** Always verify which data is available in the reporting layer before assuming server-side SQL can replace all API calls. The reporting sync covers documents and relationships but not term definitions. This may be a WIP reporting-sync configuration issue or a deliberate scope limitation.
+**Current state, verified against the live install:** reporting-sync replicates term data. The `clintrial` reporting schema carries `terms` = 1,099 rows, `terminologies` = 13, `term_relations` = 80 (note the table is named `term_relations`, not `term_relationships`). SQL against these tables is a supported pattern — `useAETermResolution`, `ae-cleanup`, and `useClassificationRules` already rely on it. Do NOT "fix" those queries back to REST on the strength of the original claim.
+
+**Lesson (still valid):** always verify which data the reporting layer carries against the *current* platform before assuming — in either direction. Claims about platform scope rot; date them and re-verify after platform upgrades.
 
 ## 4. WIP file upload works, but linking is a separate step
 
