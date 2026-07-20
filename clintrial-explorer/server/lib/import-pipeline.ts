@@ -285,11 +285,67 @@ export async function createOrganizationsBulk(
   logBulkErrors(counts, 'Org creation', result.results)
 }
 
-/** Create a single trial document. Returns document_id if successful, null on failure. */
-export async function createTrial(
+/**
+ * Cross-trial write batcher (CASE-731). Accumulates docs for one template and
+ * flushes them through createDocumentsBulk in batches of `flushSize`, keeping
+ * a parallel nct_id per item so per-item errors stay attributable — this
+ * relies on createDocumentsBulk's globally input-ordered results[] (the
+ * CASE-725 index-rebase invariant, including synthetic error items for
+ * thrown batches).
+ */
+export interface FlushedResult extends BulkResult {
+  batchNctId?: string
+}
+
+export class DocBatcher {
+  private items: { nctId: string; data: AnyObj }[] = []
+
+  constructor(
+    private templateKey: string,
+    private label: string,
+    private counts: ImportCounts,
+    private createdKey: string,
+    private updatedKey: string,
+    private flushSize = 100,
+  ) {}
+
+  add(nctId: string, docs: AnyObj[]): void {
+    for (const d of docs) this.items.push({ nctId, data: d })
+  }
+
+  get size(): number {
+    return this.items.length
+  }
+
+  async flushIfFull(): Promise<FlushedResult[]> {
+    return this.items.length >= this.flushSize ? this.flush() : []
+  }
+
+  async flush(): Promise<FlushedResult[]> {
+    if (!this.items.length) return []
+    const batch = this.items
+    this.items = []
+    const result = await createDocumentsBulk(TEMPLATES[this.templateKey], batch.map((b) => b.data))
+    const tally = this.counts as unknown as Record<string, number>
+    tally[this.createdKey] += result.created
+    tally[this.updatedKey] += result.updated
+    const flushed: FlushedResult[] = []
+    for (const item of result.results) {
+      const nctId = batch[item.index]?.nctId
+      if (item.status === 'error') {
+        logError(this.counts, `${this.label} ${nctId ?? `#${item.index}`}: ${item.error || item.message || 'unknown error'}`)
+      }
+      flushed.push({ ...item, batchNctId: nctId })
+    }
+    return flushed
+  }
+}
+
+/** Build a trial document's data payload. Returns null (and logs) on missing sponsor. */
+export function buildTrialDoc(
   trialData: AnyObj,
   counts: ImportCounts,
-): Promise<string | null> {
+): AnyObj | null {
   const sponsorName = trialData.sponsor
   const sponsorDocId = ORG_DOC_IDS.get(sponsorName)
   if (!sponsorDocId) {
@@ -350,22 +406,15 @@ export async function createTrial(
     if (tas.length) data.therapeutic_areas = tas
   }
 
-  const result = await createDocumentsBulk(TEMPLATES.CT_TRIAL, [data])
-  if (result.created > 0) counts.trials_created++
-  else if (result.updated > 0) counts.trials_updated++
-  else logBulkErrors(counts, `Trial ${trialData.nct_id}`, result.results)
-
-  const docId = result.results[0]?.document_id || result.results[0]?.id || null
-  return result.errors === 0 ? docId : null
+  return data
 }
 
-/** Create outcome documents for a trial */
-export async function createOutcomes(
+/** Build outcome document payloads for a trial */
+export function buildOutcomeDocs(
   nctId: string,
   primaryOutcomes: AnyObj[],
   secondaryOutcomes: AnyObj[],
-  counts: ImportCounts,
-): Promise<void> {
+): AnyObj[] {
   const dataList: AnyObj[] = []
 
   for (let i = 0; i < primaryOutcomes.length; i++) {
@@ -396,21 +445,16 @@ export async function createOutcomes(
     dataList.push(d)
   }
 
-  if (!dataList.length) return
-
-  const result = await createDocumentsBulk(TEMPLATES.CT_TRIAL_OUTCOME, dataList)
-  counts.outcomes_created += result.created
-  counts.outcomes_updated += result.updated
-  logBulkErrors(counts, `Outcomes ${nctId}`, result.results)
+  return dataList
 }
 
-/** Create site documents for a trial */
-export async function createSites(
+/** Build site document payloads for a trial */
+export async function buildSiteDocs(
   nctId: string,
   locations: AnyObj[],
   counts: ImportCounts,
   maxSites = 20,
-): Promise<void> {
+): Promise<AnyObj[]> {
   const dataList: AnyObj[] = []
 
   for (const loc of locations.slice(0, maxSites)) {
@@ -432,21 +476,15 @@ export async function createSites(
     dataList.push(d)
   }
 
-  if (!dataList.length) return
-
-  const result = await createDocumentsBulk(TEMPLATES.CT_TRIAL_SITE, dataList)
-  counts.sites_created += result.created
-  counts.sites_updated += result.updated
-  logBulkErrors(counts, `Sites ${nctId}`, result.results)
+  return dataList
 }
 
-/** Create adverse event documents */
-export async function createAdverseEvents(
+/** Build adverse-event document payloads */
+export function buildAEDocs(
   nctId: string,
   aeModule: AnyObj | undefined,
-  counts: ImportCounts,
-): Promise<void> {
-  if (!aeModule) return
+): AnyObj[] {
+  if (!aeModule) return []
 
   const groupTitles: Record<string, string> = {}
   for (const g of aeModule.eventGroups || []) {
@@ -477,21 +515,15 @@ export async function createAdverseEvents(
     }
   }
 
-  if (!dataList.length) return
-
-  const result = await createDocumentsBulk(TEMPLATES.CT_TRIAL_AE, dataList)
-  counts.aes_created += result.created
-  counts.aes_updated += result.updated
-  logBulkErrors(counts, `AEs ${nctId}`, result.results)
+  return dataList
 }
 
-/** Create baseline characteristic documents */
-export async function createBaselines(
+/** Build baseline-characteristic document payloads */
+export function buildBaselineDocs(
   nctId: string,
   baselineModule: AnyObj | undefined,
-  counts: ImportCounts,
-): Promise<void> {
-  if (!baselineModule) return
+): AnyObj[] {
+  if (!baselineModule) return []
 
   const groupTitles: Record<string, string> = {}
   for (const g of baselineModule.groups || []) {
@@ -529,21 +561,21 @@ export async function createBaselines(
     dataList.push(d)
   }
 
-  if (!dataList.length) return
-
-  const result = await createDocumentsBulk(TEMPLATES.CT_TRIAL_BASELINE, dataList)
-  counts.baselines_created += result.created
-  counts.baselines_updated += result.updated
-  logBulkErrors(counts, `Baselines ${nctId}`, result.results)
+  return dataList
 }
 
-/** Update outcome documents with numeric results data */
-export async function updateOutcomesWithResults(
+/**
+ * Build outcome payloads enriched with numeric results. Same identity as the
+ * bare outcome docs (nct_id, outcome_type, sequence) — these MUST flush after
+ * the bare outcomes have flushed, or the bare write would create a later
+ * version and regress the results data (ordering enforced by the
+ * orchestrator's two-phase flow).
+ */
+export function buildOutcomeResultDocs(
   nctId: string,
   resultsOutcomes: AnyObj[],
-  counts: ImportCounts,
-): Promise<void> {
-  if (!resultsOutcomes?.length) return
+): AnyObj[] {
+  if (!resultsOutcomes?.length) return []
 
   const dataList: AnyObj[] = []
   for (const om of resultsOutcomes) {
@@ -607,11 +639,7 @@ export async function updateOutcomesWithResults(
     dataList.push(d)
   }
 
-  if (!dataList.length) return
-
-  const result = await createDocumentsBulk(TEMPLATES.CT_TRIAL_OUTCOME, dataList)
-  counts.outcomes_updated += result.created + result.updated
-  logBulkErrors(counts, `Outcome results ${nctId}`, result.results)
+  return dataList
 }
 
 /** Download and upload PDFs from CT.gov */
@@ -662,20 +690,25 @@ export async function downloadAndUploadPdfs(
   return fileIds
 }
 
-/** Link uploaded file IDs to a trial via PATCH (update_document) */
-export async function linkFilesToTrial(
-  nctId: string,
-  documentId: string,
-  fileIds: string[],
+/** Link uploaded file IDs to trials — ONE bulk PATCH, per-item results checked (CASE-731) */
+export async function linkFilesBulk(
+  links: Array<{ nctId: string; documentId: string; fileIds: string[] }>,
   counts: ImportCounts,
 ): Promise<void> {
+  if (!links.length) return
   try {
-    await wipPatch('/api/document-store/documents', [{
-      document_id: documentId,
-      patch: { documents: fileIds },
-    }])
+    const resp = (await wipPatch(
+      '/api/document-store/documents',
+      links.map((l) => ({ document_id: l.documentId, patch: { documents: l.fileIds } })),
+    )) as { results?: BulkResult[] } | BulkResult[]
+    const results = Array.isArray(resp) ? resp : resp.results || []
+    for (let i = 0; i < results.length; i++) {
+      if (results[i]?.status === 'error') {
+        logError(counts, `Link files to ${links[i]?.nctId}: ${results[i].error || results[i].message || 'unknown error'}`)
+      }
+    }
   } catch (err) {
-    logError(counts, `Link files to ${nctId}: ${(err as Error).message}`)
+    logError(counts, `Link files bulk (${links.length} trials): ${(err as Error).message}`)
   }
 }
 

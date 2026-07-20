@@ -275,39 +275,27 @@ router.post('/pin', async (req, res) => {
     }
 
     const trial = trials[0]
-    const templateId = await resolveTemplateId('CT_TRIAL')
-
-    // Build upsert with all mandatory fields
-    const data: Record<string, unknown> = {
-      nct_id: trial.nct_id,
-      title: trial.title,
-      brief_title: trial.brief_title,
-      acronym: trial.acronym,
-      status: trial.status,
-      phases: trial.phases,
-      study_type: trial.study_type,
-      therapeutic_areas: therapeutic_areas ?? trial.therapeutic_areas,
-      ta_pinned: pinned,
-      brief_summary: trial.brief_summary,
-      enrollment: trial.enrollment,
-      start_date: trial.start_date,
-      primary_completion_date: trial.primary_completion_date,
-      completion_date: trial.completion_date,
-      sponsor: trial.sponsor,
-      collaborators: trial.collaborators,
-      interventions: trial.interventions,
-      conditions: trial.conditions,
-      eligibility_criteria: trial.eligibility_criteria,
-      minimum_age: trial.minimum_age,
-      maximum_age: trial.maximum_age,
-      sex: trial.sex,
-      healthy_volunteers: trial.healthy_volunteers,
-      has_results: trial.has_results,
-      ctgov_url: trial.ctgov_url,
+    const documentId = (trial as { document_id?: string }).document_id
+    if (!documentId) {
+      return res.status(404).json({ error: `No document_id for ${nct_id}` })
     }
 
-    const result = await createDocumentsBulk(templateId, [data])
-    res.json({ success: true, nct_id, pinned, result })
+    // Merge-patch ONLY the two fields being changed (CASE-731): identity
+    // (nct_id) and every other field stay untouched, so a concurrent edit
+    // can't be clobbered by a full re-upsert of stale mandatory fields.
+    const { wipPatch } = await import('../lib/wip-api.js')
+    const resp = (await wipPatch('/api/document-store/documents', [{
+      document_id: documentId,
+      patch: {
+        therapeutic_areas: therapeutic_areas ?? trial.therapeutic_areas,
+        ta_pinned: pinned,
+      },
+    }])) as { results?: Array<{ status?: string; error?: string; message?: string }> } | Array<{ status?: string; error?: string; message?: string }>
+    const item = Array.isArray(resp) ? resp[0] : resp.results?.[0]
+    if (item?.status === 'error') {
+      return res.status(422).json({ error: item.error || item.message || 'patch failed', nct_id })
+    }
+    res.json({ success: true, nct_id, pinned, result: item })
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }

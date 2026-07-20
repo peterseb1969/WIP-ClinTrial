@@ -144,20 +144,33 @@ router.post('/import/link-orphan-files', async (_req, res) => {
     const nctToDocId = new Map<string, string>()
     for (const row of docRows.rows) nctToDocId.set(row.nct_id, row.document_id)
 
-    // PATCH each trial with file IDs
+    // ONE bulk PATCH for all trials, per-item results checked (CASE-731)
     let linked = 0
     const errors: string[] = []
+    const patchItems: Array<{ document_id: string; patch: { documents: string[] } }> = []
+    const patchNctIds: string[] = []
     for (const [nctId, fileIds] of nctFiles) {
       const docId = nctToDocId.get(nctId)
       if (!docId) { errors.push(`No document for ${nctId}`); continue }
+      patchItems.push({ document_id: docId, patch: { documents: fileIds } })
+      patchNctIds.push(nctId)
+    }
+    if (patchItems.length) {
       try {
-        await wipPatch('/api/document-store/documents', [{
-          document_id: docId,
-          patch: { documents: fileIds },
-        }])
-        linked++
+        const resp = (await wipPatch('/api/document-store/documents', patchItems)) as
+          | { results?: Array<{ status?: string; error?: string; message?: string }> }
+          | Array<{ status?: string; error?: string; message?: string }>
+        const results = Array.isArray(resp) ? resp : resp.results || []
+        for (let i = 0; i < patchItems.length; i++) {
+          const item = results[i]
+          if (item?.status === 'error') {
+            errors.push(`${patchNctIds[i]}: ${item.error || item.message || 'unknown error'}`)
+          } else {
+            linked++
+          }
+        }
       } catch (err) {
-        errors.push(`${nctId}: ${(err as Error).message}`)
+        errors.push(`bulk patch (${patchItems.length} trials): ${(err as Error).message}`)
       }
     }
 

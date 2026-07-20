@@ -11,14 +11,15 @@ import {
   createOrganizationsBulk,
   ensureCountryTerms,
   ensureMoleculeTerms,
-  createTrial,
-  createOutcomes,
-  createSites,
-  createAdverseEvents,
-  createBaselines,
-  updateOutcomesWithResults,
+  buildTrialDoc,
+  buildOutcomeDocs,
+  buildSiteDocs,
+  buildAEDocs,
+  buildBaselineDocs,
+  buildOutcomeResultDocs,
   downloadAndUploadPdfs,
-  linkFilesToTrial,
+  linkFilesBulk,
+  DocBatcher,
   newCounts,
   clearCaches,
   type ImportCounts,
@@ -198,65 +199,134 @@ export async function runImport(
     }
     await ensureMoleculeTerms(allInterventions, counts)
 
-    // Phase 3: Process trials
+    // Phase 3a: protocol documents — cross-trial accumulate-and-flush (CASE-731).
+    // Children carry no reference to the trial doc-id (the `trial` field is
+    // dormant; linkage is by nct_id value), so trials/outcomes/sites batch
+    // independently. Sync entries are recorded at trial-flush time for
+    // non-results trials; results trials are marked in Phase 3b so a failed
+    // results fetch leaves them retryable on the next incremental run.
+    const trialDocIds = new Map<string, string>()
+    const syncMeta = new Map<string, { lastUpdate: string; source: string; hasResults: boolean }>()
+
+    const trialBatcher = new DocBatcher('CT_TRIAL', 'Trial', counts, 'trials_created', 'trials_updated')
+    const outcomeBatcher = new DocBatcher('CT_TRIAL_OUTCOME', 'Outcomes', counts, 'outcomes_created', 'outcomes_updated')
+    const siteBatcher = new DocBatcher('CT_TRIAL_SITE', 'Sites', counts, 'sites_created', 'sites_updated')
+
+    const flushTrials = async () => {
+      const flushed = await trialBatcher.flush()
+      if (!flushed.length) return
+      for (const r of flushed) {
+        if (r.status === 'error' || !r.batchNctId) continue
+        const docId = r.document_id || r.id
+        if (docId) trialDocIds.set(r.batchNctId, docId)
+        const meta = syncMeta.get(r.batchNctId)
+        if (meta && !meta.hasResults) {
+          updateTrialSyncEntry(syncState, r.batchNctId, meta.lastUpdate, meta.source)
+        }
+      }
+      // Checkpoint at the flush boundary — only fully-flushed trials are marked
+      await saveSyncState(syncState)
+    }
+
     for (let i = 0; i < limited.length; i++) {
       if (signal.aborted) throw new Error('Import cancelled')
 
       const data = extractedData[i]
       const nctId = data.nct_id
       const source = options.nctIds?.length ? 'specific' : (data.sponsor || 'unknown')
-
-      progress('trials', `Processing ${nctId}...`, i, total, nctId)
+      progress('trials', `Preparing ${nctId}...`, i, total, nctId)
 
       try {
-        // Create trial
-        const trialDocId = await createTrial(data, counts)
-        if (!trialDocId) continue
-
-        // Create child documents
-        await createOutcomes(nctId, data.primary_outcomes, data.secondary_outcomes, counts)
-        await createSites(nctId, data.locations, counts)
-
-        // Fetch results and documents if trial has results
-        if (data.has_results) {
-          const resultsData = await fetchTrialResultsAndDocs(nctId, signal)
-          if (resultsData.resultsSection) {
-            const aeModule = resultsData.resultsSection.adverseEventsModule
-            const baselineModule = resultsData.resultsSection.baselineCharacteristicsModule
-            const outcomeMeasures = resultsData.resultsSection.outcomeMeasuresModule?.outcomeMeasures
-
-            await createAdverseEvents(nctId, aeModule, counts)
-            await createBaselines(nctId, baselineModule, counts)
-            if (outcomeMeasures) {
-              await updateOutcomesWithResults(nctId, outcomeMeasures, counts)
-            }
-          }
-
-          // Download and upload PDFs, then link to trial via PATCH
-          if (!options.skipPdfs && resultsData.documentSection) {
-            const fileIds = await downloadAndUploadPdfs(nctId, resultsData.documentSection, counts, signal)
-            if (fileIds.length > 0) {
-              await linkFilesToTrial(nctId, trialDocId, fileIds, counts)
-            }
-          }
-        }
-
-        // Update sync state
-        updateTrialSyncEntry(syncState, nctId, getLastUpdateDate(limited[i]), source)
+        const trialDoc = buildTrialDoc(data, counts)
+        if (!trialDoc) continue
+        trialBatcher.add(nctId, [trialDoc])
+        syncMeta.set(nctId, {
+          lastUpdate: getLastUpdateDate(limited[i]),
+          source,
+          hasResults: !!data.has_results,
+        })
+        outcomeBatcher.add(nctId, buildOutcomeDocs(nctId, data.primary_outcomes, data.secondary_outcomes))
+        siteBatcher.add(nctId, await buildSiteDocs(nctId, data.locations, counts))
       } catch (err) {
         counts.errors++
         counts.error_log.push(`Trial ${nctId}: ${(err as Error).message}`)
       }
 
-      // Checkpoint every 50 trials
+      if (trialBatcher.size >= 100) {
+        progress('trials', `Writing trials batch (${i + 1}/${total})...`, i + 1, total, nctId)
+        await flushTrials()
+      }
+      await outcomeBatcher.flushIfFull()
+      await siteBatcher.flushIfFull()
+    }
+    progress('trials', 'Writing final protocol batches...', total, total)
+    await flushTrials()
+    await outcomeBatcher.flush()
+    await siteBatcher.flush()
+
+    // Phase 3b: results + PDFs for trials that have them. Runs strictly after
+    // Phase 3a's outcome flush — the enriched outcome docs share identity with
+    // the bare ones, and this ordering keeps the results version on top.
+    const resultTrials = extractedData.filter((d) => d.has_results && trialDocIds.has(d.nct_id))
+    const aeBatcher = new DocBatcher('CT_TRIAL_AE', 'AEs', counts, 'aes_created', 'aes_updated')
+    const baselineBatcher = new DocBatcher('CT_TRIAL_BASELINE', 'Baselines', counts, 'baselines_created', 'baselines_updated')
+    // Both tallies land in outcomes_updated, matching prior counting semantics
+    const outcomeResultBatcher = new DocBatcher('CT_TRIAL_OUTCOME', 'Outcome results', counts, 'outcomes_updated', 'outcomes_updated')
+    const fileLinks: Array<{ nctId: string; documentId: string; fileIds: string[] }> = []
+
+    for (let i = 0; i < resultTrials.length; i++) {
+      if (signal.aborted) throw new Error('Import cancelled')
+
+      const data = resultTrials[i]
+      const nctId = data.nct_id
+      progress('results', `Fetching results ${nctId}...`, i, resultTrials.length, nctId)
+
+      try {
+        const resultsData = await fetchTrialResultsAndDocs(nctId, signal)
+        if (resultsData.resultsSection) {
+          const rs = resultsData.resultsSection
+          aeBatcher.add(nctId, buildAEDocs(nctId, rs.adverseEventsModule))
+          baselineBatcher.add(nctId, buildBaselineDocs(nctId, rs.baselineCharacteristicsModule))
+          const outcomeMeasures = rs.outcomeMeasuresModule?.outcomeMeasures
+          if (outcomeMeasures) {
+            outcomeResultBatcher.add(nctId, buildOutcomeResultDocs(nctId, outcomeMeasures))
+          }
+        }
+
+        if (!options.skipPdfs && resultsData.documentSection) {
+          const fileIds = await downloadAndUploadPdfs(nctId, resultsData.documentSection, counts, signal)
+          const documentId = trialDocIds.get(nctId)
+          if (fileIds.length > 0 && documentId) {
+            fileLinks.push({ nctId, documentId, fileIds })
+          }
+        }
+
+        // Results fetched — safe to mark synced (write errors are per-item logged)
+        const meta = syncMeta.get(nctId)
+        if (meta) updateTrialSyncEntry(syncState, nctId, meta.lastUpdate, meta.source)
+      } catch (err) {
+        counts.errors++
+        counts.error_log.push(`Trial ${nctId}: ${(err as Error).message}`)
+      }
+
+      await aeBatcher.flushIfFull()
+      await baselineBatcher.flushIfFull()
+      await outcomeResultBatcher.flushIfFull()
+
       if ((i + 1) % 50 === 0) {
-        progress('trials', `Checkpointing sync state (${i + 1}/${total})...`, i + 1, total, nctId)
+        progress('results', `Checkpointing sync state (${i + 1}/${resultTrials.length})...`, i + 1, resultTrials.length, nctId)
         await saveSyncState(syncState)
       }
 
-      // Rate limiting
+      // Rate limiting for CT.gov
       await sleep(100)
     }
+
+    progress('results', 'Writing final results batches...', resultTrials.length, resultTrials.length)
+    await aeBatcher.flush()
+    await baselineBatcher.flush()
+    await outcomeResultBatcher.flush()
+    await linkFilesBulk(fileLinks, counts)
 
     // Save final sync state
     progress('saving', 'Saving sync state...', total, total)
