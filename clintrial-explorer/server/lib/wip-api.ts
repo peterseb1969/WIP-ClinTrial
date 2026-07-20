@@ -3,6 +3,8 @@
  * Makes direct HTTP calls to WIP backend with API key injection.
  */
 
+import { PIPELINE_MAX_ROWS, type ReportQueryResult } from '../../shared/reporting-types.js'
+
 const WIP_BASE_URL = process.env.WIP_BASE_URL || 'https://localhost:8443'
 const WIP_API_KEY = process.env.WIP_API_KEY || 'dev_master_key_for_testing'
 const NAMESPACE = 'clintrial'
@@ -81,24 +83,24 @@ export async function wipUploadFile(
   return { file_id: item.file_id || item.id }
 }
 
-export interface ReportQueryResult<T = Record<string, unknown>> {
-  columns: string[]
-  rows: T[]
-  row_count: number
-  truncated: boolean
-}
+export type { ReportQueryResult } from '../../shared/reporting-types.js'
 
 /** Execute SQL against WIP reporting database */
 export async function reportQuery<T = Record<string, unknown>>(
   sql: string,
   params: unknown[] = [],
-  maxRows = 10000,
+  maxRows = PIPELINE_MAX_ROWS,
 ): Promise<ReportQueryResult<T>> {
   // Reporting tables live in per-namespace PG schemas (CASE-628/CASE-632);
   // namespace points search_path at our schema so unqualified names resolve.
   const body: Record<string, unknown> = { sql, namespace: NAMESPACE, max_rows: maxRows }
   if (params.length > 0) body.params = params
-  return wipPost('/api/reporting-sync/query', body) as Promise<ReportQueryResult<T>>
+  const result = (await wipPost('/api/reporting-sync/query', body)) as ReportQueryResult<T>
+  if (result.truncated) {
+    // Silent caps read as complete data — make truncation loud (CASE-728)
+    console.warn(`[reportQuery] result truncated at ${maxRows} rows: ${sql.slice(0, 120)}`)
+  }
+  return result
 }
 
 /** Template ID + version cache */

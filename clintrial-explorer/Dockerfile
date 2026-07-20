@@ -24,6 +24,8 @@ FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
+# server/lib/wip-api.ts imports from shared/ at runtime (CASE-728)
+COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 EXPOSE 3013
