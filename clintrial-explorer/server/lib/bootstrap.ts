@@ -81,12 +81,16 @@ export async function runBootstrap(
     }
 
     progress('terminologies', `Creating ${terminologies.length} terminologies...`)
+    // Forward the seed's behavioural flags — the earlier builder silently
+    // dropped `extensible`, so seeds declaring it bootstrapped as false
+    // (CASE-733; CT_AE_TERM was the victim)
     const termBulk = terminologies.map((t) => ({
       value: t.value,
       label: t.label,
       description: t.description || '',
       namespace: NAMESPACE,
       ...(t.mutable ? { mutable: true } : {}),
+      ...(t.extensible ? { extensible: true } : {}),
     }))
     const termResult = (await wipPost('/api/def-store/terminologies', termBulk)) as {
       results: Array<{ status: string; id: string; error?: string }>
