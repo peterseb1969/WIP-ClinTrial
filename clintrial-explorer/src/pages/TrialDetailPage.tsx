@@ -35,6 +35,8 @@ import {
 import { usePinTrial } from '@/hooks/useClassification'
 import { formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
+import { refetchUntil, sameSet } from '@/lib/refetch-until'
+import { useQueryClient } from '@tanstack/react-query'
 
 type TabId = 'overview' | 'outcomes' | 'sites' | 'aes' | 'baseline' | 'documents'
 
@@ -52,17 +54,31 @@ export function TrialDetailPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { data: trial, isLoading, error, refetch } = useTrial(nctId || '')
   const pinMutation = usePinTrial()
+  const queryClient = useQueryClient()
   const [addingTA, setAddingTA] = useState(false)
   const [newTA, setNewTA] = useState('')
+
+  // Poll the cheap single-trial query until reporting-sync shows the state we
+  // just wrote, then invalidate the broader caches — deterministic ordering
+  // instead of the former blind 3s timers (CASE-727)
+  const reconcile = useCallback(
+    (isSynced: (t: typeof trial) => boolean) => {
+      void refetchUntil(refetch, isSynced).then(() =>
+        queryClient.invalidateQueries({ queryKey: ['clintrial'] }),
+      )
+    },
+    [refetch, queryClient],
+  )
 
   const handleTogglePin = useCallback(() => {
     if (!trial) return
     const d = trial.data
+    const expectPinned = !d.ta_pinned
     pinMutation.mutate(
-      { nct_id: d.nct_id, pinned: !d.ta_pinned, therapeutic_areas: d.therapeutic_areas },
-      { onSuccess: () => setTimeout(() => refetch(), 3000) },
+      { nct_id: d.nct_id, pinned: expectPinned, therapeutic_areas: d.therapeutic_areas },
+      { onSuccess: () => reconcile((t) => t?.data.ta_pinned === expectPinned) },
     )
-  }, [trial, pinMutation, refetch])
+  }, [trial, pinMutation, reconcile])
 
   const handleRemoveTA = useCallback((taToRemove: string) => {
     if (!trial) return
@@ -70,9 +86,9 @@ export function TrialDetailPage() {
     const newTAs = (d.therapeutic_areas || []).filter((ta) => ta !== taToRemove)
     pinMutation.mutate(
       { nct_id: d.nct_id, pinned: true, therapeutic_areas: newTAs },
-      { onSuccess: () => setTimeout(() => refetch(), 3000) },
+      { onSuccess: () => reconcile((t) => sameSet(t?.data.therapeutic_areas, newTAs)) },
     )
-  }, [trial, pinMutation, refetch])
+  }, [trial, pinMutation, reconcile])
 
   const handleAddTA = useCallback(() => {
     if (!trial || !newTA.trim()) return
@@ -83,11 +99,18 @@ export function TrialDetailPage() {
       setAddingTA(false)
       return
     }
+    const newTAs = [...currentTAs, newTA.trim()]
     pinMutation.mutate(
-      { nct_id: d.nct_id, pinned: true, therapeutic_areas: [...currentTAs, newTA.trim()] },
-      { onSuccess: () => { setTimeout(() => refetch(), 3000); setNewTA(''); setAddingTA(false) } },
+      { nct_id: d.nct_id, pinned: true, therapeutic_areas: newTAs },
+      {
+        onSuccess: () => {
+          reconcile((t) => sameSet(t?.data.therapeutic_areas, newTAs))
+          setNewTA('')
+          setAddingTA(false)
+        },
+      },
     )
-  }, [trial, newTA, pinMutation, refetch])
+  }, [trial, newTA, pinMutation, reconcile])
 
   if (isLoading) return <PageLoading message={`Loading ${nctId}...`} />
   if (error) return <ErrorMessage message={error.message} />

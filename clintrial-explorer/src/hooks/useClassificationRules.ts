@@ -287,10 +287,10 @@ export function useDeleteRule() {
       }
     },
     onSettled: () => {
-      // Refetch after a delay to let reporting-sync catch up
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['clintrial', 'classification-rules'] })
-      }, 3000)
+      // The rules list reads document-store directly (real-time), not
+      // reporting SQL — archive is synchronous, so invalidate immediately;
+      // the former 3s "reporting-sync" delay guarded nothing (CASE-727)
+      queryClient.invalidateQueries({ queryKey: ['clintrial', 'classification-rules'] })
     },
   })
 }

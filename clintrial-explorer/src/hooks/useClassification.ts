@@ -136,8 +136,6 @@ export function useRunClassification() {
 
 /** Hook to pin/unpin a trial's therapeutic areas */
 export function usePinTrial() {
-  const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: async (opts: {
       nct_id: string
@@ -152,11 +150,9 @@ export function usePinTrial() {
       if (!res.ok) throw new Error(`Pin failed: ${res.status}`)
       return res.json()
     },
-    onSuccess: () => {
-      // Invalidate after a brief delay for reporting-sync
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['clintrial'] })
-      }, 3000)
-    },
+    // No blanket delayed invalidation here: the caller (TrialDetailPage)
+    // confirms reporting-sync visibility via refetchUntil on the cheap
+    // single-trial query, then invalidates — deterministic ordering instead
+    // of a 3s guess (CASE-727).
   })
 }

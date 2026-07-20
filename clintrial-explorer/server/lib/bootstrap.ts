@@ -143,6 +143,10 @@ export async function runBootstrap(
       .sort()
 
     progress('templates', `Creating ${templateFiles.length} templates...`)
+    // Captured from the create response so the BOOTSTRAP_RECORD write below can
+    // pin template_id + version directly — explicit-version resolution bypasses
+    // the 5s "latest" cache entirely, so no sleep is needed (CASE-727, PoNIF #6)
+    let bootstrapTmpl: { template_id: string; version: number } | undefined
     for (const file of templateFiles) {
       const data = JSON.parse(readFileSync(join(SEED_DIR, 'templates', file), 'utf-8'))
       progress('templates', `Creating ${data.value}...`)
@@ -158,22 +162,24 @@ export async function runBootstrap(
 
       if (data.reporting) template.reporting = data.reporting
 
-      await wipPost('/api/template-store/templates?on_conflict=validate', [template])
+      const resp = (await wipPost('/api/template-store/templates?on_conflict=validate', [
+        template,
+      ])) as { results?: Array<{ id?: string; version?: number }> }
+      if (data.value === 'BOOTSTRAP_RECORD') {
+        const item = resp.results?.[0]
+        if (item?.id) bootstrapTmpl = { template_id: item.id, version: item.version ?? 1 }
+      }
       // Track domain templates for the audit doc; the audit template itself
       // is infrastructure, not a domain template, so don't list it.
       if (data.value !== 'BOOTSTRAP_RECORD') templatesCreated.push(data.value)
     }
 
-    // Wait for template cache to refresh (PoNIF #6) — without this the
-    // BOOTSTRAP_RECORD write below races the just-created template and may
-    // validate against an empty resolution.
-    progress('cache', 'Waiting for caches to refresh...')
-    await new Promise((resolve) => setTimeout(resolve, 6000))
-
     // Step 6: Write the BOOTSTRAP_RECORD audit doc (provenance trail —
-    // CLAUDE.md "Namespace Bootstrap on Launch", rule 3).
+    // CLAUDE.md "Namespace Bootstrap on Launch", rule 3). The create response
+    // above already carries template_id + version, so this write cannot race
+    // the template cache — the former 6s sleep is gone (CASE-727).
     progress('audit', 'Writing BOOTSTRAP_RECORD audit doc...')
-    await writeBootstrapRecord({ startedAt, templatesCreated, terminologiesCreated })
+    await writeBootstrapRecord({ startedAt, templatesCreated, terminologiesCreated }, bootstrapTmpl)
 
     onProgress({ step: 'done', detail: 'Bootstrap complete', done: true })
   } catch (err) {
@@ -195,14 +201,21 @@ export async function runBootstrap(
  * created rather than whatever the 5s "latest" cache resolves (PoNIF #6).
  * No edge types in this app, so edge_types_created is always empty.
  */
-async function writeBootstrapRecord(meta: {
-  startedAt: string
-  templatesCreated: string[]
-  terminologiesCreated: string[]
-}): Promise<void> {
-  const tmpl = (await wipGet(
-    `/api/template-store/templates/by-value/BOOTSTRAP_RECORD?namespace=${NAMESPACE}`,
-  )) as { template_id: string; version: number }
+async function writeBootstrapRecord(
+  meta: {
+    startedAt: string
+    templatesCreated: string[]
+    terminologiesCreated: string[]
+  },
+  // Preferred: the ref captured from the create response (immune to the 5s
+  // "latest" cache). The by-value GET remains only as a defensive fallback.
+  tmplRef?: { template_id: string; version: number },
+): Promise<void> {
+  const tmpl =
+    tmplRef ??
+    ((await wipGet(
+      `/api/template-store/templates/by-value/BOOTSTRAP_RECORD?namespace=${NAMESPACE}`,
+    )) as { template_id: string; version: number })
 
   const doc = {
     template_id: tmpl.template_id,
