@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { X, Trash2, Plus, Network } from 'lucide-react'
 import { useWipClient } from '@wip/react'
+import { describeWipError } from '@/lib/wip-errors'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TATerm } from '@/hooks/useTherapeuticAreaTerms'
 
@@ -50,7 +51,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
             })),
         )
       } catch (e) {
-        if (!cancelled) setError(String(e))
+        if (!cancelled) setError(describeWipError(e))
       }
     })()
     return () => {
@@ -93,7 +94,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
       setLocalTerm({ term_id: termId, value, label, aliases: [] })
       setDirty(true)
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -110,7 +111,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
       setNewAlias('')
       setDirty(true)
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -125,7 +126,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
       setLocalTerm({ ...localTerm, aliases: updatedAliases })
       setDirty(true)
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -152,7 +153,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
       setNewParentValue('')
       setDirty(true)
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -175,7 +176,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
       setParents(parents.filter((p) => p.term_id !== parent.term_id))
       setDirty(true)
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -196,7 +197,7 @@ export function TAManager({ term, allTerms, terminologyId, onClose }: TAManagerP
       invalidate()
       onClose()
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }

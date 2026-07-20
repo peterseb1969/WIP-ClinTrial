@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { X, Merge, Trash2, Lightbulb } from 'lucide-react'
 import { useWipClient } from '@wip/react'
+import { describeWipError } from '@/lib/wip-errors'
 import { useQueryClient } from '@tanstack/react-query'
 import type { ResolvedTerm } from '@/hooks/useAETermResolution'
 
@@ -142,7 +143,7 @@ export function AETermManager({
       setShowTypeahead(false)
       setDirty(true)
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -157,7 +158,7 @@ export function AETermManager({
       setLocalAliases(updatedAliases)
       setDirty(true)
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -172,7 +173,7 @@ export function AETermManager({
       invalidate()
       onClose()
     } catch (e) {
-      setError(String(e))
+      setError(describeWipError(e))
     }
     setBusy(false)
   }
@@ -197,7 +198,7 @@ export function AETermManager({
                 await client.defStore.createTerms(terminologyId, [{ value: term, label: term }], { namespace: 'clintrial' })
                 invalidate()
               } catch (e) {
-                setError(String(e))
+                setError(describeWipError(e))
               }
               setBusy(false)
             }}
