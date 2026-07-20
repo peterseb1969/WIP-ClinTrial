@@ -40,8 +40,16 @@ router.use('/server-api', settingsRoutes)
 // Secret-writing config endpoints are admin-gated (pass-through in open/dev mode)
 router.use('/server-api', requireAdmin(), configRoutes)
 
-// Proxy /api/* and /files/* to WIP backend (injects API key server-side)
-router.use(wipProxy({ baseUrl: WIP_BASE_URL, apiKey: WIP_API_KEY }))
+// Proxy /api/* and /files/* to WIP backend (injects API key server-side).
+// apiKeyFile (host-side dev, live wip-deploy secrets file) wins over apiKey when
+// set; deployed containers get the key as env via from_secret. defaultNamespace
+// guards unscoped documents queries under the multi-namespace key (CASE-730).
+router.use(wipProxy({
+  baseUrl: WIP_BASE_URL,
+  ...(process.env.WIP_API_KEY_FILE ? { apiKeyFile: process.env.WIP_API_KEY_FILE } : {}),
+  apiKey: WIP_API_KEY,
+  defaultNamespace: 'clintrial',
+}))
 
 // Health endpoint
 router.get('/health', (_req, res) => {

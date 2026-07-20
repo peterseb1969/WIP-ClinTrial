@@ -276,6 +276,23 @@ export function ClassificationRulesPage() {
             </div>
           )}
 
+          {/* Per-trial write failures (bulk 200 with item errors) */}
+          {classification.summary?.write_errors && classification.summary.write_errors.length > 0 && (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              <div className="flex items-center gap-2 font-medium">
+                <AlertCircle className="h-4 w-4" />
+                {classification.summary.write_errors.length} trial update(s) failed to write:
+              </div>
+              <ul className="mt-1 list-disc pl-9">
+                {classification.summary.write_errors.map((e) => (
+                  <li key={e.nct_id}>
+                    <span className="font-mono">{e.nct_id}</span> — {e.error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Results table */}
           {classification.results.length > 0 && (
             <ClassificationResultsTable results={classification.results} />

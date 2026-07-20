@@ -181,6 +181,7 @@ router.post('/classify', async (req, res) => {
     }
 
     // Write back if not dry run
+    let writeErrors: { nct_id: string; error: string }[] = []
     if (!dryRun && changedResults.length > 0) {
       sendSSE(res, 'status', {
         phase: 'writing',
@@ -222,6 +223,19 @@ router.post('/classify', async (req, res) => {
       })
 
       const bulkResult = await createDocumentsBulk(templateId, upsertData)
+      // Bulk-first (PoNIF #4): HTTP 200 can carry per-item failures. Attribute
+      // each failed upsert to its trial — results[] aligns by index with
+      // upsertData/changedResults (CASE-725; re-verify ordering if CASE-731
+      // reworks batching).
+      writeErrors = bulkResult.results
+        .filter((r) => r.status === 'error')
+        .map((r) => ({
+          nct_id: changedResults[r.index]?.nct_id ?? `index ${r.index}`,
+          error: r.error || r.message || 'unknown error',
+        }))
+      for (const e of writeErrors) {
+        console.error(`[classify] trial upsert failed ${e.nct_id}: ${e.error}`)
+      }
       sendSSE(res, 'write-result', bulkResult)
     }
 
@@ -231,6 +245,8 @@ router.post('/classify', async (req, res) => {
       pinned: pinnedCount,
       unchanged: results.length - changedResults.length - pinnedCount,
       dryRun,
+      write_failed: writeErrors.length,
+      write_errors: writeErrors,
     })
   } catch (err) {
     sendSSE(res, 'error', { message: (err as Error).message })

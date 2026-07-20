@@ -33,6 +33,8 @@ export interface ClassificationSummary {
   pinned: number
   unchanged: number
   dryRun: boolean
+  write_failed?: number
+  write_errors?: { nct_id: string; error: string }[]
 }
 
 /** Hook to run server-side classification via SSE */

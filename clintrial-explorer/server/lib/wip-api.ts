@@ -7,8 +7,12 @@ const WIP_BASE_URL = process.env.WIP_BASE_URL || 'https://localhost:8443'
 const WIP_API_KEY = process.env.WIP_API_KEY || 'dev_master_key_for_testing'
 const NAMESPACE = 'clintrial'
 
-// Disable TLS verification for local dev (WIP uses self-signed certs)
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+// Disable TLS verification outside production only (dev WIP uses a self-signed cert).
+// Production trust comes from NODE_EXTRA_CA_CERTS — auto-injected on apps-only
+// installs; provide via `wip-deploy export-ca` otherwise (CASE-724).
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+}
 
 function headers(contentType = 'application/json'): Record<string, string> {
   return {
@@ -185,11 +189,20 @@ export async function createDocumentsBulk(
         } else {
           created++
         }
-        allResults.push(item)
+        // WIP returns batch-relative indices; rebase to the caller's input
+        // order so results[i].index attributes across batches (CASE-725)
+        allResults.push({ ...item, index: i + (item.index ?? 0) })
       }
     } catch (err) {
       errors += batch.length
       console.error(`Bulk create batch error:`, err)
+      // Keep results[] complete: a failed batch still yields one error item
+      // per input so callers can attribute every submitted document
+      allResults.push(...batch.map((_, j) => ({
+        index: i + j,
+        status: 'error',
+        error: err instanceof Error ? err.message : String(err),
+      })))
     }
   }
 
