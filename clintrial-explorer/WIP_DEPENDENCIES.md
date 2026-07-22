@@ -76,10 +76,11 @@ All entities are in the `clintrial` namespace.
 - **Used by:** incremental import checkpointing (`import-orchestrator`)
 - **Reporting table:** `doc_ct_sync_state`
 
-### BOOTSTRAP_RECORD
+### BOOTSTRAP_RECORD (legacy value) / CLINTRIAL_BOOTSTRAP_RECORD (current seed)
 - **Identity fields:** `bootstrap_id`
 - **Used by:** namespace bootstrap provenance (BootstrapGate audit trail; write-once per bootstrap)
-- **Reporting table:** `doc_bootstrap_record`
+- **Reporting table:** `doc_bootstrap_record` (legacy) / `doc_clintrial_bootstrap_record` (fresh bootstraps)
+- **Note (CASE-757):** the seed now mints the namespace-prefixed value `CLINTRIAL_BOOTSTRAP_RECORD` so app-to-app namespace merges never collide. The live `clintrial` namespace was bootstrapped before this change and keeps its unprefixed `BOOTSTRAP_RECORD` — never renamed in place (a template's value is its identity). Field shape is canonical and identical under both values.
 
 ## Reporting SQL API
 

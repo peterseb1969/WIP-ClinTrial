@@ -11,6 +11,12 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const SEED_DIR = join(__dirname, '..', 'seed')
 const NAMESPACE = 'clintrial'
+// Namespace-prefixed bootstrap-record value (CASE-757): every app minting the
+// same literal BOOTSTRAP_RECORD made app-to-app namespace merges collide on
+// that one template. The seed file MUST declare this same value. Field shape
+// stays canonical. Namespaces bootstrapped before this change keep their
+// unprefixed template — never rename in place (value = identity).
+const BOOTSTRAP_RECORD_VALUE = `${NAMESPACE.toUpperCase().replace(/-/g, '_')}_BOOTSTRAP_RECORD`
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyObj = Record<string, any>
@@ -169,13 +175,13 @@ export async function runBootstrap(
       const resp = (await wipPost('/api/template-store/templates?on_conflict=validate', [
         template,
       ])) as { results?: Array<{ id?: string; version?: number }> }
-      if (data.value === 'BOOTSTRAP_RECORD') {
+      if (data.value === BOOTSTRAP_RECORD_VALUE) {
         const item = resp.results?.[0]
         if (item?.id) bootstrapTmpl = { template_id: item.id, version: item.version ?? 1 }
       }
       // Track domain templates for the audit doc; the audit template itself
       // is infrastructure, not a domain template, so don't list it.
-      if (data.value !== 'BOOTSTRAP_RECORD') templatesCreated.push(data.value)
+      if (data.value !== BOOTSTRAP_RECORD_VALUE) templatesCreated.push(data.value)
     }
 
     // Step 6: Write the BOOTSTRAP_RECORD audit doc (provenance trail —
@@ -218,7 +224,7 @@ async function writeBootstrapRecord(
   const tmpl =
     tmplRef ??
     ((await wipGet(
-      `/api/template-store/templates/by-value/BOOTSTRAP_RECORD?namespace=${NAMESPACE}`,
+      `/api/template-store/templates/by-value/${BOOTSTRAP_RECORD_VALUE}?namespace=${NAMESPACE}`,
     )) as { template_id: string; version: number })
 
   const doc = {
