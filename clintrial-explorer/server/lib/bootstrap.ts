@@ -127,13 +127,19 @@ export async function runBootstrap(
     // Step 4: Create term relations (ontology edges)
     // Seed-file format key remains `ontology.relationships` for back-compat with existing
     // seed JSON; the WIP API was renamed to `term-relations` in def-store Phase 0 (CASE-65).
+    // Seed refs use the 2-part TERMINOLOGY:VALUE shorthand, which def-store rejects
+    // as ambiguous since CASE-778 (a value containing ':' is indistinguishable from
+    // it). Qualify to the accepted ns:terminology:value form; UUIDs and already
+    // 3-part refs pass through untouched.
+    const qualifyTermRef = (ref: string): string =>
+      ref.split(':').length === 2 ? `${NAMESPACE}:${ref}` : ref
     const allRelations: AnyObj[] = []
     for (const termData of terminologies) {
       const rels = termData.ontology?.relationships || []
       for (const rel of rels) {
         allRelations.push({
-          source_term_id: rel.source,
-          target_term_id: rel.target,
+          source_term_id: qualifyTermRef(rel.source),
+          target_term_id: qualifyTermRef(rel.target),
           relation_type: rel.type,
         })
       }
