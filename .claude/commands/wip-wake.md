@@ -1,40 +1,46 @@
 Roll the current session over into a fresh, linked one and recover context. Use `/wip-wake` after a `/clear`, a compaction reset, the built-in `/resume` of an old transcript, or any time the operator decides "context lost, continuity matters." It closes the prior session (so kb doesn't accrete zombie `active` records), mints a new session ID whose `continues_from` points back at the prior, then reloads context from durable artifacts. (For a brand-new session with no predecessor, use `/wip-setup`.)
 
-### Step A — Roll the session over (run before context reload)
+### Step A — Roll the session over (deterministic — run the script)
 
-Identity is **local-first**: `.claude/.session-id` is the single source of truth; kb is a derived mirror. Every control-flow decision here reads local files only — never query kb.
+Identity is **local-first**: `.claude/.session-id` is the single source of truth; kb is a derived mirror. Step A is a fully mechanical state machine, so it is executed by a script, not hand-walked step by step. Run it once:
 
-1. **Require a prior session** — read `$CLAUDE_PROJECT_DIR/.claude/.session-id` (fall back to `$PWD/.claude/.session-id`). If absent, **stop**:
-   > Error: no prior session found at `.claude/.session-id`. Run `/wip-setup` for a fresh session with no continuation.
+```bash
+python3 .claude/scripts/wake-rollover.py
+```
 
-   Let `<prior-id>` be the sentinel value.
+It closes the prior session if still active (atomic frontmatter flip + auto-close summary, skipped when already `closed`), mints `<ROLE>-<YYYYMMDD-HHMMSS>` from `.claude/.session-role`, creates `reports/<NEW_ID>/session.md` with `continues_from`, atomically swaps the sentinel, and mirrors both sessions to kb (tier-gated: skipped silently without `.claude/kb.json`; kb-unreachable warns and continues — local writes are authoritative and a re-run converges). It prints the machine-readable contract on stdout:
 
-2. **Close the prior session** (load-bearing). Report paths below are **project-local** to this repo — `reports/<prior-id>/`, never the shared FR-YAC checkout:
-   - **Prior dir missing** — if `reports/<prior-id>/` doesn't exist, **stop** (don't fabricate state). **Transition note:** a session staged *before* this change lives in the legacy shared `/Users/peter/Development/FR-YAC/reports/<prior-id>/`. To carry such a session forward cleanly, do ONE of these *before* this `/wip-wake`: run `/wip-report session-end` under the old body (final state mirrors to kb), **or** move that legacy dir into this repo's `reports/`. New sessions never touch the shared path; this note retires once no legacy shared-path sessions remain.
-     > Error: prior session dir `reports/<prior-id>/` not found. `/wip-wake` won't fabricate state. If this session was staged before this change, see the transition note above. Otherwise restore the dir, or `rm .claude/.session-id` and run `/wip-setup` for a fresh discontinuous start.
-   - Read the `status:` field from `reports/<prior-id>/session.md` frontmatter (local read). Missing or malformed frontmatter → treat as `active` (conservative default; the rewrite below regenerates well-formed frontmatter).
-   - **Already `status: closed`** (operator ran `/wip-report session-end`, or a previous `/wip-wake` already closed it) → **skip the close phase**: do NOT recompose the body, do NOT touch `ended_at`, do NOT overwrite the hand-written `## Session Summary`. Go to step 3.
-   - **Otherwise** (`active` or missing) — compute `<close_ts>` once (`date '+%Y-%m-%dT%H:%M:%S'` — naive, NO timezone suffix), then **atomically rewrite** `reports/<prior-id>/session.md` (read full content, modify, write to a temp file, `mv` over the original — POSIX-atomic; never truncate-in-place): set `status: closed` + `ended_at: <close_ts>` in frontmatter (regenerating `session_id` / `role` / `started_at` from `<prior-id>` if frontmatter was absent — `continues_from` cannot be recovered this way; that loss is acknowledged), preserve the existing body, and append `## Session Summary — auto-closed by /wip-wake (<close_ts>)`. The frontmatter flip and the summary append are **one** atomic write so a partial failure can't leave a half-state.
-   - Mirror the now-closed prior to kb (tier 3 only — skip silently if `.claude/kb.json` is absent): `kbc kb-write.py SESSION reports/<prior-id>/session.md`. **kb-unreachable → warn-and-continue** — the local write already flipped `status: closed`, so a later re-run sees `closed` and skips; the manual retry is re-running the same `kb-write.py` call.
+```
+PRIOR_ID=<prior-id>
+NEW_ID=<NEW_ID>
+PRIOR_SUMMARY=content|stub|absent
+```
 
-3. **Mint the new session** — `ROLE="$(cat "$CLAUDE_PROJECT_DIR/.claude/.session-role")"; NEW_ID="$ROLE-$(date '+%Y%m%d-%H%M%S')"`. (Role source is identical to `/wip-setup`. If `.session-role` is missing, stop and re-run `create-app-project.sh --refresh --prefix APP-<X>`.)
+**Do not re-implement the rollover by hand** — the full state machine (every edge case: missing sentinel, missing prior dir + the legacy shared-path transition note, malformed frontmatter regeneration, collision retry, partial-failure convergence) lives in the script's docstring and its test suite (`agent-scripts/`, `./scripts/wip-test.sh agent-scripts`). On a non-zero exit, read the script's error message: missing sentinel → run `/wip-setup`; missing `reports/<prior-id>/` → resolve per the message (never fabricate state); missing `.session-role` → re-run `scripts/create-app-project.sh <app-dir> --prefix APP-<X>` from the WIP clone (repos whose committed `.app-meta` records `ROLE_PREFIX` self-heal without `--prefix`) (there is NO `--refresh` flag; the scaffolds auto-detect mode).
 
-4. **Create the new report dir + session.md** — `mkdir "reports/$NEW_ID"` (plain `mkdir`, not `-p`; on collision, surface and retry). Write the frontmatter:
-   ```yaml
-   ---
-   session_id: <NEW_ID>
-   role: <ROLE>
-   started_at: <NEW_ID's YYYYMMDD-HHMMSS as a naive datetime, YYYY-MM-DDTHH:MM:SS, NO timezone suffix>
-   status: active
-   continues_from: <prior-id>
-   ---
-   ```
+After Step A, `.claude/.session-id` holds `<NEW_ID>`. Every **write** from here on goes to the new session's dir; the continuity **reads** in Step B target the **prior** session's reports (use the `PRIOR_ID` the script printed).
 
-5. **Overwrite the sentinel atomically** — write `<NEW_ID>` as a single line to a temp file under `.claude/`, then `mv` over `.claude/.session-id`.
+### Step A.2 — Backfill the prior's summary, if the script says it is a stub
 
-6. **Mirror the new session to kb (tier 3 only, warn-and-continue)** — **Tier gate:** kb mirrors run only in tier-3 repos — if `.claude/kb.json` is absent, skip this step silently and continue (tier-2 solo mode is by design; nothing to warn about). Then: `kbc kb-write.py SESSION reports/$NEW_ID/session.md`. The gateway derives the `CONTINUES_FROM` edge (new → prior) from the `continues_from:` frontmatter; if the prior isn't in kb yet, the edge silently skips and lands on a re-run. Both kb writes (step 2 close + step 6 create) are idempotent — re-running `/wip-wake` after a partial failure converges.
+**Skip this step entirely unless the script printed `PRIOR_SUMMARY=stub`.** `content` means someone wrote a real summary — never overwrite it. `absent` means there is no prior, or nothing readable to summarise.
 
-After Step A, `.claude/.session-id` holds `<NEW_ID>`. Every **write** from here on goes to the new session's dir; the continuity **reads** in Step B target the **prior** session's reports.
+`stub` means the prior's summary is a heading with nothing under it — most often because the prior died without `/wip-report session-end` (a `/clear`, a context wall, a closed laptop) and the close phase you just ran wrote `## Session Summary — auto-closed by /wip-wake (<ts>)` as a placeholder. It also covers a stub an earlier wake left behind. That placeholder is otherwise permanent: the agent who could have written the summary is gone, and nobody runs `session-end` against a session that is not theirs. Now — while the artifacts are still on this disk — is the only moment it gets written.
+
+Reconstruct from what survives, then replace the bare heading in place in `reports/$PRIOR_ID/session.md`, leave `ended_at` alone (the auto-close timestamp is the truth about when the session ended), and re-mirror with `kbc kb-write.py SESSION reports/$PRIOR_ID` (`SESSION` is keyed on `session_id`, so this upserts and cannot mint a duplicate).
+
+The sources, in descending reliability:
+
+- `reports/$PRIOR_ID/commits.md` and `session-updates.md` — the richest, and per-session attributed. The kb mirror bundles them into the SESSION body, so they are readable from kb too, not only on the originating clone.
+- Cases the session filed or responded to: `kbc case-fetch.py list --filed-by $PRIOR_ID`. Reliably attributed.
+- `git log` over the session's window — **only as corroboration when `commits.md` exists.**
+
+Three ways to get this wrong, each worth avoiding deliberately:
+
+- **Label it as a reconstruction.** A backfilled summary that reads as though the session wrote it fabricates provenance. Say who rebuilt it, when, and from what.
+- **Do not build a commit narrative from `git log` alone.** Sessions overlap on the same branch, and `commits.md` is the only per-session commit attribution that exists. Where it is missing, a time-windowed `git log` will hand you another session's commits with full confidence. Cite the case list instead and say plainly that no local commit log survived.
+- **When nothing survives, record that.** A session that died early can leave a session dir holding nothing but a few hundred bytes of `session.md` frontmatter — no commit log, no running log. Then write "no durable artifacts survived; reconstructed from kb case activity only", or that nothing was recoverable. Recording irrecoverability is a real artifact. Composing a plausible narrative to fill the space is the fabrication the first rule warns about.
+
+Do **not** hand-close the prior before running the Step A script. `close_prior` returns early on an already-closed session and skips *both* the rewrite and the kb mirror, stranding whatever you wrote on local disk where no peer can read it. Let the script close and mirror; backfill and re-mirror after.
 
 ### Step B — Recover context
 
