@@ -33,8 +33,8 @@ TA_PORTAL = Path("/Users/sebbelp/Development/TA-Portal")
 MDMS_FILE = TA_PORTAL / "get_study_IDs_2026-08-10-1509.csv"
 CTGOV_FILE = TA_PORTAL / "2026-08-10 2_45pm_2026-08-10-1445.csv"
 ID_MATCHES_FILE = TA_PORTAL / "ta_nct_mappings.json"
-STUDY_RO_FILE = Path("/tmp/study_ro_numbers.json")
-STUDY_PRODUCTS_FILE = Path("/tmp/study_products.json")
+STUDY_RO_FILE = TA_PORTAL / "study_ro_numbers.json"
+STUDY_PRODUCTS_FILE = TA_PORTAL / "study_products.json"
 
 ROCHE_SPONSORS = {
     "HOFFMANN-LA ROCHE", "GENENTECH, INC.", "GENENTECH, INC",
@@ -167,6 +167,53 @@ def map_ta_to_conditions(ta_code):
 
 # --- Load data ---
 
+def fetch_product_data_from_wip():
+    """Fetch RO numbers and product names from WIP reporting and save to disk."""
+    import urllib.request
+    import ssl
+    import os
+
+    key_path = os.path.expanduser("~/.wip-deploy/wip-local/secrets/api-key")
+    with open(key_path) as f:
+        api_key = f.read().strip()
+
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    sql = """
+        SELECT s.study_number, p.ro_number, p.product_name
+        FROM doc_ct_ta_study_product e
+        JOIN doc_ct_ta_study s ON e.source_ref_id = s.document_id
+        JOIN doc_ct_ta_product p ON e.target_ref_id = p.document_id
+        WHERE p.ro_number IS NOT NULL AND p.ro_number != ''
+    """
+    body = json.dumps({"sql": sql, "namespace": "clintrial", "max_rows": 10000}).encode()
+    req = urllib.request.Request(
+        "https://localhost:8443/api/reporting-sync/query",
+        data=body,
+        headers={"Content-Type": "application/json", "X-API-Key": api_key},
+        method="POST",
+    )
+    resp = urllib.request.urlopen(req, context=ctx, timeout=60)
+    result = json.loads(resp.read())
+
+    study_ro = {}
+    study_products = {}
+    for row in result["rows"]:
+        sn = row["study_number"]
+        study_ro.setdefault(sn, set()).add(row["ro_number"])
+        study_products.setdefault(sn, set()).add(row["product_name"])
+
+    with open(STUDY_RO_FILE, "w") as f:
+        json.dump({sn: sorted(ros) for sn, ros in study_ro.items()}, f)
+    with open(STUDY_PRODUCTS_FILE, "w") as f:
+        json.dump({sn: sorted(prods) for sn, prods in study_products.items()}, f)
+
+    print(f"  Fetched product data from WIP: {len(study_ro)} studies with RO numbers")
+    return study_ro, study_products
+
+
 def load_id_matches():
     if ID_MATCHES_FILE.exists():
         with open(ID_MATCHES_FILE) as f:
@@ -175,22 +222,23 @@ def load_id_matches():
 
 
 def load_study_ro_numbers():
-    """Load study_number -> set of RO numbers from Products export (via WIP reporting)."""
-    if STUDY_RO_FILE.exists():
-        with open(STUDY_RO_FILE) as f:
-            data = json.load(f)
-        return {sn: set(ros) for sn, ros in data.items()}
-    print("  WARNING: study_ro_numbers.json not found — run the RO number extraction first")
-    return {}
+    """Load study_number -> set of RO numbers. Auto-fetches from WIP if missing."""
+    if not STUDY_RO_FILE.exists():
+        print("  Product data files missing — fetching from WIP...")
+        fetch_product_data_from_wip()
+    with open(STUDY_RO_FILE) as f:
+        data = json.load(f)
+    return {sn: set(ros) for sn, ros in data.items()}
 
 
 def load_study_products():
-    """Load study_number -> set of product names from Products export."""
-    if STUDY_PRODUCTS_FILE.exists():
-        with open(STUDY_PRODUCTS_FILE) as f:
-            data = json.load(f)
-        return {sn: set(prods) for sn, prods in data.items()}
-    return {}
+    """Load study_number -> set of product names. Auto-fetches from WIP if missing."""
+    if not STUDY_PRODUCTS_FILE.exists():
+        print("  Product data files missing — fetching from WIP...")
+        fetch_product_data_from_wip()
+    with open(STUDY_PRODUCTS_FILE) as f:
+        data = json.load(f)
+    return {sn: set(prods) for sn, prods in data.items()}
 
 
 def load_roche_studies():
