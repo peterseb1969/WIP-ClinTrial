@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/Card'
@@ -51,6 +51,7 @@ export function RocheStudiesPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const { data: detail } = useRocheStudyDetail(selectedId, selectedSource)
+  const detailRef = useRef<HTMLDivElement>(null)
 
   const setFilter = (key: string, value: string) => {
     setFilters((f) => ({ ...f, [key]: value }))
@@ -68,6 +69,40 @@ export function RocheStudiesPage() {
           {filtered.length} of {studies?.length ?? 0} studies
           {Object.values(filters).some(Boolean) && ' (filtered)'}
         </span>
+      </div>
+
+      {/* Detail panel — above table so it's visible on click */}
+      <div ref={detailRef}>
+        {selectedId && detail && (
+          <Card>
+            <div className="flex items-center justify-between border-b px-4 py-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium">
+                  {String(detail.study_number || selectedId)}
+                </h3>
+                <Badge variant={selectedSource === 'ta_portal' ? 'primary' : 'muted'}>
+                  {selectedSource === 'ta_portal' ? 'TA Portal' : 'MDMS'}
+                </Badge>
+              </div>
+              <button
+                onClick={() => { setSelectedId(null); setSelectedSource(null) }}
+                className="rounded p-1 text-text-muted hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 p-4">
+              {Object.entries(detail)
+                .filter(([k, v]) => v != null && String(v).trim() !== '' && !SKIP_DETAIL_KEYS.has(k) && !k.endsWith('_term_id') && !k.endsWith('_search'))
+                .map(([key, val]) => (
+                  <div key={key} className="flex gap-2 py-0.5 text-sm">
+                    <dt className="w-36 shrink-0 text-text-muted">{key}</dt>
+                    <dd className="min-w-0 break-words font-medium">{String(val)}</dd>
+                  </div>
+                ))}
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Table */}
@@ -109,6 +144,7 @@ export function RocheStudiesPage() {
                       onClick={() => {
                         setSelectedId(s.document_id)
                         setSelectedSource(s.source)
+                        setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
                       }}
                       className={cn(
                         'cursor-pointer border-b border-gray-50 text-xs hover:bg-gray-50',
@@ -176,37 +212,6 @@ export function RocheStudiesPage() {
         )}
       </Card>
 
-      {/* Detail panel */}
-      {selectedId && detail && (
-        <Card>
-          <div className="flex items-center justify-between border-b px-4 py-2">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium">
-                {String(detail.study_number || selectedId)}
-              </h3>
-              <Badge variant={selectedSource === 'ta_portal' ? 'primary' : 'muted'}>
-                {selectedSource === 'ta_portal' ? 'TA Portal' : 'MDMS'}
-              </Badge>
-            </div>
-            <button
-              onClick={() => { setSelectedId(null); setSelectedSource(null) }}
-              className="rounded p-1 text-text-muted hover:bg-gray-100"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 p-4">
-            {Object.entries(detail)
-              .filter(([k, v]) => v != null && String(v).trim() !== '' && !SKIP_DETAIL_KEYS.has(k) && !k.endsWith('_term_id') && !k.endsWith('_search'))
-              .map(([key, val]) => (
-                <div key={key} className="flex gap-2 py-0.5 text-sm">
-                  <dt className="w-36 shrink-0 text-text-muted">{key}</dt>
-                  <dd className="min-w-0 break-words font-medium">{String(val)}</dd>
-                </div>
-              ))}
-          </div>
-        </Card>
-      )}
     </div>
   )
 }
