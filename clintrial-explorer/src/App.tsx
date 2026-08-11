@@ -18,6 +18,7 @@ import { MoleculeComparePage } from '@/pages/MoleculeComparePage'
 import { ClassificationRulesPage } from '@/pages/ClassificationRulesPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { CurationPage } from '@/pages/CurationPage'
+import { RocheStudiesPage } from '@/pages/RocheStudiesPage'
 import { BootstrapGate } from '@/pages/BootstrapPage'
 
 const queryClient = new QueryClient({
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="settings/rules" element={<ClassificationRulesPage />} />
               <Route path="curation" element={<CurationPage />} />
+              <Route path="roche-studies" element={<RocheStudiesPage />} />
               <Route path="import" element={<ImportPage />} />
               <Route path="sync" element={<ImportPage />} />
             </Route>
