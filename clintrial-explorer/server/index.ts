@@ -11,6 +11,7 @@ import aeCleanupRoutes from './routes/ae-cleanup.js'
 import bootstrapRoutes from './routes/bootstrap.js'
 import settingsRoutes from './routes/settings.js'
 import configRoutes from './routes/config.js'
+import curationRoutes from './routes/curation.js'
 import { requireAdmin } from './lib/admin.js'
 import { startAutoSync } from './lib/auto-sync.js'
 
@@ -37,6 +38,7 @@ router.use('/server-api', importRoutes)
 router.use('/server-api', aeCleanupRoutes)
 router.use('/server-api', bootstrapRoutes)
 router.use('/server-api', settingsRoutes)
+router.use('/server-api', curationRoutes)
 // Secret-writing config endpoints are admin-gated (pass-through in open/dev mode)
 router.use('/server-api', requireAdmin(), configRoutes)
 

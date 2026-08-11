@@ -9,6 +9,7 @@ import {
   MapPin,
   Bookmark,
   Upload,
+  ClipboardCheck,
   Settings,
   Menu,
   Home,
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/adverse-events', icon: AlertTriangle, label: 'Adverse Events' },
   { to: '/sites', icon: MapPin, label: 'Sites' },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
+  { to: '/curation', icon: ClipboardCheck, label: 'Data Curation' },
   { to: '/settings', icon: Settings, label: 'Settings' },
   { to: '/import', icon: Upload, label: 'Import' },
 ] as const
@@ -40,6 +42,7 @@ const breadcrumbLabels: Record<string, string> = {
   bookmarks: 'Bookmarks',
   settings: 'Settings',
   rules: 'Classification Rules',
+  curation: 'Data Curation',
   import: 'Import',
   sync: 'Import',
 }
