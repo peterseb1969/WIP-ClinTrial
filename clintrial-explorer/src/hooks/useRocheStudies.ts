@@ -35,7 +35,7 @@ export function useRocheStudies() {
                   therapeutic_area, disease_area, indication,
                   theme_molecule, non_lead_molecule, sponsor_type,
                   actual_enrolled, nct_id
-           FROM doc_ct_ta_study`,
+           FROM doc_ct_ta_study__v3`,
           [],
           10000,
         ),

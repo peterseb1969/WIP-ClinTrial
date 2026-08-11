@@ -25,7 +25,7 @@ export function useMappedStudyNumbers() {
     queryKey: ['curation', 'mapped-study-numbers'],
     queryFn: async () => {
       const result = await reportQuery<{ study_number: string }>(
-        `SELECT study_number FROM doc_ct_ta_study WHERE nct_id IS NOT NULL AND nct_id != ''`,
+        `SELECT study_number FROM doc_ct_ta_study__v3 WHERE nct_id IS NOT NULL AND nct_id != ''`,
         [],
         10000,
       )

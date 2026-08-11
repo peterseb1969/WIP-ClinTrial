@@ -12,7 +12,7 @@ export function useRocheStudyMap() {
     queryKey: ['clintrial', 'roche-study-map'],
     queryFn: async () => {
       const result = await reportQuery<{ nct_id: string; study_number: string }>(
-        `SELECT nct_id, study_number FROM doc_ct_ta_study WHERE nct_id IS NOT NULL AND nct_id != ''`,
+        `SELECT nct_id, study_number FROM doc_ct_ta_study__v3 WHERE nct_id IS NOT NULL AND nct_id != ''`,
         [],
         10000,
       )
