@@ -6,6 +6,26 @@ import { useBookmarks } from './useBookmarks'
 import { useClassificationRules, enrichTherapeuticAreas, useTAAncestors } from './useClassificationRules'
 import { reportQuery } from '@/lib/reporting'
 
+/** Map of NCT IDs to Roche study numbers (from crosswalk + nct_id on CT_TA_STUDY) */
+export function useRocheStudyMap() {
+  return useQuery({
+    queryKey: ['clintrial', 'roche-study-map'],
+    queryFn: async () => {
+      const result = await reportQuery<{ nct_id: string; study_number: string }>(
+        `SELECT nct_id, study_number FROM doc_ct_ta_study WHERE nct_id IS NOT NULL AND nct_id != ''`,
+        [],
+        10000,
+      )
+      const map = new Map<string, string>()
+      for (const row of result.rows) {
+        map.set(row.nct_id, row.study_number)
+      }
+      return map
+    },
+    staleTime: 60000,
+  })
+}
+
 /** Pre-compute sets of NCT IDs that have related data (AE, outcomes, baselines) */
 function useDataAvailability() {
   const { data: aeNctIds } = useQuery({
@@ -65,6 +85,7 @@ export function useFilteredTrials() {
   const { has: isBookmarked } = useBookmarks()
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
   const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds } = useDataAvailability()
+  const { data: rocheStudyMap } = useRocheStudyMap()
 
   // Enrich trials with rule-based TA classification and ontology ancestor walk
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
@@ -126,6 +147,8 @@ export function useFilteredTrials() {
       if (filters.has_outcomes === 'true' && outcomeNctIds && !outcomeNctIds.has(d.nct_id)) return false
       if (filters.has_baseline === 'true' && baselineNctIds && !baselineNctIds.has(d.nct_id)) return false
       if (filters.has_protocol === 'true' && protocolNctIds && !protocolNctIds.has(d.nct_id)) return false
+      if (filters.has_roche_id === 'true' && rocheStudyMap && !rocheStudyMap.has(d.nct_id)) return false
+      if (filters.has_roche_id === 'false' && rocheStudyMap && rocheStudyMap.has(d.nct_id)) return false
 
       // Free-text search
       if (filters.search) {
@@ -136,7 +159,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, rocheStudyMap])
 
   return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
 }

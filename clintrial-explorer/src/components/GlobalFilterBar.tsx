@@ -21,6 +21,7 @@ const LABEL_MAP: Record<string, string> = {
   has_baseline: 'Has Baseline',
   has_outcomes: 'Has Outcomes',
   has_protocol: 'Has Protocol',
+  has_roche_id: 'Roche ID',
   bookmarked: 'Bookmarked',
   search: 'Search',
 }

@@ -11,7 +11,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { type TrialDocument, allTrialsQueries } from '@/hooks/useAllTrials'
-import { useFilteredTrials } from '@/hooks/useFilteredTrials'
+import { useFilteredTrials, useRocheStudyMap } from '@/hooks/useFilteredTrials'
 import { useTrialFilters, trialFilters, type SingleFilterKey } from '@/hooks/useTrialFilters'
 import { reportQuery } from '@/lib/reporting'
 import { formatPhase } from '@/lib/trial-utils'
@@ -23,6 +23,7 @@ export function TrialsPage() {
   const navigate = useNavigate()
   const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
   const { filters, set: setFilter } = useTrialFilters()
+  const { data: rocheStudyMap } = useRocheStudyMap()
   const [page, setPage] = useState(1)
   const [aggregateOpen, setAggregateOpen] = useState(false)
 
@@ -97,6 +98,7 @@ export function TrialsPage() {
               <tr className="border-b border-gray-200 bg-gray-50/50">
                 <th className="w-10 px-3 py-2.5" />
                 <th className="px-3 py-2.5 text-left font-medium text-text-muted">NCT ID</th>
+                <th className="px-3 py-2.5 text-left font-medium text-text-muted">Roche ID</th>
                 <th className="px-3 py-2.5 text-left font-medium text-text-muted">Title</th>
                 <th className="px-3 py-2.5 text-left font-medium text-text-muted">Status</th>
                 <th className="px-3 py-2.5 text-left font-medium text-text-muted">Phase</th>
@@ -124,6 +126,17 @@ export function TrialsPage() {
                       {trial.data.nct_id}
                     </Link>
                   </td>
+                  <td className="px-3 py-2 font-mono text-xs">
+                    {rocheStudyMap?.get(trial.data.nct_id) && (
+                      <Link
+                        to={`/curation?search=${rocheStudyMap.get(trial.data.nct_id)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-primary hover:underline"
+                      >
+                        {rocheStudyMap.get(trial.data.nct_id)}
+                      </Link>
+                    )}
+                  </td>
                   <td className="max-w-xs truncate px-3 py-2" title={trial.data.brief_title || trial.data.title}>
                     {trial.data.brief_title || trial.data.title}
                   </td>
@@ -144,7 +157,7 @@ export function TrialsPage() {
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-3 py-12 text-center text-text-muted">
+                  <td colSpan={9} className="px-3 py-12 text-center text-text-muted">
                     No trials match the current filters.
                   </td>
                 </tr>
@@ -247,6 +260,22 @@ function QuickFilters({
         label="Has Protocol"
         active={filters.has_protocol === 'true'}
         onClick={() => trialFilters.toggle('has_protocol', 'true')}
+      />
+      <FilterToggle
+        label="Has Roche ID"
+        active={filters.has_roche_id === 'true'}
+        onClick={() => {
+          if (filters.has_roche_id === 'true') trialFilters.removeKey('has_roche_id')
+          else trialFilters.set('has_roche_id', 'true')
+        }}
+      />
+      <FilterToggle
+        label="No Roche ID"
+        active={filters.has_roche_id === 'false'}
+        onClick={() => {
+          if (filters.has_roche_id === 'false') trialFilters.removeKey('has_roche_id')
+          else trialFilters.set('has_roche_id', 'false')
+        }}
       />
       <FilterToggle
         label="Bookmarked"

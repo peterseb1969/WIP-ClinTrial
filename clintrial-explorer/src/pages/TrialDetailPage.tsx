@@ -33,6 +33,7 @@ import {
   useTrialFiles,
 } from '@/hooks/useTrialDetail'
 import { usePinTrial } from '@/hooks/useClassification'
+import { useRocheStudyMap } from '@/hooks/useFilteredTrials'
 import { formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
 import { refetchUntil, sameSet } from '@/lib/refetch-until'
@@ -54,6 +55,8 @@ export function TrialDetailPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { data: trial, isLoading, error, refetch } = useTrial(nctId || '')
   const pinMutation = usePinTrial()
+  const { data: rocheStudyMap } = useRocheStudyMap()
+  const rocheStudyNumber = nctId && rocheStudyMap ? rocheStudyMap.get(nctId) : null
   const queryClient = useQueryClient()
   const [addingTA, setAddingTA] = useState(false)
   const [newTA, setNewTA] = useState('')
@@ -127,6 +130,15 @@ export function TrialDetailPage() {
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-bold">{d.nct_id}</h1>
+              {rocheStudyNumber && (
+                <a
+                  href={`/curation?search=${rocheStudyNumber}`}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
+                  title="View in Data Curation"
+                >
+                  Roche: {rocheStudyNumber}
+                </a>
+              )}
               <StatusBadge status={d.status} />
               {(d.phases || []).map((p) => (
                 <ChipLink key={p} filterKey="phase" filterValue={p}>

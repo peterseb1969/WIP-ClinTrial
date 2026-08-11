@@ -19,6 +19,7 @@ export type SingleFilterKey =
   | 'has_baseline'
   | 'has_outcomes'
   | 'has_protocol'
+  | 'has_roche_id'
   | 'bookmarked'
   | 'search'
 
