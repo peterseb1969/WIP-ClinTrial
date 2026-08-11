@@ -63,7 +63,7 @@ export function RocheStudiesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-text">Roche Studies</h1>
+        <h1 className="text-2xl font-semibold text-text">TA Portal / MDMS</h1>
         <span className="text-sm text-text-muted">
           {filtered.length} of {studies?.length ?? 0} studies
           {Object.values(filters).some(Boolean) && ' (filtered)'}
