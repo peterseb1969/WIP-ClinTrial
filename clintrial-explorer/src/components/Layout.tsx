@@ -19,20 +19,21 @@ import {
 import { WipFooter } from '@wip/react'
 import { cn } from '@/lib/utils'
 import { useBookmarks } from '@/hooks/useBookmarks'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { GlobalFilterBar } from '@/components/GlobalFilterBar'
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/trials', icon: FlaskConical, label: 'Trials' },
-  { to: '/molecules', icon: Pill, label: 'Molecules' },
-  { to: '/therapeutic-areas', icon: Dna, label: 'Therapeutic Areas' },
-  { to: '/adverse-events', icon: AlertTriangle, label: 'Adverse Events' },
-  { to: '/sites', icon: MapPin, label: 'Sites' },
-  { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
-  { to: '/roche-studies', icon: Building2, label: 'TA Portal / MDMS' },
-  { to: '/curation', icon: ClipboardCheck, label: 'Data Curation' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
-  { to: '/import', icon: Upload, label: 'Import' },
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard', adminOnly: false },
+  { to: '/trials', icon: FlaskConical, label: 'Trials', adminOnly: false },
+  { to: '/molecules', icon: Pill, label: 'Molecules', adminOnly: false },
+  { to: '/therapeutic-areas', icon: Dna, label: 'Therapeutic Areas', adminOnly: false },
+  { to: '/adverse-events', icon: AlertTriangle, label: 'Adverse Events', adminOnly: false },
+  { to: '/sites', icon: MapPin, label: 'Sites', adminOnly: false },
+  { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks', adminOnly: false },
+  { to: '/roche-studies', icon: Building2, label: 'TA Portal / MDMS', adminOnly: false },
+  { to: '/curation', icon: ClipboardCheck, label: 'Data Curation', adminOnly: true },
+  { to: '/settings', icon: Settings, label: 'Settings', adminOnly: false },
+  { to: '/import', icon: Upload, label: 'Import', adminOnly: true },
 ] as const
 
 const breadcrumbLabels: Record<string, string> = {
@@ -54,6 +55,8 @@ const breadcrumbLabels: Record<string, string> = {
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { count } = useBookmarks()
+  const { data: currentUser } = useCurrentUser()
+  const isAdmin = currentUser?.isAdmin ?? true // default to true in dev (no auth)
   const location = useLocation()
 
   const segments = location.pathname.split('/').filter(Boolean)
@@ -80,7 +83,7 @@ export function Layout() {
           <span className="font-semibold text-sm">Clinical Trials</span>
         </div>
         <nav className="flex-1 space-y-1 p-2">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.filter((item) => !item.adminOnly || isAdmin).map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -105,6 +108,12 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        {currentUser?.user && (
+          <div className="border-t border-white/10 px-4 py-2 text-[11px] text-white/50">
+            {currentUser.user}
+            {isAdmin && <span className="ml-1 text-accent">(admin)</span>}
+          </div>
+        )}
       </aside>
 
       {/* Main content */}

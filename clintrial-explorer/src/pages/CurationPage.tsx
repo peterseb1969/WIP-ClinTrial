@@ -25,6 +25,7 @@ import {
   useStudyDetail,
   useTrialDetail,
 } from '@/hooks/useCuration'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { useFilteredTrials } from '@/hooks/useFilteredTrials'
 
@@ -171,6 +172,17 @@ function StudyCard({
 }
 
 export function CurationPage() {
+  const { data: currentUser } = useCurrentUser()
+  if (currentUser && !currentUser.isAdmin) {
+    return (
+      <Card>
+        <div className="p-6 text-center text-sm text-text-muted">
+          Data curation requires administrator access.
+        </div>
+      </Card>
+    )
+  }
+
   const [searchParams] = useSearchParams()
   const [statusFilter, setStatusFilter] = useState('PENDING')
   const [confidence, setConfidence] = useState('all')
