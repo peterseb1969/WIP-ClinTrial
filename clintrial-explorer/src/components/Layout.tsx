@@ -56,10 +56,30 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { count } = useBookmarks()
   const { data: currentUser } = useCurrentUser()
-  const isAdmin = currentUser?.isAdmin ?? true // default to true in dev (no auth)
+  const role = currentUser?.role ?? 'admin' // default to admin in dev (no auth)
+  const isAdmin = role === 'admin'
   const location = useLocation()
 
   const segments = location.pathname.split('/').filter(Boolean)
+
+  if (currentUser && role === 'none') {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="max-w-md rounded-lg border bg-surface p-8 text-center shadow-sm">
+          <h1 className="mb-2 text-xl font-semibold text-text">Access Denied</h1>
+          <p className="mb-4 text-sm text-text-muted">
+            You need to be a member of <strong>ct-user</strong> or <strong>ct-admin</strong> to access Clinical Trials Explorer.
+          </p>
+          {currentUser.user && (
+            <p className="text-xs text-text-muted">
+              Logged in as: {currentUser.user}<br />
+              Groups: {currentUser.groups.join(', ') || 'none'}
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -111,7 +131,7 @@ export function Layout() {
         {currentUser?.user && (
           <div className="border-t border-white/10 px-4 py-2 text-[11px] text-white/50">
             {currentUser.user}
-            {isAdmin && <span className="ml-1 text-accent">(admin)</span>}
+            <span className="ml-1 text-accent">({role})</span>
           </div>
         )}
       </aside>

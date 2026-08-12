@@ -13,7 +13,7 @@ import settingsRoutes from './routes/settings.js'
 import configRoutes from './routes/config.js'
 import curationRoutes from './routes/curation.js'
 import userRoutes from './routes/user.js'
-import { requireAdmin } from './lib/admin.js'
+import { requireRole } from './lib/access.js'
 import { startAutoSync } from './lib/auto-sync.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -33,16 +33,18 @@ const router = express.Router()
 // Parse JSON for custom server-api routes (BEFORE wipProxy which uses express.raw())
 router.use('/server-api', express.json({ limit: '50mb' }))
 
-// Mount custom server routes
-router.use('/server-api', classifyRoutes)
-router.use('/server-api', importRoutes)
-router.use('/server-api', aeCleanupRoutes)
-router.use('/server-api', bootstrapRoutes)
-router.use('/server-api', settingsRoutes)
+// /me endpoint is ungated (it reports the caller's own role)
 router.use('/server-api', userRoutes)
-router.use('/server-api', requireAdmin(), curationRoutes)
-// Secret-writing config endpoints are admin-gated (pass-through in open/dev mode)
-router.use('/server-api', requireAdmin(), configRoutes)
+// Bootstrap is ungated (runs before user can log in)
+router.use('/server-api', bootstrapRoutes)
+// All other server-api routes require at least ct-user group
+router.use('/server-api', requireRole('user'), classifyRoutes)
+router.use('/server-api', requireRole('user'), aeCleanupRoutes)
+router.use('/server-api', requireRole('user'), settingsRoutes)
+// Admin-only routes: curation, import, config
+router.use('/server-api', requireRole('admin'), curationRoutes)
+router.use('/server-api', requireRole('admin'), importRoutes)
+router.use('/server-api', requireRole('admin'), configRoutes)
 
 // Proxy /api/* and /files/* to WIP backend (injects API key server-side).
 // apiKeyFile (host-side dev, live wip-deploy secrets file) wins over apiKey when

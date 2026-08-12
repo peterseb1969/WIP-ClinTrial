@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { serverApiUrl } from '@/lib/config'
 
+export type AppRole = 'admin' | 'user' | 'none'
+
 export interface CurrentUser {
   user: string | null
   groups: string[]
+  role: AppRole
   isAdmin: boolean
   authEnabled: boolean
 }
