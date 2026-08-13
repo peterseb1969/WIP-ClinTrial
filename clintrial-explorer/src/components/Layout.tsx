@@ -15,6 +15,7 @@ import {
   Menu,
   Home,
   ChevronRight,
+  LogOut,
 } from 'lucide-react'
 import { WipFooter } from '@wip/react'
 import { cn } from '@/lib/utils'
@@ -76,6 +77,13 @@ export function Layout() {
               Groups: {currentUser.groups.join(', ') || 'none'}
             </p>
           )}
+          <a
+            href={`/auth/logout?return_to=${import.meta.env.BASE_URL || '/'}`}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sign in with a different account
+          </a>
         </div>
       </div>
     )
@@ -129,9 +137,18 @@ export function Layout() {
           ))}
         </nav>
         {currentUser?.user && (
-          <div className="border-t border-white/10 px-4 py-2 text-[11px] text-white/50">
-            {currentUser.user}
-            <span className="ml-1 text-accent">({role})</span>
+          <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 text-[11px] text-white/50">
+            <span>
+              {currentUser.user}
+              <span className="ml-1 text-accent">({role})</span>
+            </span>
+            <a
+              href={`/auth/logout?return_to=${import.meta.env.BASE_URL || '/'}`}
+              className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+              title="Log out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </a>
           </div>
         )}
       </aside>
