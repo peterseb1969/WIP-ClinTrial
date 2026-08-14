@@ -283,19 +283,12 @@ router.post('/pin', async (req, res) => {
     // Merge-patch ONLY the two fields being changed (CASE-731): identity
     // (nct_id) and every other field stay untouched, so a concurrent edit
     // can't be clobbered by a full re-upsert of stale mandatory fields.
-    const { wipPatch } = await import('../lib/wip-api.js')
-    const resp = (await wipPatch('/api/document-store/documents', [{
-      document_id: documentId,
-      patch: {
-        therapeutic_areas: therapeutic_areas ?? trial.therapeutic_areas,
-        ta_pinned: pinned,
-      },
-    }])) as { results?: Array<{ status?: string; error?: string; message?: string }> } | Array<{ status?: string; error?: string; message?: string }>
-    const item = Array.isArray(resp) ? resp[0] : resp.results?.[0]
-    if (item?.status === 'error') {
-      return res.status(422).json({ error: item.error || item.message || 'patch failed', nct_id })
-    }
-    res.json({ success: true, nct_id, pinned, result: item })
+    const { wipClient } = await import('../lib/wip-api.js')
+    const result = await wipClient.documents.updateDocument(documentId, {
+      therapeutic_areas: therapeutic_areas ?? trial.therapeutic_areas,
+      ta_pinned: pinned,
+    })
+    res.json({ success: true, nct_id, pinned, result })
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }

@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import {
   wipPost,
-  wipPatch,
   wipGet,
+  wipClient,
   reportQuery,
   resolveTemplateId,
   createDocumentsBulk,
@@ -103,9 +103,7 @@ router.post('/curation/review', async (req, res) => {
     }
     if (notes) fields.notes = notes
 
-    const patchResult = await wipPatch('/api/document-store/documents', [
-      { document_id, patch: fields },
-    ])
+    const patchResult = await wipClient.documents.updateDocument(document_id, fields)
 
     if (decision === 'approved') {
       const doc = (await wipGet(
@@ -147,13 +145,11 @@ router.post('/curation/bulk-review', async (req, res) => {
 
     for (const docId of document_ids) {
       try {
-        await wipPatch('/api/document-store/documents', [
-          { document_id: docId, patch: {
-            status: statusMap[decision],
-            reviewed_by: 'curator',
-            reviewed_at: now,
-          }},
-        ])
+        await wipClient.documents.updateDocument(docId, {
+          status: statusMap[decision],
+          reviewed_by: 'curator',
+          reviewed_at: now,
+        })
 
         if (decision === 'approved') {
           const doc = (await wipGet(

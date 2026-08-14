@@ -4,10 +4,16 @@
  */
 
 import { PIPELINE_MAX_ROWS, type ReportQueryResult } from '../../shared/reporting-types.js'
+import { createWipClient } from '@wip/client'
 
 const WIP_BASE_URL = process.env.WIP_BASE_URL || 'https://localhost:8443'
 const WIP_API_KEY = process.env.WIP_API_KEY || 'dev_master_key_for_testing'
 const NAMESPACE = 'clintrial'
+
+export const wipClient = createWipClient({
+  baseUrl: WIP_BASE_URL,
+  auth: { type: 'api-key', key: WIP_API_KEY },
+})
 
 // Disable TLS verification outside production only (dev WIP uses a self-signed cert).
 // Production trust comes from NODE_EXTRA_CA_CERTS — auto-injected on apps-only
@@ -36,16 +42,6 @@ export async function wipPost(path: string, body: unknown): Promise<unknown> {
     body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`WIP POST ${path}: ${res.status} ${res.statusText}`)
-  return res.json()
-}
-
-export async function wipPatch(path: string, body: unknown): Promise<unknown> {
-  const res = await fetch(`${WIP_BASE_URL}${path}`, {
-    method: 'PATCH',
-    headers: headers(),
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`WIP PATCH ${path}: ${res.status} ${res.statusText}`)
   return res.json()
 }
 

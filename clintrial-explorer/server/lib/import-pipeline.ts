@@ -7,7 +7,7 @@ import {
   resolveTemplateIds,
   createDocumentsBulk,
   wipUploadFile,
-  wipPatch,
+  wipClient,
   reportQuery,
   clearTemplateCache,
   resolveTerminologyId,
@@ -697,11 +697,10 @@ export async function linkFilesBulk(
 ): Promise<void> {
   if (!links.length) return
   try {
-    const resp = (await wipPatch(
-      '/api/document-store/documents',
+    const resp = await wipClient.documents.updateDocuments(
       links.map((l) => ({ document_id: l.documentId, patch: { documents: l.fileIds } })),
-    )) as { results?: BulkResult[] } | BulkResult[]
-    const results = Array.isArray(resp) ? resp : resp.results || []
+    )
+    const results = resp.results || []
     for (let i = 0; i < results.length; i++) {
       if (results[i]?.status === 'error') {
         logError(counts, `Link files to ${links[i]?.nctId}: ${results[i].error || results[i].message || 'unknown error'}`)

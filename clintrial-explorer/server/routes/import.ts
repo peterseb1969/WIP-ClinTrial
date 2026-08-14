@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { initSSE, sendSSE, endSSE } from '../lib/sse.js'
 import { runImport, getActiveJob, cancelActiveJob, type ImportOptions } from '../lib/import-orchestrator.js'
 import { loadSyncState } from '../lib/sync-state.js'
-import { wipGet, wipPatch, reportQuery } from '../lib/wip-api.js'
+import { wipGet, wipClient, reportQuery } from '../lib/wip-api.js'
 
 const router = Router()
 
@@ -157,10 +157,8 @@ router.post('/import/link-orphan-files', async (_req, res) => {
     }
     if (patchItems.length) {
       try {
-        const resp = (await wipPatch('/api/document-store/documents', patchItems)) as
-          | { results?: Array<{ status?: string; error?: string; message?: string }> }
-          | Array<{ status?: string; error?: string; message?: string }>
-        const results = Array.isArray(resp) ? resp : resp.results || []
+        const resp = await wipClient.documents.updateDocuments(patchItems)
+        const results = resp.results || []
         for (let i = 0; i < patchItems.length; i++) {
           const item = results[i]
           if (item?.status === 'error') {
