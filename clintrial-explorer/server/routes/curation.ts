@@ -96,17 +96,16 @@ router.post('/curation/review', async (req, res) => {
       skipped: 'SKIPPED',
     }
 
-    const patch: Record<string, unknown> = {
+    const fields: Record<string, unknown> = {
       status: statusMap[decision],
       reviewed_by: 'curator',
       reviewed_at: new Date().toISOString(),
     }
-    if (notes) patch.notes = notes
+    if (notes) fields.notes = notes
 
-    const patchResult = await wipPatch(
-      `/api/document-store/documents/${document_id}`,
-      { patch },
-    )
+    const patchResult = await wipPatch('/api/document-store/documents', [
+      { document_id, patch: fields },
+    ])
 
     if (decision === 'approved') {
       const doc = (await wipGet(
@@ -148,13 +147,13 @@ router.post('/curation/bulk-review', async (req, res) => {
 
     for (const docId of document_ids) {
       try {
-        await wipPatch(`/api/document-store/documents/${docId}`, {
-          patch: {
+        await wipPatch('/api/document-store/documents', [
+          { document_id: docId, patch: {
             status: statusMap[decision],
             reviewed_by: 'curator',
             reviewed_at: now,
-          },
-        })
+          }},
+        ])
 
         if (decision === 'approved') {
           const doc = (await wipGet(
