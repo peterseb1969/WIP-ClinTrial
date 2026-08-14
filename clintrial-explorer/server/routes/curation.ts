@@ -262,10 +262,21 @@ async function applyStudyCrosswalk(
   const studyDocId = studyResult.rows[0].document_id
   const trialDocId = trialResult.rows[0].document_id
 
-  // PATCH nct_id onto the TA study
-  await wipPatch(`/api/document-store/documents/${studyDocId}`, {
-    patch: { nct_id: nctId },
-  })
+  // Link nct_id on the TA study. Documents pinned to template v1/v2 don't have
+  // the nct_id field, so a PATCH would fail with validation_failed. Instead,
+  // fetch the full document and re-post (upsert) against the latest template
+  // version — this migrates the doc to v3 and adds the field in one step.
+  const studyDoc = (await wipGet(
+    `/api/document-store/documents/${studyDocId}`,
+  )) as { data: Record<string, unknown> }
+  const templateId = await resolveTemplateId('CT_TA_STUDY')
+  await wipPost('/api/document-store/documents', [
+    {
+      template_id: templateId,
+      namespace: NAMESPACE,
+      data: { ...studyDoc.data, nct_id: nctId },
+    },
+  ])
 
   // Create crosswalk edge
   const crosswalkTemplateId = await resolveTemplateId('CT_STUDY_CROSSWALK')
