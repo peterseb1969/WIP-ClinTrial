@@ -20,15 +20,14 @@ const router = Router()
 async function fetchRules(): Promise<ClassificationRule[]> {
   try {
     const templateId = await resolveTemplateId('CT_CLASSIFICATION_RULE')
-    const res = (await import('../lib/wip-api.js').then((m) =>
-      m.wipPost('/api/document-store/documents/query', {
-        template_id: templateId,
-        status: 'active',
-        page_size: 100,
-      }),
-    )) as { items?: Record<string, unknown>[]; results?: Record<string, unknown>[] }
+    const { wipClient } = await import('../lib/wip-api.js')
+    const res = await wipClient.documents.queryDocuments({
+      template_id: templateId,
+      status: 'active',
+      page_size: 100,
+    })
 
-    const items = res.items ?? res.results ?? []
+    const items = res.items ?? []
     return items.map((doc) => {
       const d = (doc.data ?? doc) as Record<string, unknown>
       return {

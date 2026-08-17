@@ -29,13 +29,7 @@ function headers(contentType = 'application/json'): Record<string, string> {
   }
 }
 
-export async function wipGet(path: string): Promise<unknown> {
-  const res = await fetch(`${WIP_BASE_URL}${path}`, { headers: headers() })
-  if (!res.ok) throw new Error(`WIP GET ${path}: ${res.status} ${res.statusText}`)
-  return res.json()
-}
-
-export async function wipPost(path: string, body: unknown): Promise<unknown> {
+async function wipPost(path: string, body: unknown): Promise<unknown> {
   const res = await fetch(`${WIP_BASE_URL}${path}`, {
     method: 'POST',
     headers: headers(),
@@ -45,38 +39,20 @@ export async function wipPost(path: string, body: unknown): Promise<unknown> {
   return res.json()
 }
 
-export async function wipDelete(path: string): Promise<unknown> {
-  const res = await fetch(`${WIP_BASE_URL}${path}`, {
-    method: 'DELETE',
-    headers: headers(),
-  })
-  if (!res.ok) throw new Error(`WIP DELETE ${path}: ${res.status} ${res.statusText}`)
-  return res.json()
-}
-
 /** Upload a file to WIP via multipart form */
 export async function wipUploadFile(
   fileBuffer: Buffer,
   filename: string,
   opts: { description?: string; tags?: string; category?: string; allowedTemplates?: string },
 ): Promise<{ file_id: string }> {
-  const formData = new FormData()
-  formData.append('file', new Blob([fileBuffer], { type: 'application/pdf' }), filename)
-  formData.append('namespace', NAMESPACE)
-  if (opts.description) formData.append('description', opts.description)
-  if (opts.tags) formData.append('tags', opts.tags)
-  if (opts.category) formData.append('category', opts.category)
-  if (opts.allowedTemplates) formData.append('allowed_templates', opts.allowedTemplates)
-
-  const res = await fetch(`${WIP_BASE_URL}/api/document-store/files`, {
-    method: 'POST',
-    headers: { 'X-API-Key': WIP_API_KEY },
-    body: formData,
+  const blob = new Blob([fileBuffer], { type: 'application/pdf' })
+  const file = await wipClient.files.uploadFile(blob, filename, {
+    description: opts.description,
+    tags: opts.tags?.split(',').map((t) => t.trim()),
+    category: opts.category,
+    allowed_templates: opts.allowedTemplates?.split(',').map((t) => t.trim()),
   })
-  if (!res.ok) throw new Error(`WIP file upload failed: ${res.status}`)
-  const result = await res.json()
-  const item = Array.isArray(result) ? result[0] : result
-  return { file_id: item.file_id || item.id }
+  return { file_id: file.file_id }
 }
 
 export type { ReportQueryResult } from '../../shared/reporting-types.js'
@@ -112,9 +88,7 @@ export async function resolveTemplateId(value: string): Promise<string> {
   const cached = templateCache.get(value)
   if (cached) return cached.id
 
-  const data = (await wipGet(
-    `/api/template-store/templates/by-value/${value}?namespace=${NAMESPACE}`,
-  )) as { template_id: string; version: number }
+  const data = await wipClient.templates.getTemplateByValue(value)
   templateCache.set(value, { id: data.template_id, version: data.version })
   return data.template_id
 }
@@ -209,11 +183,8 @@ export async function createDocumentsBulk(
 
 /** Resolve a terminology value to its terminology_id */
 export async function resolveTerminologyId(value: string, namespace?: string): Promise<string> {
-  const ns = namespace || NAMESPACE
-  const data = (await wipGet(
-    `/api/def-store/terminologies/by-value/${value}?namespace=${ns}`,
-  )) as { terminology_id: string }
-  return data.terminology_id
+  const t = await wipClient.defStore.getTerminology(value)
+  return t.terminology_id
 }
 
 /** Create terms in a terminology. Returns per-item results. */
@@ -221,39 +192,17 @@ export async function createTerms(
   terminologyId: string,
   terms: Array<{ value: string; label: string; aliases?: string[] }>,
 ): Promise<unknown> {
-  return wipPost(`/api/def-store/terminologies/${terminologyId}/terms`, terms)
-}
-
-/** Generic PUT with bulk envelope (matching wip-client convention). */
-export async function wipPut(path: string, body: unknown): Promise<unknown> {
-  const res = await fetch(`${WIP_BASE_URL}${path}`, {
-    method: 'PUT',
-    headers: headers(),
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`WIP PUT ${path}: ${res.status} ${res.statusText}`)
-  return res.json()
-}
-
-/** Generic DELETE with body (matching wip-client convention). */
-export async function wipDeleteWithBody(path: string, body: unknown): Promise<unknown> {
-  const res = await fetch(`${WIP_BASE_URL}${path}`, {
-    method: 'DELETE',
-    headers: headers(),
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`WIP DELETE ${path}: ${res.status} ${res.statusText}`)
-  return res.json()
+  return wipClient.defStore.createTerms(terminologyId, terms, { namespace: NAMESPACE })
 }
 
 /** Update a term's aliases (and optionally other fields). */
 export async function updateTermAliases(termId: string, aliases: string[]): Promise<unknown> {
-  return wipPut('/api/def-store/terms', [{ term_id: termId, aliases }])
+  return wipClient.defStore.updateTerm(termId, { aliases })
 }
 
 /** Deactivate (soft-delete) a term by ID. */
 export async function deleteTermById(termId: string): Promise<unknown> {
-  return wipDeleteWithBody('/api/def-store/terms', [{ id: termId }])
+  return wipClient.defStore.deleteTerm(termId)
 }
 
 export { NAMESPACE }

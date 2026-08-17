@@ -1,7 +1,5 @@
 import { Router } from 'express'
 import {
-  wipPost,
-  wipGet,
   wipClient,
   reportQuery,
   resolveTemplateId,
@@ -106,13 +104,11 @@ router.post('/curation/review', async (req, res) => {
     const patchResult = await wipClient.documents.updateDocument(document_id, fields)
 
     if (decision === 'approved') {
-      const doc = (await wipGet(
-        `/api/document-store/documents/${document_id}`,
-      )) as { data: { topic: string; match_data: string; item_key: string } }
+      const doc = await wipClient.documents.getDocument(document_id)
 
       if (doc.data.topic === 'study_crosswalk') {
-        const matchData = JSON.parse(doc.data.match_data)
-        await applyStudyCrosswalk(doc.data.item_key, matchData.nct_id, matchData)
+        const matchData = JSON.parse(doc.data.match_data as string)
+        await applyStudyCrosswalk(doc.data.item_key as string, matchData.nct_id, matchData)
       }
     }
 
@@ -152,13 +148,11 @@ router.post('/curation/bulk-review', async (req, res) => {
         })
 
         if (decision === 'approved') {
-          const doc = (await wipGet(
-            `/api/document-store/documents/${docId}`,
-          )) as { data: { topic: string; match_data: string; item_key: string } }
+          const doc = await wipClient.documents.getDocument(docId)
 
           if (doc.data.topic === 'study_crosswalk') {
-            const matchData = JSON.parse(doc.data.match_data)
-            await applyStudyCrosswalk(doc.data.item_key, matchData.nct_id, matchData)
+            const matchData = JSON.parse(doc.data.match_data as string)
+            await applyStudyCrosswalk(doc.data.item_key as string, matchData.nct_id, matchData)
           }
         }
         succeeded++
@@ -199,7 +193,7 @@ router.post('/curation/clear', async (req, res) => {
 
     for (let i = 0; i < ids.length; i += batchSize) {
       const batch = ids.slice(i, i + batchSize)
-      await wipPost('/api/document-store/documents/archive', batch.map((id) => ({ id })))
+      await Promise.all(batch.map((id) => wipClient.documents.archiveDocument(id)))
       deleted += batch.length
     }
 
@@ -261,36 +255,30 @@ async function applyStudyCrosswalk(
   // the nct_id field, so a PATCH would fail with validation_failed. Instead,
   // fetch the full document and re-post (upsert) against the latest template
   // version — this migrates the doc to v3 and adds the field in one step.
-  const studyDoc = (await wipGet(
-    `/api/document-store/documents/${studyDocId}`,
-  )) as { data: Record<string, unknown> }
+  const studyDoc = await wipClient.documents.getDocument(studyDocId)
   const templateId = await resolveTemplateId('CT_TA_STUDY')
-  await wipPost('/api/document-store/documents', [
-    {
-      template_id: templateId,
-      namespace: NAMESPACE,
-      data: { ...studyDoc.data, nct_id: nctId },
-    },
-  ])
+  await wipClient.documents.createDocument({
+    template_id: templateId,
+    namespace: NAMESPACE,
+    data: { ...studyDoc.data, nct_id: nctId },
+  })
 
   // Create crosswalk edge
   const crosswalkTemplateId = await resolveTemplateId('CT_STUDY_CROSSWALK')
-  await wipPost('/api/document-store/documents', [
-    {
-      template_id: crosswalkTemplateId,
-      namespace: NAMESPACE,
-      data: {
-        source_ref: studyDocId,
-        target_ref: trialDocId,
-        confidence: String(matchData.confidence || 'fuzzy'),
-        source: 'fuzzy_matcher',
-        match_method: 'tfidf_multi_signal',
-        title_similarity: String(
-          (matchData.signals as Record<string, unknown>)?.title_sim ?? '',
-        ),
-      },
+  await wipClient.documents.createDocument({
+    template_id: crosswalkTemplateId,
+    namespace: NAMESPACE,
+    data: {
+      source_ref: studyDocId,
+      target_ref: trialDocId,
+      confidence: String(matchData.confidence || 'fuzzy'),
+      source: 'fuzzy_matcher',
+      match_method: 'tfidf_multi_signal',
+      title_similarity: String(
+        (matchData.signals as Record<string, unknown>)?.title_sim ?? '',
+      ),
     },
-  ])
+  })
 }
 
 export default router

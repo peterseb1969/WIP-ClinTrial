@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { initSSE, sendSSE, endSSE } from '../lib/sse.js'
 import { runImport, getActiveJob, cancelActiveJob, type ImportOptions } from '../lib/import-orchestrator.js'
 import { loadSyncState } from '../lib/sync-state.js'
-import { wipGet, wipClient, reportQuery } from '../lib/wip-api.js'
+import { wipClient, reportQuery } from '../lib/wip-api.js'
 
 const router = Router()
 
@@ -108,9 +108,9 @@ router.post('/import/link-orphan-files', async (_req, res) => {
     const pageSize = 100
 
     while (true) {
-      const resp = await wipGet(
-        `/api/document-store/files?namespace=clintrial&page=${page}&page_size=${pageSize}`,
-      ) as { items?: Array<{ file_id: string; metadata?: { tags?: string[] } }>; total?: number }
+      const resp = await wipClient.files.listFiles({
+        namespace: 'clintrial', page, page_size: pageSize,
+      })
 
       const files = resp.items || []
       if (!files.length) break

@@ -3,7 +3,7 @@
  * terms, ontology relationships, and templates from embedded seed data.
  */
 
-import { wipGet, wipPost, wipPut } from './wip-api.js'
+import { wipClient } from './wip-api.js'
 import { readFileSync, readdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -35,16 +35,16 @@ export async function checkStatus(): Promise<BootstrapStatus> {
   // Use namespace listing as health probe — no dedicated /health endpoint
   let namespaces: Array<{ prefix: string }>
   try {
-    namespaces = (await wipGet('/api/registry/namespaces')) as Array<{ prefix: string }>
+    namespaces = (await wipClient.registry.listNamespaces()).items
   } catch {
     return 'wip_unreachable'
   }
 
   if (namespaces.some((ns) => ns.prefix === NAMESPACE)) {
     try {
-      const templates = (await wipGet(
-        `/api/template-store/templates?namespace=${NAMESPACE}&page_size=1`,
-      )) as { total: number }
+      const templates = await wipClient.templates.listTemplates({
+        namespace: NAMESPACE, page_size: 1,
+      })
       if (templates.total > 0) return 'ready'
     } catch {
       // Namespace exists but can't query templates — treat as needs bootstrap
@@ -69,7 +69,7 @@ export async function runBootstrap(
   try {
     // Step 1: Create namespace (idempotent upsert)
     progress('namespace', 'Creating clintrial namespace...')
-    await wipPut(`/api/registry/namespaces/${NAMESPACE}`, {
+    await wipClient.registry.upsertNamespace(NAMESPACE, {
       description: 'Clinical Trials Explorer',
     })
 
@@ -98,9 +98,7 @@ export async function runBootstrap(
       ...(t.mutable ? { mutable: true } : {}),
       ...(t.extensible ? { extensible: true } : {}),
     }))
-    const termResult = (await wipPost('/api/def-store/terminologies', termBulk)) as {
-      results: Array<{ status: string; id: string; error?: string }>
-    }
+    const termResult = await wipClient.defStore.createTerminologies(termBulk)
 
     // Build value → terminology_id map
     const termIdMap = new Map<string, string>()
@@ -119,7 +117,7 @@ export async function runBootstrap(
       if (!termId) continue
 
       progress('terms', `Creating ${terms.length} terms for ${termData.value}...`)
-      await wipPost(`/api/def-store/terminologies/${termId}/terms`, terms)
+      await wipClient.defStore.createTerms(termId, terms, { namespace: NAMESPACE })
       totalTerms += terms.length
     }
     progress('terms', `Created ${totalTerms} terms across ${terminologies.length} terminologies`)
@@ -147,10 +145,7 @@ export async function runBootstrap(
 
     if (allRelations.length) {
       progress('relationships', `Creating ${allRelations.length} term relations...`)
-      await wipPost(
-        `/api/def-store/ontology/term-relations?namespace=${NAMESPACE}`,
-        allRelations,
-      )
+      await wipClient.defStore.createTermRelations(allRelations, NAMESPACE)
     }
 
     // Step 5: Create templates (sorted by filename prefix for dependency order)
@@ -178,9 +173,9 @@ export async function runBootstrap(
 
       if (data.reporting) template.reporting = data.reporting
 
-      const resp = (await wipPost('/api/template-store/templates?on_conflict=validate', [
-        template,
-      ])) as { results?: Array<{ id?: string; version?: number }> }
+      const resp = await wipClient.templates.createTemplates([template], {
+        onConflict: 'validate',
+      })
       if (data.value === BOOTSTRAP_RECORD_VALUE) {
         const item = resp.results?.[0]
         if (item?.id) bootstrapTmpl = { template_id: item.id, version: item.version ?? 1 }
@@ -229,11 +224,9 @@ async function writeBootstrapRecord(
 ): Promise<void> {
   const tmpl =
     tmplRef ??
-    ((await wipGet(
-      `/api/template-store/templates/by-value/${BOOTSTRAP_RECORD_VALUE}?namespace=${NAMESPACE}`,
-    )) as { template_id: string; version: number })
+    (await wipClient.templates.getTemplateByValue(BOOTSTRAP_RECORD_VALUE))
 
-  const doc = {
+  const result = await wipClient.documents.createDocument({
     template_id: tmpl.template_id,
     template_version: tmpl.version,
     namespace: NAMESPACE,
@@ -246,14 +239,9 @@ async function writeBootstrapRecord(
       edge_types_created: [],
       terminologies_created: meta.terminologiesCreated,
     },
-  }
-
-  const result = (await wipPost('/api/document-store/documents', [doc])) as {
-    results?: Array<{ status: string; error?: string }>
-  }
-  const item = result.results?.[0]
-  if (item && item.status === 'error') {
-    throw new Error(`BOOTSTRAP_RECORD write failed: ${item.error || 'unknown error'}`)
+  })
+  if (result.status === 'error') {
+    throw new Error(`BOOTSTRAP_RECORD write failed: ${result.error || 'unknown error'}`)
   }
 }
 
