@@ -35,7 +35,7 @@ export async function checkStatus(): Promise<BootstrapStatus> {
   // Use namespace listing as health probe — no dedicated /health endpoint
   let namespaces: Array<{ prefix: string }>
   try {
-    namespaces = (await wipClient.registry.listNamespaces()).items
+    namespaces = await wipClient.registry.listNamespaces()
   } catch {
     return 'wip_unreachable'
   }
