@@ -71,6 +71,7 @@ export async function runBootstrap(
     progress('namespace', 'Creating clintrial namespace...')
     await wipClient.registry.upsertNamespace(NAMESPACE, {
       description: 'Clinical Trials Explorer',
+      deletion_mode: 'full',
     })
 
     // Step 2: Load and create terminologies
