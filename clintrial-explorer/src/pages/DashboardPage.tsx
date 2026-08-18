@@ -21,7 +21,7 @@ import {
 import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { useFilteredTrials } from '@/hooks/useFilteredTrials'
+import { useFilteredTrials, useSampleCounts } from '@/hooks/useFilteredTrials'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { countBy, deduplicateConditions, formatStatus, formatPhase } from '@/lib/trial-utils'
@@ -36,6 +36,7 @@ const PIE_COLORS = [
 
 export function DashboardPage() {
   const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
+  const { data: sampleCounts } = useSampleCounts()
   const { count: bookmarkCount } = useBookmarks()
   const { hasActive } = useTrialFilters()
   const navigate = useNavigate()
@@ -97,6 +98,27 @@ export function DashboardPage() {
           onClick={() => toggleFilter('status', 'RECRUITING')}
         />
       </div>
+
+      {/* Sample stats chips */}
+      {sampleCounts && filtered && (() => {
+        const withSamples = filtered.filter((t) => sampleCounts.has(t.data.nct_id))
+        const totalSamples = withSamples.reduce((s, t) => s + (sampleCounts.get(t.data.nct_id) || 0), 0)
+        if (!withSamples.length) return null
+        return (
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-surface px-4 py-2.5 text-sm">
+            <span className="text-xs font-medium uppercase text-text-muted">SAMI Samples</span>
+            <span><strong className="text-text">{formatNumber(withSamples.length)}</strong> <span className="text-text-muted">trials with samples</span></span>
+            <span className="text-gray-300">|</span>
+            <span><strong className="text-text">{formatNumber(totalSamples)}</strong> <span className="text-text-muted">available samples</span></span>
+            <button
+              onClick={() => toggleFilter('has_samples', 'true')}
+              className="ml-auto rounded border border-primary/30 px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/5"
+            >
+              Filter to trials with samples
+            </button>
+          </div>
+        )
+      })()}
 
       {/* Charts row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">

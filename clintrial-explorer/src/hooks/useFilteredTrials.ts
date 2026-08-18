@@ -26,6 +26,30 @@ export function useRocheStudyMap() {
   })
 }
 
+/** Map of NCT IDs to total in-circulation sample counts (for trials table + dashboard) */
+export function useSampleCounts() {
+  return useQuery({
+    queryKey: ['clintrial', 'sample-counts'],
+    queryFn: async () => {
+      const result = await reportQuery<{ nct_id: string; samples: number }>(
+        `SELECT ta.nct_id, SUM(s.in_circulation)::INT AS samples
+         FROM doc_ct_sami_study_summary__v2 s
+         JOIN doc_ct_ta_study__v3 ta ON ta.study_number = s.study_number
+         WHERE s.source_system = 'SAMI' AND ta.nct_id IS NOT NULL AND ta.nct_id != ''
+         GROUP BY ta.nct_id`,
+        [],
+        10000,
+      )
+      const map = new Map<string, number>()
+      for (const row of result.rows) {
+        map.set(row.nct_id, row.samples)
+      }
+      return map
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
 /** Pre-compute sets of NCT IDs that have related data (AE, outcomes, baselines) */
 function useDataAvailability() {
   const { data: aeNctIds } = useQuery({
@@ -78,7 +102,7 @@ function useDataAvailability() {
       const r = await reportQuery<{ nct_id: string }>(
         `SELECT DISTINCT ta.nct_id
          FROM doc_ct_sami_study_summary__v2 s
-         JOIN doc_ct_ta_study ta ON ta.study_number = s.study_number
+         JOIN doc_ct_ta_study__v3 ta ON ta.study_number = s.study_number
          WHERE s.source_system = 'SAMI' AND s.in_circulation > 0 AND ta.nct_id IS NOT NULL AND ta.nct_id != ''`,
         [],
         10000,

@@ -14,6 +14,7 @@ import {
   Plus,
   X,
   Check,
+  ChevronRight,
 } from 'lucide-react'
 import { useWipClient } from '@wip/react'
 import { Badge } from '@/components/Badge'
@@ -340,62 +341,86 @@ function OverviewTab({ data: d, studyNumber }: { data: Record<string, unknown>; 
   )
 }
 
+function useStickyToggle(key: string, defaultOpen = false) {
+  const [open, setOpen] = useState(() => {
+    try { return localStorage.getItem(key) === 'true' } catch { return defaultOpen }
+  })
+  const toggle = useCallback(() => {
+    setOpen((prev) => {
+      const next = !prev
+      try { localStorage.setItem(key, String(next)) } catch { /* */ }
+      return next
+    })
+  }, [key])
+  return [open, toggle] as const
+}
+
 function SamplesSection({ studyNumber }: { studyNumber?: string | null }) {
   const { data: samples, isLoading } = useTrialSamples(studyNumber)
+  const [expanded, toggleExpanded] = useStickyToggle('clintrial-samples-expanded')
 
   if (!studyNumber) return null
-  if (isLoading) return (
-    <Card className="lg:col-span-2">
-      <h3 className="mb-3 font-semibold">SAMI Samples</h3>
-      <LoadingSpinner />
-    </Card>
-  )
-  if (!samples || samples.length === 0) return (
-    <Card className="lg:col-span-2">
-      <h3 className="mb-3 font-semibold">SAMI Samples</h3>
-      <p className="text-sm text-text-muted">No sample data available for {studyNumber}.</p>
-    </Card>
-  )
 
-  const totalInCirculation = samples.reduce((s, r) => s + (r.in_circulation || 0), 0)
-  const totalAll = samples.reduce((s, r) => s + (r.total_count || 0), 0)
-  const snapshotDate = samples[0]?.snapshot_date
+  const hasSamples = samples && samples.length > 0
+  const totalInCirculation = hasSamples ? samples.reduce((s, r) => s + (r.in_circulation || 0), 0) : 0
+  const snapshotDate = hasSamples ? samples[0]?.snapshot_date : null
 
   return (
     <Card className="lg:col-span-2">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold">SAMI Samples</h3>
+      <button
+        onClick={toggleExpanded}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <h3 className="font-semibold">
+          SAMI Samples
+          {!isLoading && hasSamples && (
+            <span className="ml-2 text-sm font-normal text-text-muted">
+              {formatNumber(totalInCirculation)} available
+            </span>
+          )}
+        </h3>
         <div className="flex items-center gap-3 text-xs text-text-muted">
-          <span>{formatNumber(totalInCirculation)} available of {formatNumber(totalAll)} total</span>
           {snapshotDate && <span>as of {snapshotDate}</span>}
+          <ChevronRight className={`h-4 w-4 transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-xs text-text-muted">
-              <th className="pb-2 pr-4 font-medium">Sample Type</th>
-              <th className="pb-2 pr-4 font-medium text-right">In Circulation</th>
-              <th className="pb-2 pr-4 font-medium text-right">Disposed</th>
-              <th className="pb-2 pr-4 font-medium text-right">Allocated</th>
-              <th className="pb-2 pr-4 font-medium text-right">On Hold</th>
-              <th className="pb-2 font-medium text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {samples.map((row) => (
-              <tr key={row.sample_type} className="border-b border-gray-100">
-                <td className="py-1.5 pr-4 font-medium">{row.sample_type}</td>
-                <td className="py-1.5 pr-4 text-right">{formatNumber(row.in_circulation)}</td>
-                <td className="py-1.5 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
-                <td className="py-1.5 pr-4 text-right text-text-muted">{row.allocated || '—'}</td>
-                <td className="py-1.5 pr-4 text-right text-text-muted">{row.on_hold || '—'}</td>
-                <td className="py-1.5 text-right">{formatNumber(row.total_count)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      </button>
+
+      {expanded && (
+        <div className="mt-3">
+          {isLoading && <LoadingSpinner />}
+          {!isLoading && !hasSamples && (
+            <p className="text-sm text-text-muted">No sample data available for {studyNumber}.</p>
+          )}
+          {!isLoading && hasSamples && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-text-muted">
+                    <th className="pb-2 pr-4 font-medium">Sample Type</th>
+                    <th className="pb-2 pr-4 font-medium text-right">In Circulation</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Disposed</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Allocated</th>
+                    <th className="pb-2 pr-4 font-medium text-right">On Hold</th>
+                    <th className="pb-2 font-medium text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {samples.map((row) => (
+                    <tr key={row.sample_type} className="border-b border-gray-100">
+                      <td className="py-1.5 pr-4 font-medium">{row.sample_type}</td>
+                      <td className="py-1.5 pr-4 text-right">{formatNumber(row.in_circulation)}</td>
+                      <td className="py-1.5 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
+                      <td className="py-1.5 pr-4 text-right text-text-muted">{row.allocated || '—'}</td>
+                      <td className="py-1.5 pr-4 text-right text-text-muted">{row.on_hold || '—'}</td>
+                      <td className="py-1.5 text-right">{formatNumber(row.total_count)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   )
 }

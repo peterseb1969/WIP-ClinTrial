@@ -11,7 +11,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { type TrialDocument, allTrialsQueries } from '@/hooks/useAllTrials'
-import { useFilteredTrials, useRocheStudyMap } from '@/hooks/useFilteredTrials'
+import { useFilteredTrials, useRocheStudyMap, useSampleCounts } from '@/hooks/useFilteredTrials'
 import { useTrialFilters, trialFilters, type SingleFilterKey } from '@/hooks/useTrialFilters'
 import { reportQuery } from '@/lib/reporting'
 import { formatPhase } from '@/lib/trial-utils'
@@ -24,6 +24,7 @@ export function TrialsPage() {
   const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
   const { filters, set: setFilter } = useTrialFilters()
   const { data: rocheStudyMap } = useRocheStudyMap()
+  const { data: sampleCounts } = useSampleCounts()
   const [page, setPage] = useState(1)
   const [aggregateOpen, setAggregateOpen] = useState(false)
 
@@ -104,6 +105,7 @@ export function TrialsPage() {
                 <th className="px-3 py-2.5 text-left font-medium text-text-muted">Phase</th>
                 <th className="px-3 py-2.5 text-left font-medium text-text-muted">Sponsor</th>
                 <th className="px-3 py-2.5 text-right font-medium text-text-muted">Enrolled</th>
+                <th className="px-3 py-2.5 text-right font-medium text-text-muted">Samples</th>
                 <th className="px-3 py-2.5 text-left font-medium text-text-muted">Start</th>
               </tr>
             </thead>
@@ -152,12 +154,17 @@ export function TrialsPage() {
                   </td>
                   <td className="px-3 py-2 text-xs">{trial.data.sponsor}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{trial.data.enrollment ?? '—'}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-xs">
+                    {sampleCounts?.get(trial.data.nct_id)
+                      ? formatNumber(sampleCounts.get(trial.data.nct_id)!)
+                      : <span className="text-text-muted">—</span>}
+                  </td>
                   <td className="px-3 py-2 text-xs tabular-nums">{trial.data.start_date ?? '—'}</td>
                 </tr>
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-3 py-12 text-center text-text-muted">
+                  <td colSpan={10} className="px-3 py-12 text-center text-text-muted">
                     No trials match the current filters.
                   </td>
                 </tr>
