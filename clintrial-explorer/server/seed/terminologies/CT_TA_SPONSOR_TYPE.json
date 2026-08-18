@@ -1,0 +1,57 @@
+{
+  "value": "CT_TA_SPONSOR_TYPE",
+  "label": "TA Portal Sponsor Type",
+  "description": "TA Portal Sponsor Type values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Acquired After Closure (Non-Roche Sponsor)",
+      "label": "Acquired After Closure (Non-Roche Sponsor)"
+    },
+    {
+      "value": "CHUGAI Sole Sponsorship - CSST",
+      "label": "CHUGAI Sole Sponsorship - CSST"
+    },
+    {
+      "value": "Co-managed",
+      "label": "Co-managed"
+    },
+    {
+      "value": "Funded",
+      "label": "Funded"
+    },
+    {
+      "value": "Funded Non-Interventional Study - Funded NIS",
+      "label": "Funded Non-Interventional Study - Funded NIS"
+    },
+    {
+      "value": "Institution Sponsored Research - ISR",
+      "label": "Institution Sponsored Research - ISR"
+    },
+    {
+      "value": "Investigator Initiated Study - IIS",
+      "label": "Investigator Initiated Study - IIS"
+    },
+    {
+      "value": "Managed",
+      "label": "Managed"
+    },
+    {
+      "value": "Roche Lead Sponsorship - RLST",
+      "label": "Roche Lead Sponsorship - RLST"
+    },
+    {
+      "value": "Roche Sole Sponsorship - RSST",
+      "label": "Roche Sole Sponsorship - RSST"
+    },
+    {
+      "value": "Roche Supported - RSCT",
+      "label": "Roche Supported - RSCT"
+    },
+    {
+      "value": "Spark Tx Sole Sponsorship",
+      "label": "Spark Tx Sole Sponsorship"
+    }
+  ]
+}

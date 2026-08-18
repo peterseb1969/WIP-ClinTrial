@@ -1,0 +1,25 @@
+{
+  "value": "CT_TA_MGMT_MODEL",
+  "label": "TA Portal Management Model",
+  "description": "TA Portal Management Model values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Collaborative Model",
+      "label": "Collaborative Model"
+    },
+    {
+      "value": "Hybrid",
+      "label": "Hybrid"
+    },
+    {
+      "value": "Insourced",
+      "label": "Insourced"
+    },
+    {
+      "value": "Outsourced",
+      "label": "Outsourced"
+    }
+  ]
+}

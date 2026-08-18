@@ -1,0 +1,41 @@
+{
+  "value": "CT_TA_STUDY_STAGE",
+  "label": "TA Portal Study Stage",
+  "description": "TA Portal Study Stage values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Active, but stage not defined",
+      "label": "Active, but stage not defined"
+    },
+    {
+      "value": "Cancelled",
+      "label": "Cancelled"
+    },
+    {
+      "value": "Closed in Last 5 Yrs",
+      "label": "Closed in Last 5 Yrs"
+    },
+    {
+      "value": "Closeout",
+      "label": "Closeout"
+    },
+    {
+      "value": "Conduct",
+      "label": "Conduct"
+    },
+    {
+      "value": "Enrollment",
+      "label": "Enrollment"
+    },
+    {
+      "value": "Pre PA Startup",
+      "label": "Pre PA Startup"
+    },
+    {
+      "value": "Startup",
+      "label": "Startup"
+    }
+  ]
+}

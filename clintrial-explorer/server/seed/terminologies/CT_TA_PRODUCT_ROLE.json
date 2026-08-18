@@ -1,0 +1,37 @@
+{
+  "value": "CT_TA_PRODUCT_ROLE",
+  "label": "TA Portal Product Role",
+  "description": "TA Portal Product Role values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Combination Product",
+      "label": "Combination Product"
+    },
+    {
+      "value": "Comparator",
+      "label": "Comparator"
+    },
+    {
+      "value": "Not Available",
+      "label": "Not Available"
+    },
+    {
+      "value": "Other Study Medication",
+      "label": "Other Study Medication"
+    },
+    {
+      "value": "Primary",
+      "label": "Primary"
+    },
+    {
+      "value": "Test",
+      "label": "Test"
+    },
+    {
+      "value": "Undefined in CTMS",
+      "label": "Undefined in CTMS"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "value": "CT_TA_ACCOUNTABLE_PARTY",
+  "label": "TA Portal Accountable Party",
+  "description": "TA Portal Accountable Party values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "CHUGAI",
+      "label": "CHUGAI"
+    },
+    {
+      "value": "GPS",
+      "label": "GPS"
+    },
+    {
+      "value": "LMA",
+      "label": "LMA"
+    },
+    {
+      "value": "PD",
+      "label": "PD"
+    },
+    {
+      "value": "PDMA",
+      "label": "PDMA"
+    },
+    {
+      "value": "Spark Tx",
+      "label": "Spark Tx"
+    },
+    {
+      "value": "USMA",
+      "label": "USMA"
+    },
+    {
+      "value": "gRED",
+      "label": "gRED"
+    },
+    {
+      "value": "pRED",
+      "label": "pRED"
+    }
+  ]
+}

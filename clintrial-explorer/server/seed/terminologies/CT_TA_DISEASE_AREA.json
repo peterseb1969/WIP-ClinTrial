@@ -1,0 +1,249 @@
+{
+  "value": "CT_TA_DISEASE_AREA",
+  "label": "TA Portal Disease Area",
+  "description": "TA Portal Disease Area values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "AGE RELATED MACULAR DEGENERATION",
+      "label": "AGE RELATED MACULAR DEGENERATION"
+    },
+    {
+      "value": "AGNOSTIC OR SOLID TUMOR",
+      "label": "AGNOSTIC OR SOLID TUMOR"
+    },
+    {
+      "value": "ALZHEIMER'S DISEASE",
+      "label": "ALZHEIMER'S DISEASE"
+    },
+    {
+      "value": "ASTHMA / COPD",
+      "label": "ASTHMA / COPD"
+    },
+    {
+      "value": "BILIARY TRACT CANCER",
+      "label": "BILIARY TRACT CANCER"
+    },
+    {
+      "value": "BLADDER CANCER",
+      "label": "BLADDER CANCER"
+    },
+    {
+      "value": "BONE & SOFT TISSUE CANCER",
+      "label": "BONE & SOFT TISSUE CANCER"
+    },
+    {
+      "value": "BREAST CANCER",
+      "label": "BREAST CANCER"
+    },
+    {
+      "value": "CARDIOVASCULAR",
+      "label": "CARDIOVASCULAR"
+    },
+    {
+      "value": "CNS CANCER",
+      "label": "CNS CANCER"
+    },
+    {
+      "value": "COLORECTAL CANCER",
+      "label": "COLORECTAL CANCER"
+    },
+    {
+      "value": "CONNECTIVE AND SOFT TISSUE CANCER",
+      "label": "CONNECTIVE AND SOFT TISSUE CANCER"
+    },
+    {
+      "value": "COVID-19",
+      "label": "COVID-19"
+    },
+    {
+      "value": "DERMATOLOGY",
+      "label": "DERMATOLOGY"
+    },
+    {
+      "value": "DIABETIC EYE DISEASE",
+      "label": "DIABETIC EYE DISEASE"
+    },
+    {
+      "value": "ESOPHAGEAL CANCER",
+      "label": "ESOPHAGEAL CANCER"
+    },
+    {
+      "value": "GASTRIC CANCER",
+      "label": "GASTRIC CANCER"
+    },
+    {
+      "value": "GASTROENTEROLOGY",
+      "label": "GASTROENTEROLOGY"
+    },
+    {
+      "value": "GASTROINTESTINAL CANCER",
+      "label": "GASTROINTESTINAL CANCER"
+    },
+    {
+      "value": "GEOGRAPHIC ATROPHY",
+      "label": "GEOGRAPHIC ATROPHY"
+    },
+    {
+      "value": "GLAUCOMA",
+      "label": "GLAUCOMA"
+    },
+    {
+      "value": "GYNAECOLOGICAL CANCER",
+      "label": "GYNAECOLOGICAL CANCER"
+    },
+    {
+      "value": "HEAD & NECK CANCER",
+      "label": "HEAD & NECK CANCER"
+    },
+    {
+      "value": "HEMATOLOGY",
+      "label": "HEMATOLOGY"
+    },
+    {
+      "value": "HEMOPHILIA",
+      "label": "HEMOPHILIA"
+    },
+    {
+      "value": "HEPATITIS",
+      "label": "HEPATITIS"
+    },
+    {
+      "value": "IBD",
+      "label": "IBD"
+    },
+    {
+      "value": "INFLUENZA",
+      "label": "INFLUENZA"
+    },
+    {
+      "value": "IPF / ILD",
+      "label": "IPF / ILD"
+    },
+    {
+      "value": "LEUKEMIA",
+      "label": "LEUKEMIA"
+    },
+    {
+      "value": "LIVER CANCER",
+      "label": "LIVER CANCER"
+    },
+    {
+      "value": "LUNG CANCER",
+      "label": "LUNG CANCER"
+    },
+    {
+      "value": "LUPUS",
+      "label": "LUPUS"
+    },
+    {
+      "value": "LYMPHOMA",
+      "label": "LYMPHOMA"
+    },
+    {
+      "value": "MESOTHELIOMA",
+      "label": "MESOTHELIOMA"
+    },
+    {
+      "value": "METABOLIC",
+      "label": "METABOLIC"
+    },
+    {
+      "value": "MULTIPLE MYELOMA",
+      "label": "MULTIPLE MYELOMA"
+    },
+    {
+      "value": "NEPHROLOGY",
+      "label": "NEPHROLOGY"
+    },
+    {
+      "value": "NEURODEGENERATIVE",
+      "label": "NEURODEGENERATIVE"
+    },
+    {
+      "value": "NEURODEVELOPMENTAL",
+      "label": "NEURODEVELOPMENTAL"
+    },
+    {
+      "value": "NEUROENDOCRINE CANCER",
+      "label": "NEUROENDOCRINE CANCER"
+    },
+    {
+      "value": "NEUROIMMUNOLOGY",
+      "label": "NEUROIMMUNOLOGY"
+    },
+    {
+      "value": "NEUROMUSCULAR",
+      "label": "NEUROMUSCULAR"
+    },
+    {
+      "value": "OBESITY",
+      "label": "OBESITY"
+    },
+    {
+      "value": "OTHER",
+      "label": "OTHER"
+    },
+    {
+      "value": "OTHER IMMUNOLOGY",
+      "label": "OTHER IMMUNOLOGY"
+    },
+    {
+      "value": "OTHER INFECTIOUS DISEASES",
+      "label": "OTHER INFECTIOUS DISEASES"
+    },
+    {
+      "value": "OTHER NEUROSCIENCE",
+      "label": "OTHER NEUROSCIENCE"
+    },
+    {
+      "value": "OTHER ONCOLOGY",
+      "label": "OTHER ONCOLOGY"
+    },
+    {
+      "value": "OTHER OPHTHALMOLOGY",
+      "label": "OTHER OPHTHALMOLOGY"
+    },
+    {
+      "value": "OTHER RESPIRATORY / ALLERGY",
+      "label": "OTHER RESPIRATORY / ALLERGY"
+    },
+    {
+      "value": "OTHER RETINAL DISEASES",
+      "label": "OTHER RETINAL DISEASES"
+    },
+    {
+      "value": "OTHER RHEUMATOLOGY",
+      "label": "OTHER RHEUMATOLOGY"
+    },
+    {
+      "value": "PROSTATE CANCER",
+      "label": "PROSTATE CANCER"
+    },
+    {
+      "value": "PSYCHIATRIC",
+      "label": "PSYCHIATRIC"
+    },
+    {
+      "value": "RARE HEMATOLOGY",
+      "label": "RARE HEMATOLOGY"
+    },
+    {
+      "value": "RENAL CANCER",
+      "label": "RENAL CANCER"
+    },
+    {
+      "value": "RHEUMATOID ARTHRITIS",
+      "label": "RHEUMATOID ARTHRITIS"
+    },
+    {
+      "value": "SKIN CANCER",
+      "label": "SKIN CANCER"
+    },
+    {
+      "value": "TRANSPLANT",
+      "label": "TRANSPLANT"
+    }
+  ]
+}

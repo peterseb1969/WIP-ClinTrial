@@ -1,0 +1,65 @@
+{
+  "value": "CT_TA_STUDY_PHASE",
+  "label": "TA Portal Study Phase",
+  "description": "TA Portal Study Phase values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Phase 0",
+      "label": "Phase 0"
+    },
+    {
+      "value": "Phase I",
+      "label": "Phase I"
+    },
+    {
+      "value": "Phase I/II",
+      "label": "Phase I/II"
+    },
+    {
+      "value": "Phase I/III",
+      "label": "Phase I/III"
+    },
+    {
+      "value": "Phase II",
+      "label": "Phase II"
+    },
+    {
+      "value": "Phase II/III",
+      "label": "Phase II/III"
+    },
+    {
+      "value": "Phase III",
+      "label": "Phase III"
+    },
+    {
+      "value": "Phase IIIb",
+      "label": "Phase IIIb"
+    },
+    {
+      "value": "Phase IIa",
+      "label": "Phase IIa"
+    },
+    {
+      "value": "Phase IIb",
+      "label": "Phase IIb"
+    },
+    {
+      "value": "Phase IV",
+      "label": "Phase IV"
+    },
+    {
+      "value": "Phase Ia",
+      "label": "Phase Ia"
+    },
+    {
+      "value": "Phase Ib",
+      "label": "Phase Ib"
+    },
+    {
+      "value": "Phase V",
+      "label": "Phase V"
+    }
+  ]
+}

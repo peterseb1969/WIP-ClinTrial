@@ -1,0 +1,16 @@
+{
+  "value": "CT_TA_STUDY_PRODUCT",
+  "label": "TA Study–Product Link",
+  "description": "Edge linking a TA Portal study to a product. One edge per (study, product) pair.",
+  "namespace": "clintrial",
+  "usage": "relationship",
+  "versioned": false,
+  "identity_fields": ["source_ref", "target_ref"],
+  "source_templates": ["CT_TA_STUDY"],
+  "target_templates": ["CT_TA_PRODUCT"],
+  "fields": [
+    {"name": "source_ref", "label": "Study", "type": "reference", "mandatory": true, "reference_type": "document", "target_templates": ["CT_TA_STUDY"]},
+    {"name": "target_ref", "label": "Product", "type": "reference", "mandatory": true, "reference_type": "document", "target_templates": ["CT_TA_PRODUCT"]}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}

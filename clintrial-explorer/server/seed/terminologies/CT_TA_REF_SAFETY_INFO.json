@@ -1,0 +1,49 @@
+{
+  "value": "CT_TA_REF_SAFETY_INFO",
+  "label": "TA Portal Reference Safety Info",
+  "description": "TA Portal Reference Safety Info values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "CDS/SPC",
+      "label": "CDS/SPC"
+    },
+    {
+      "value": "EU-SmPC",
+      "label": "EU-SmPC"
+    },
+    {
+      "value": "IB",
+      "label": "IB"
+    },
+    {
+      "value": "Irish-SmPC",
+      "label": "Irish-SmPC"
+    },
+    {
+      "value": "LPI",
+      "label": "LPI"
+    },
+    {
+      "value": "Other SmPC",
+      "label": "Other SmPC"
+    },
+    {
+      "value": "Other-SmPC",
+      "label": "Other-SmPC"
+    },
+    {
+      "value": "SmPC",
+      "label": "SmPC"
+    },
+    {
+      "value": "UK-SmPC",
+      "label": "UK-SmPC"
+    },
+    {
+      "value": "USPI",
+      "label": "USPI"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "value": "CT_TA_STUDY_TYPE",
+  "label": "TA Portal Study Type",
+  "description": "TA Portal Study Type values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Electronic Survey  (eSurvey)",
+      "label": "Electronic Survey  (eSurvey)"
+    },
+    {
+      "value": "Interventional",
+      "label": "Interventional"
+    },
+    {
+      "value": "Low Interventional",
+      "label": "Low Interventional"
+    },
+    {
+      "value": "Non-interventional",
+      "label": "Non-interventional"
+    },
+    {
+      "value": "Patient Access",
+      "label": "Patient Access"
+    },
+    {
+      "value": "Patient Centered Outcome Research (PCOR)",
+      "label": "Patient Centered Outcome Research (PCOR)"
+    },
+    {
+      "value": "Pre-Clinical",
+      "label": "Pre-Clinical"
+    },
+    {
+      "value": "Research Project with Roche Product",
+      "label": "Research Project with Roche Product"
+    },
+    {
+      "value": "Research Project without Roche Product",
+      "label": "Research Project without Roche Product"
+    },
+    {
+      "value": "Sample Analysis",
+      "label": "Sample Analysis"
+    },
+    {
+      "value": "Scientific Project",
+      "label": "Scientific Project"
+    }
+  ]
+}

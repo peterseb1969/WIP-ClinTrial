@@ -1,0 +1,25 @@
+{
+  "value": "CT_TA_MED_PRODUCT_TYPE",
+  "label": "TA Portal Medicinal Product Type",
+  "description": "TA Portal Medicinal Product Type values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Authorised AxMP",
+      "label": "Authorised AxMP"
+    },
+    {
+      "value": "IMP",
+      "label": "IMP"
+    },
+    {
+      "value": "NIMP",
+      "label": "NIMP"
+    },
+    {
+      "value": "Unauthorised AxMP",
+      "label": "Unauthorised AxMP"
+    }
+  ]
+}

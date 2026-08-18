@@ -1,0 +1,41 @@
+{
+  "value": "CT_TA_THERAPEUTIC_AREA",
+  "label": "TA Portal Therapeutic Area",
+  "description": "TA Portal Therapeutic Area values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "CVM",
+      "label": "CVM"
+    },
+    {
+      "value": "HAN",
+      "label": "HAN"
+    },
+    {
+      "value": "ID",
+      "label": "ID"
+    },
+    {
+      "value": "IMM",
+      "label": "IMM"
+    },
+    {
+      "value": "NS",
+      "label": "NS"
+    },
+    {
+      "value": "ONC",
+      "label": "ONC"
+    },
+    {
+      "value": "OPH",
+      "label": "OPH"
+    },
+    {
+      "value": "OTH",
+      "label": "OTH"
+    }
+  ]
+}

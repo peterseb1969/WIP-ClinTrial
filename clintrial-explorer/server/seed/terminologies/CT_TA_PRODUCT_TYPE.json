@@ -1,0 +1,25 @@
+{
+  "value": "CT_TA_PRODUCT_TYPE",
+  "label": "TA Portal Product Type",
+  "description": "TA Portal Product Type values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Non-Roche Compound",
+      "label": "Non-Roche Compound"
+    },
+    {
+      "value": "Non-Roche Medicinal Product",
+      "label": "Non-Roche Medicinal Product"
+    },
+    {
+      "value": "Roche Compound",
+      "label": "Roche Compound"
+    },
+    {
+      "value": "Roche Medicinal Product",
+      "label": "Roche Medicinal Product"
+    }
+  ]
+}

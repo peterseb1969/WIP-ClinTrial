@@ -1,0 +1,89 @@
+{
+  "value": "CT_TA_EXECUTING_PARTY",
+  "label": "TA Portal Executing Party",
+  "description": "TA Portal Executing Party values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "CHUGAI",
+      "label": "CHUGAI"
+    },
+    {
+      "value": "COOP",
+      "label": "COOP"
+    },
+    {
+      "value": "Collaborative Group",
+      "label": "Collaborative Group"
+    },
+    {
+      "value": "GPMA",
+      "label": "GPMA"
+    },
+    {
+      "value": "Investigator",
+      "label": "Investigator"
+    },
+    {
+      "value": "LMA",
+      "label": "LMA"
+    },
+    {
+      "value": "Other company",
+      "label": "Other company"
+    },
+    {
+      "value": "PD China",
+      "label": "PD China"
+    },
+    {
+      "value": "PDB",
+      "label": "PDB"
+    },
+    {
+      "value": "PDD",
+      "label": "PDD"
+    },
+    {
+      "value": "PDG",
+      "label": "PDG"
+    },
+    {
+      "value": "PDMA",
+      "label": "PDMA"
+    },
+    {
+      "value": "PDP",
+      "label": "PDP"
+    },
+    {
+      "value": "PDP (Pharma phc)",
+      "label": "PDP (Pharma phc)"
+    },
+    {
+      "value": "PDY",
+      "label": "PDY"
+    },
+    {
+      "value": "Partner",
+      "label": "Partner"
+    },
+    {
+      "value": "Spark Tx",
+      "label": "Spark Tx"
+    },
+    {
+      "value": "USMA",
+      "label": "USMA"
+    },
+    {
+      "value": "gRED",
+      "label": "gRED"
+    },
+    {
+      "value": "pRED",
+      "label": "pRED"
+    }
+  ]
+}

@@ -198,11 +198,63 @@ function parseCsvRows(text: string): Record<string, string>[] {
   })
 }
 
-const TA_STUDY_DATE_FIELDS = new Set([
-  'dt_protocol_approval', 'dt_first_site_activation', 'dt_first_screening',
-  'dt_first_enrolled', 'dt_last_enrolled', 'dt_last_visit',
-  'dt_complete_db_lock', 'dt_clinical_closure',
-])
+const TA_HEADER_MAP: Record<string, string> = {
+  'study number': 'study_number',
+  'study name': 'study_name',
+  'study short title': 'study_short_title',
+  'accountable party': 'accountable_party',
+  'executing party': 'executing_party',
+  'study phase': 'study_phase',
+  'study management model (source: veeva-ctms)': 'mgmt_model',
+  'study status': 'study_status',
+  'study stage': 'study_stage',
+  'study type': 'study_type',
+  'therapeutic area': 'therapeutic_area',
+  'disease area': 'disease_area',
+  'indication': 'indication',
+  'theme molecule': 'theme_molecule',
+  'non-lead molecule': 'non_lead_molecule',
+  'sponsor type': 'sponsor_type',
+  'theme': 'theme',
+  'study actual enrolled': 'actual_enrolled',
+  'study actual screened': 'actual_screened',
+  'study roche protocol approval': 'dt_protocol_approval',
+  'study first site activation': 'dt_first_site_activation',
+  'study first subject in screening': 'dt_first_screening',
+  'study first subject enrolled': 'dt_first_enrolled',
+  'study last subject enrolled': 'dt_last_enrolled',
+  'study last subject last visit': 'dt_last_visit',
+  'study complete database lock': 'dt_complete_db_lock',
+  'study clinical closure': 'dt_clinical_closure',
+}
+
+function parseTaPortalCsv(text: string): Record<string, string>[] {
+  const lines = text.split('\n')
+  // Find the header row — first row containing "Study Number"
+  let headerIdx = -1
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
+    if (lines[i].toLowerCase().includes('study number')) {
+      headerIdx = i
+      break
+    }
+  }
+  if (headerIdx < 0) return []
+
+  const rawHeaders = lines[headerIdx].split(',').map((h) => h.replace(/^"|"$/g, '').trim())
+  const fieldNames = rawHeaders.map((h) => TA_HEADER_MAP[h.toLowerCase()] || h.toLowerCase().replace(/[^a-z0-9]+/g, '_'))
+
+  const rows: Record<string, string>[] = []
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+    const vals = line.split(',').map((v) => v.replace(/^"|"$/g, '').trim())
+    if (!vals[0]) continue
+    const row: Record<string, string> = {}
+    fieldNames.forEach((f, j) => { row[f] = vals[j] ?? '' })
+    rows.push(row)
+  }
+  return rows
+}
 
 router.post('/import/ta-studies', async (req, res) => {
   try {
@@ -211,24 +263,17 @@ router.post('/import/ta-studies', async (req, res) => {
       return res.status(400).json({ error: 'csv field is required in request body (raw CSV text)' })
     }
 
-    const rows = parseCsvRows(csvText)
+    const rows = parseTaPortalCsv(csvText)
     if (!rows.length) {
-      return res.status(400).json({ error: 'No data rows found in CSV' })
+      return res.status(400).json({ error: 'No data rows found. Expected a CSV with a "Study Number" header row.' })
     }
 
     const templateId = await resolveTemplateId('CT_TA_STUDY')
     const docs = rows.map((row) => {
       const data: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(row)) {
-        if (!v || v === '-') continue
-        if (TA_STUDY_DATE_FIELDS.has(k)) {
-          data[k] = v.slice(0, 10)
-        } else if (k === 'actual_enrolled' || k === 'actual_screened') {
-          const n = parseInt(v, 10)
-          if (!isNaN(n)) data[k] = String(n)
-        } else {
-          data[k] = v
-        }
+        if (!v || v === '-' || v === 'N/A') continue
+        data[k] = v
       }
       return data
     })

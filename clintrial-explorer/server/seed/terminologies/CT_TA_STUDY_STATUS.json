@@ -1,0 +1,49 @@
+{
+  "value": "CT_TA_STUDY_STATUS",
+  "label": "TA Portal Study Status",
+  "description": "TA Portal Study Status values from TA Portal",
+  "namespace": "clintrial",
+  "extensible": true,
+  "terms": [
+    {
+      "value": "Active",
+      "label": "Active"
+    },
+    {
+      "value": "Archived",
+      "label": "Archived"
+    },
+    {
+      "value": "Candidate",
+      "label": "Candidate"
+    },
+    {
+      "value": "Clinical Closure",
+      "label": "Clinical Closure"
+    },
+    {
+      "value": "Closed",
+      "label": "Closed"
+    },
+    {
+      "value": "Closing",
+      "label": "Closing"
+    },
+    {
+      "value": "Number Generated",
+      "label": "Number Generated"
+    },
+    {
+      "value": "Planning",
+      "label": "Planning"
+    },
+    {
+      "value": "Prematurely Terminated",
+      "label": "Prematurely Terminated"
+    },
+    {
+      "value": "Study # Generated",
+      "label": "Study # Generated"
+    }
+  ]
+}
