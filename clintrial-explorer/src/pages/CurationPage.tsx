@@ -192,6 +192,7 @@ export function CurationPage() {
   const [expanded, setExpanded] = useState(false)
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '')
   const [showMapped, setShowMapped] = useState(false)
+  const [bulkThreshold, setBulkThreshold] = useState(0.95)
 
   // Pre-fill search from URL params (e.g. ?nct_ids=NCT123,NCT456 or ?search=WO43571)
   useEffect(() => {
@@ -296,28 +297,29 @@ export function CurationPage() {
     [selected, reviewMutation, filteredCandidates, selectedIdx],
   )
 
-  const handleBulkApprove = useCallback(() => {
-    if (!filteredCandidates.length) return
+  const bulkEligible = useMemo(() => {
+    if (!filteredCandidates.length) return []
     const pending = filteredCandidates.filter(
       (c) => c.status === 'PENDING' && c.confidence === 'high',
     )
     const matchDataList = pending.map((c) => parseMatchData(c.match_data))
-    const highSim = pending.filter((_, i) => {
+    return pending.filter((_, i) => {
       const sim = Number(
         (matchDataList[i].signals as Record<string, unknown>)?.title_sim ?? 0,
       )
-      return sim >= 0.95
+      return sim >= bulkThreshold
     })
-    if (
-      highSim.length > 0 &&
-      confirm(`Approve ${highSim.length} high-confidence matches (sim ≥ 0.95)?`)
-    ) {
+  }, [filteredCandidates, bulkThreshold])
+
+  const handleBulkApprove = useCallback(() => {
+    if (!bulkEligible.length) return
+    if (confirm(`Approve ${bulkEligible.length} matches with sim ≥ ${bulkThreshold}?`)) {
       bulkMutation.mutate({
-        document_ids: highSim.map((c) => c.document_id),
+        document_ids: bulkEligible.map((c) => c.document_id),
         decision: 'approved',
       })
     }
-  }, [filteredCandidates, bulkMutation])
+  }, [bulkEligible, bulkThreshold, bulkMutation])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -356,13 +358,29 @@ export function CurationPage() {
           >
             {clearMutation.isPending ? 'Clearing...' : 'Clear All'}
           </button>
-          <button
-            onClick={handleBulkApprove}
-            disabled={bulkMutation.isPending}
-            className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            Bulk Approve (sim ≥ 0.95)
-          </button>
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs text-text-muted">sim ≥</label>
+            <input
+              type="number"
+              min={0}
+              max={1}
+              step={0.05}
+              value={bulkThreshold}
+              onChange={(e) => setBulkThreshold(Number(e.target.value))}
+              className="w-16 rounded border border-gray-300 px-1.5 py-1 text-sm"
+            />
+            <button
+              onClick={handleBulkApprove}
+              disabled={bulkMutation.isPending || bulkEligible.length === 0}
+              className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              {bulkMutation.isPending
+                ? 'Approving...'
+                : bulkEligible.length === 0
+                  ? 'Bulk Approve (0)'
+                  : `Bulk Approve (${bulkEligible.length})`}
+            </button>
+          </div>
         </div>
       </div>
 
