@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { initSSE, sendSSE, endSSE } from '../lib/sse.js'
 import { runImport, getActiveJob, cancelActiveJob, type ImportOptions } from '../lib/import-orchestrator.js'
 import { loadSyncState } from '../lib/sync-state.js'
-import { wipClient, reportQuery, resolveTemplateId, createDocumentsBulk } from '../lib/wip-api.js'
+import { wipClient, reportQuery, resolveTemplateId, createDocumentsBulk, SKIP_ERROR_CODES } from '../lib/wip-api.js'
 
 const router = Router()
 
@@ -280,6 +280,11 @@ router.post('/import/ta-studies', async (req, res) => {
 
     const result = await createDocumentsBulk(templateId, docs)
 
+    const errorSample = result.results
+      .filter((r) => r.status === 'error' && !SKIP_ERROR_CODES.has(r.error_code || ''))
+      .slice(0, 10)
+      .map((r) => ({ index: r.index, error: r.error, error_code: r.error_code }))
+
     res.json({
       success: true,
       total: rows.length,
@@ -287,6 +292,7 @@ router.post('/import/ta-studies', async (req, res) => {
       updated: result.updated,
       skipped: result.skipped,
       errors: result.errors,
+      error_sample: errorSample,
     })
   } catch (err) {
     console.error('[import/ta-studies]', err)
@@ -322,6 +328,11 @@ router.post('/import/sami-summary', async (req, res) => {
 
     const result = await createDocumentsBulk(templateId, docs)
 
+    const errorSample = result.results
+      .filter((r) => r.status === 'error' && !SKIP_ERROR_CODES.has(r.error_code || ''))
+      .slice(0, 10)
+      .map((r) => ({ index: r.index, error: r.error, error_code: r.error_code }))
+
     res.json({
       success: true,
       total: rows.length,
@@ -329,6 +340,7 @@ router.post('/import/sami-summary', async (req, res) => {
       updated: result.updated,
       skipped: result.skipped,
       errors: result.errors,
+      error_sample: errorSample,
     })
   } catch (err) {
     console.error('[import/sami-summary]', err)

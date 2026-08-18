@@ -125,7 +125,7 @@ export interface BulkResult {
   message?: string
 }
 
-const SKIP_ERROR_CODES = new Set(['duplicate_identity', 'already_exists', 'unchanged'])
+export const SKIP_ERROR_CODES = new Set(['duplicate_identity', 'already_exists', 'unchanged'])
 
 /** Create documents in bulk with batching. Returns per-item results. */
 export async function createDocumentsBulk(

@@ -391,7 +391,7 @@ export function ImportPage() {
 function CsvUploadCard({ title, description, endpoint }: { title: string; description: string; endpoint: string }) {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<{ success: boolean; total?: number; created?: number; updated?: number; skipped?: number; errors?: number; error?: string } | null>(null)
+  const [result, setResult] = useState<{ success: boolean; total?: number; created?: number; updated?: number; skipped?: number; errors?: number; error?: string; error_sample?: Array<{ index: number; error: string; error_code?: string }> } | null>(null)
 
   const handleUpload = async () => {
     if (!file) return
@@ -437,7 +437,16 @@ function CsvUploadCard({ title, description, endpoint }: { title: string; descri
         {result && (
           <div className={`rounded-md p-3 text-sm ${result.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
             {result.success
-              ? `Imported ${formatNumber(result.total ?? 0)} rows: ${formatNumber(result.created ?? 0)} created, ${formatNumber(result.updated ?? 0)} updated, ${formatNumber(result.skipped ?? 0)} skipped, ${result.errors ?? 0} errors`
+              ? <>
+                  Imported {formatNumber(result.total ?? 0)} rows: {formatNumber(result.created ?? 0)} created, {formatNumber(result.updated ?? 0)} updated, {formatNumber(result.skipped ?? 0)} skipped, {result.errors ?? 0} errors
+                  {result.error_sample && result.error_sample.length > 0 && (
+                    <ul className="mt-2 space-y-0.5 text-xs">
+                      {result.error_sample.map((e, i) => (
+                        <li key={i}>Row {e.index}: [{e.error_code || '?'}] {e.error}</li>
+                      ))}
+                    </ul>
+                  )}
+                </>
               : `Error: ${result.error}`}
           </div>
         )}
