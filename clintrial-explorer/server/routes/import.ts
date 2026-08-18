@@ -295,6 +295,7 @@ router.post('/import/ta-studies', async (req, res) => {
         if (!v || v === '-' || v === 'N/A') continue
         data[k] = v
       }
+      if (!data.study_name && data.study_number) data.study_name = data.study_number
       return data
     })
 
