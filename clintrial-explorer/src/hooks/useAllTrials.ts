@@ -39,6 +39,7 @@ export interface TrialDocument {
 interface TrialRow {
   document_id: string
   nct_id: string
+  org_study_id: string | null
   title: string
   brief_title: string
   acronym: string | null
@@ -85,6 +86,7 @@ export function useAllTrials() {
         document_id: r.document_id,
         data: {
           nct_id: r.nct_id,
+          org_study_id: r.org_study_id || undefined,
           title: r.title || '',
           brief_title: r.brief_title || '',
           acronym: r.acronym || undefined,
