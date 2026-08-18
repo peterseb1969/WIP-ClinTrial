@@ -9,7 +9,6 @@ import {
   MapPin,
   Bookmark,
   Upload,
-  ClipboardCheck,
   Building2,
   Settings,
   Menu,
@@ -32,7 +31,6 @@ const navItems = [
   { to: '/sites', icon: MapPin, label: 'Sites', adminOnly: false },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks', adminOnly: false },
   { to: '/roche-studies', icon: Building2, label: 'TA Portal / MDMS', adminOnly: false },
-  { to: '/curation', icon: ClipboardCheck, label: 'Data Curation', adminOnly: true },
   { to: '/settings', icon: Settings, label: 'Settings', adminOnly: false },
   { to: '/import', icon: Upload, label: 'Import', adminOnly: true },
 ] as const
@@ -47,7 +45,6 @@ const breadcrumbLabels: Record<string, string> = {
   settings: 'Settings',
   rules: 'Classification Rules',
   'roche-studies': 'TA Portal / MDMS',
-  curation: 'Data Curation',
   import: 'Import',
   sync: 'Import',
 }

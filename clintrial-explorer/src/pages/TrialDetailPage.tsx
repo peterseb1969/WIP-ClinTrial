@@ -133,13 +133,9 @@ export function TrialDetailPage() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-bold">{d.nct_id}</h1>
               {rocheStudyNumber && (
-                <a
-                  href={`/curation?search=${rocheStudyNumber}`}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
-                  title="View in Data Curation"
-                >
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                   Roche: {rocheStudyNumber}
-                </a>
+                </span>
               )}
               <StatusBadge status={d.status} />
               {(d.phases || []).map((p) => (

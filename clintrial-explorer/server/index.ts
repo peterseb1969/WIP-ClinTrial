@@ -11,7 +11,6 @@ import aeCleanupRoutes from './routes/ae-cleanup.js'
 import bootstrapRoutes from './routes/bootstrap.js'
 import settingsRoutes from './routes/settings.js'
 import configRoutes from './routes/config.js'
-import curationRoutes from './routes/curation.js'
 import userRoutes from './routes/user.js'
 import { requireRole } from './lib/access.js'
 import { startAutoSync } from './lib/auto-sync.js'
@@ -41,8 +40,7 @@ router.use('/server-api', bootstrapRoutes)
 router.use('/server-api', requireRole('user'), classifyRoutes)
 router.use('/server-api', requireRole('user'), aeCleanupRoutes)
 router.use('/server-api', requireRole('user'), settingsRoutes)
-// Admin-only routes: curation, import, config
-router.use('/server-api', requireRole('admin'), curationRoutes)
+// Admin-only routes: import, config
 router.use('/server-api', requireRole('admin'), importRoutes)
 router.use('/server-api', requireRole('admin'), configRoutes)
 

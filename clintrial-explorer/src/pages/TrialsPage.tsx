@@ -128,16 +128,8 @@ export function TrialsPage() {
                       {trial.data.nct_id}
                     </Link>
                   </td>
-                  <td className="px-3 py-2 font-mono text-xs">
-                    {rocheStudyMap?.get(trial.data.nct_id) && (
-                      <Link
-                        to={`/curation?search=${rocheStudyMap.get(trial.data.nct_id)}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-primary hover:underline"
-                      >
-                        {rocheStudyMap.get(trial.data.nct_id)}
-                      </Link>
-                    )}
+                  <td className="px-3 py-2 font-mono text-xs text-text-muted">
+                    {rocheStudyMap?.get(trial.data.nct_id) || ''}
                   </td>
                   <td className="max-w-xs truncate px-3 py-2" title={trial.data.brief_title || trial.data.title}>
                     {trial.data.brief_title || trial.data.title}
