@@ -285,6 +285,7 @@ router.post('/import/ta-studies', async (req, res) => {
       total: rows.length,
       created: result.created,
       updated: result.updated,
+      skipped: result.skipped,
       errors: result.errors,
     })
   } catch (err) {
@@ -326,6 +327,7 @@ router.post('/import/sami-summary', async (req, res) => {
       total: rows.length,
       created: result.created,
       updated: result.updated,
+      skipped: result.skipped,
       errors: result.errors,
     })
   } catch (err) {

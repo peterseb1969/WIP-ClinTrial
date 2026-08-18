@@ -121,17 +121,21 @@ export interface BulkResult {
   document_id?: string
   version?: number
   error?: string
+  error_code?: string
   message?: string
 }
+
+const SKIP_ERROR_CODES = new Set(['duplicate_identity', 'already_exists', 'unchanged'])
 
 /** Create documents in bulk with batching. Returns per-item results. */
 export async function createDocumentsBulk(
   templateId: string,
   dataList: Record<string, unknown>[],
   batchSize = 100,
-): Promise<{ created: number; updated: number; errors: number; results: BulkResult[] }> {
+): Promise<{ created: number; updated: number; skipped: number; errors: number; results: BulkResult[] }> {
   let created = 0
   let updated = 0
+  let skipped = 0
   let errors = 0
   const allResults: BulkResult[] = []
 
@@ -155,21 +159,23 @@ export async function createDocumentsBulk(
       for (const item of items) {
         const status = item.status || ''
         if (status === 'error') {
-          errors++
+          if (SKIP_ERROR_CODES.has(item.error_code || '')) {
+            skipped++
+          } else {
+            errors++
+          }
+        } else if (status === 'unchanged' || status === 'skipped') {
+          skipped++
         } else if ((item.version || 1) > 1) {
           updated++
         } else {
           created++
         }
-        // WIP returns batch-relative indices; rebase to the caller's input
-        // order so results[i].index attributes across batches (CASE-725)
         allResults.push({ ...item, index: i + (item.index ?? 0) })
       }
     } catch (err) {
       errors += batch.length
       console.error(`Bulk create batch error:`, err)
-      // Keep results[] complete: a failed batch still yields one error item
-      // per input so callers can attribute every submitted document
       allResults.push(...batch.map((_, j) => ({
         index: i + j,
         status: 'error',
@@ -178,7 +184,7 @@ export async function createDocumentsBulk(
     }
   }
 
-  return { created, updated, errors, results: allResults }
+  return { created, updated, skipped, errors, results: allResults }
 }
 
 /** Resolve a terminology value to its terminology_id */
