@@ -29,6 +29,9 @@ export async function reportQuery<T = Record<string, unknown>>(
     }),
   })
 
+  if (res.status === 400) {
+    return { columns: [], rows: [], row_count: 0, truncated: false } as ReportQueryResult<T>
+  }
   if (!res.ok) {
     throw new Error(`Reporting query failed: ${res.status} ${res.statusText}`)
   }
