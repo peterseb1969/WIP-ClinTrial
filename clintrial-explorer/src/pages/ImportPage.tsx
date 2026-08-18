@@ -370,7 +370,79 @@ export function ImportPage() {
           </div>
         )}
       </Card>
+
+      {/* CSV Upload sections */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <CsvUploadCard
+          title="TA Portal Studies"
+          description="Upload CSV exported from the TA Portal / MDMS. Creates or updates CT_TA_STUDY documents."
+          endpoint="/server-api/import/ta-studies"
+        />
+        <CsvUploadCard
+          title="SAMI Sample Summary"
+          description="Upload CSV from the Snowflake refresh query. Creates or updates CT_SAMI_STUDY_SUMMARY documents."
+          endpoint="/server-api/import/sami-summary"
+        />
+      </div>
     </div>
+  )
+}
+
+function CsvUploadCard({ title, description, endpoint }: { title: string; description: string; endpoint: string }) {
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<{ success: boolean; total?: number; created?: number; updated?: number; errors?: number; error?: string } | null>(null)
+
+  const handleUpload = async () => {
+    if (!file) return
+    setLoading(true)
+    setResult(null)
+    try {
+      const text = await file.text()
+      const basePath = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '')
+      const res = await fetch(`${basePath}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csv: text }),
+      })
+      const data = await res.json()
+      setResult(res.ok ? { success: true, ...data } : { success: false, error: data.error })
+    } catch (err) {
+      setResult({ success: false, error: (err as Error).message })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <p className="mb-3 text-sm text-text-muted">{description}</p>
+      <div className="space-y-3">
+        <input
+          type="file"
+          accept=".csv"
+          onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null) }}
+          className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
+        />
+        <button
+          onClick={handleUpload}
+          disabled={!file || loading}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+        >
+          {loading ? 'Uploading...' : 'Upload & Import'}
+        </button>
+        {result && (
+          <div className={`rounded-md p-3 text-sm ${result.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+            {result.success
+              ? `Imported ${formatNumber(result.total ?? 0)} rows: ${formatNumber(result.created ?? 0)} created, ${formatNumber(result.updated ?? 0)} updated, ${result.errors ?? 0} errors`
+              : `Error: ${result.error}`}
+          </div>
+        )}
+      </div>
+    </Card>
   )
 }
 

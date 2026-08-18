@@ -234,6 +234,7 @@ export function extractTrialData(study: AnyObj) {
 
   return {
     nct_id: nctId,
+    org_study_id: ident.orgStudyIdInfo?.id || undefined,
     title,
     brief_title: ident.briefTitle,
     acronym: ident.acronym,

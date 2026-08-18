@@ -198,6 +198,56 @@ function parseCsvRows(text: string): Record<string, string>[] {
   })
 }
 
+const TA_STUDY_DATE_FIELDS = new Set([
+  'dt_protocol_approval', 'dt_first_site_activation', 'dt_first_screening',
+  'dt_first_enrolled', 'dt_last_enrolled', 'dt_last_visit',
+  'dt_complete_db_lock', 'dt_clinical_closure',
+])
+
+router.post('/import/ta-studies', async (req, res) => {
+  try {
+    const csvText = req.body?.csv as string
+    if (!csvText) {
+      return res.status(400).json({ error: 'csv field is required in request body (raw CSV text)' })
+    }
+
+    const rows = parseCsvRows(csvText)
+    if (!rows.length) {
+      return res.status(400).json({ error: 'No data rows found in CSV' })
+    }
+
+    const templateId = await resolveTemplateId('CT_TA_STUDY')
+    const docs = rows.map((row) => {
+      const data: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(row)) {
+        if (!v || v === '-') continue
+        if (TA_STUDY_DATE_FIELDS.has(k)) {
+          data[k] = v.slice(0, 10)
+        } else if (k === 'actual_enrolled' || k === 'actual_screened') {
+          const n = parseInt(v, 10)
+          if (!isNaN(n)) data[k] = String(n)
+        } else {
+          data[k] = v
+        }
+      }
+      return data
+    })
+
+    const result = await createDocumentsBulk(templateId, docs)
+
+    res.json({
+      success: true,
+      total: rows.length,
+      created: result.created,
+      updated: result.updated,
+      errors: result.errors,
+    })
+  } catch (err) {
+    console.error('[import/ta-studies]', err)
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
 router.post('/import/sami-summary', async (req, res) => {
   try {
     const csvText = req.body?.csv as string

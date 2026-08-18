@@ -361,6 +361,8 @@ export function buildTrialDoc(
     sponsor: sponsorDocId,
   }
 
+  if (trialData.org_study_id) data.org_study_id = trialData.org_study_id
+
   // Optional string fields
   for (const field of [
     'brief_title', 'acronym', 'brief_summary',
