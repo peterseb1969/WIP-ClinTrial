@@ -1,0 +1,32 @@
+{
+  "value": "CT_SAMI_STUDY_SUMMARY",
+  "label": "SAMI Study Sample Summary",
+  "description": "Per-study, per-sample-type inventory from the SAMI repository. One row per (study_number, source_system, sample_type) with availability computed as: in retrievable storage (ROX/i6/i7) AND not marked for disposal.",
+  "namespace": "clintrial",
+  "identity_fields": ["study_number", "source_system", "sample_type"],
+  "fields": [
+    {"name": "study_number", "label": "Study Number", "type": "string", "mandatory": true},
+    {"name": "source_system", "label": "Source System", "type": "string", "mandatory": true},
+    {"name": "sample_type", "label": "Sample Type", "type": "string", "mandatory": true},
+    {"name": "total_count", "label": "Total Count", "type": "integer", "mandatory": true},
+    {"name": "available", "label": "Available", "type": "integer"},
+    {"name": "marked_for_disposal", "label": "Marked for Disposal", "type": "integer"},
+    {"name": "in_circulation", "label": "In Circulation", "type": "integer"},
+    {"name": "disposed", "label": "Disposed", "type": "integer"},
+    {"name": "allocated", "label": "Allocated", "type": "integer"},
+    {"name": "on_hold", "label": "On Hold", "type": "integer"},
+    {"name": "unique_participants", "label": "Unique Participants", "type": "integer"},
+    {"name": "distinct_timepoints", "label": "Distinct Timepoints", "type": "integer"},
+    {"name": "earliest_collection", "label": "Earliest Collection", "type": "date"},
+    {"name": "latest_collection", "label": "Latest Collection", "type": "date"},
+    {"name": "use_pk", "label": "PK Use", "type": "integer"},
+    {"name": "use_biomarker", "label": "Biomarker Use", "type": "integer"},
+    {"name": "use_protein", "label": "Protein Use", "type": "integer"},
+    {"name": "use_genomics", "label": "Genomics Use", "type": "integer"},
+    {"name": "use_pd", "label": "PD Use", "type": "integer"},
+    {"name": "use_ada", "label": "ADA Use", "type": "integer"},
+    {"name": "use_other", "label": "Other Use", "type": "integer"},
+    {"name": "snapshot_date", "label": "Snapshot Date", "type": "date", "mandatory": true}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}

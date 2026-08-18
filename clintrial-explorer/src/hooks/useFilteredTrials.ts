@@ -32,11 +32,11 @@ export function useSampleCounts() {
     queryKey: ['clintrial', 'sample-counts'],
     queryFn: async () => {
       const result = await reportQuery<{ nct_id: string; samples: number }>(
-        `SELECT ta.nct_id, SUM(s.in_circulation)::INT AS samples
-         FROM doc_ct_sami_study_summary__v2 s
-         JOIN doc_ct_ta_study__v3 ta ON ta.study_number = s.study_number
-         WHERE s.source_system = 'SAMI' AND ta.nct_id IS NOT NULL AND ta.nct_id != ''
-         GROUP BY ta.nct_id`,
+        `SELECT t.nct_id, SUM(s.available)::INT AS samples
+         FROM doc_ct_sami_study_summary s
+         JOIN doc_ct_trial t ON t.org_study_id = s.study_number
+         WHERE s.source_system = 'SAMI'
+         GROUP BY t.nct_id`,
         [],
         10000,
       )
@@ -100,10 +100,9 @@ function useDataAvailability() {
     queryKey: ['clintrial', 'has-samples'],
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
-        `SELECT DISTINCT ta.nct_id
-         FROM doc_ct_sami_study_summary__v2 s
-         JOIN doc_ct_ta_study__v3 ta ON ta.study_number = s.study_number
-         WHERE s.source_system = 'SAMI' AND s.in_circulation > 0 AND ta.nct_id IS NOT NULL AND ta.nct_id != ''`,
+        `SELECT DISTINCT nct_id FROM doc_ct_trial
+         WHERE org_study_id IN (SELECT DISTINCT study_number FROM doc_ct_sami_study_summary WHERE available > 0)
+         AND nct_id IS NOT NULL`,
         [],
         10000,
       )

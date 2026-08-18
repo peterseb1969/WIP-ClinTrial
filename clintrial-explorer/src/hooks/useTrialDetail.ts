@@ -107,6 +107,8 @@ export function useTrialBaselines(nctId: string) {
 export interface SamiSampleRow {
   sample_type: string
   total_count: number
+  available: number
+  marked_for_disposal: number
   in_circulation: number
   disposed: number
   allocated: number
@@ -120,9 +122,10 @@ export function useTrialSamples(studyNumber: string | null | undefined) {
     queryKey: ['clintrial', 'sami-samples', studyNumber],
     queryFn: async () => {
       const result = await reportQuery<SamiSampleRow>(
-        `SELECT sample_type, total_count, in_circulation, disposed, allocated, on_hold,
+        `SELECT sample_type, total_count, available, marked_for_disposal,
+                in_circulation, disposed, allocated, on_hold,
                 unique_participants, snapshot_date
-         FROM doc_ct_sami_study_summary__v2
+         FROM doc_ct_sami_study_summary
          WHERE study_number = $1 AND source_system = 'SAMI'
          ORDER BY total_count DESC`,
         [studyNumber!],

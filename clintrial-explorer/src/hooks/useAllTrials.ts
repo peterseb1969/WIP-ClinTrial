@@ -4,6 +4,7 @@ import { type SqlQuery } from '@/components/SqlInspector'
 
 export interface TrialData {
   nct_id: string
+  org_study_id?: string
   title: string
   brief_title: string
   acronym?: string

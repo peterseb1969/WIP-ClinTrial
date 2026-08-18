@@ -6,6 +6,7 @@
   "identity_fields": ["nct_id"],
   "fields": [
     {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true, "pattern": "^NCT\\d{8,11}$"},
+    {"name": "org_study_id", "label": "Organization Study ID", "type": "string", "mandatory": false},
     {"name": "title", "label": "Official Title", "type": "string", "mandatory": true},
     {"name": "brief_title", "label": "Brief Title", "type": "string", "mandatory": false},
     {"name": "acronym", "label": "Acronym", "type": "string", "mandatory": false},

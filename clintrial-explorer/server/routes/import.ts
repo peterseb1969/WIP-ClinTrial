@@ -179,7 +179,8 @@ router.post('/import/link-orphan-files', async (_req, res) => {
 })
 
 const INT_FIELDS = new Set([
-  'total_count', 'in_circulation', 'disposed', 'allocated', 'on_hold',
+  'total_count', 'available', 'marked_for_disposal',
+  'in_circulation', 'disposed', 'allocated', 'on_hold',
   'unique_participants', 'distinct_timepoints',
   'use_pk', 'use_biomarker', 'use_protein', 'use_genomics', 'use_pd', 'use_ada', 'use_other',
 ])

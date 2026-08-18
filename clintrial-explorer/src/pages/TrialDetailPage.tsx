@@ -262,7 +262,7 @@ export function TrialDetailPage() {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'overview' && <OverviewTab data={d as unknown as Record<string, unknown>} studyNumber={rocheStudyNumber} />}
+      {activeTab === 'overview' && <OverviewTab data={d as unknown as Record<string, unknown>} studyNumber={(d.org_study_id as string) || rocheStudyNumber} />}
       {activeTab === 'outcomes' && <OutcomesTab nctId={d.nct_id} />}
       {activeTab === 'sites' && <SitesTab nctId={d.nct_id} />}
       {activeTab === 'aes' && <AEsTab nctId={d.nct_id} />}
@@ -362,7 +362,7 @@ function SamplesSection({ studyNumber }: { studyNumber?: string | null }) {
   if (!studyNumber) return null
 
   const hasSamples = samples && samples.length > 0
-  const totalInCirculation = hasSamples ? samples.reduce((s, r) => s + (r.in_circulation || 0), 0) : 0
+  const totalAvailable = hasSamples ? samples.reduce((s, r) => s + (r.available || 0), 0) : 0
   const snapshotDate = hasSamples ? samples[0]?.snapshot_date : null
 
   return (
@@ -375,7 +375,7 @@ function SamplesSection({ studyNumber }: { studyNumber?: string | null }) {
           SAMI Samples
           {!isLoading && hasSamples && (
             <span className="ml-2 text-sm font-normal text-text-muted">
-              {formatNumber(totalInCirculation)} available
+              {formatNumber(totalAvailable)} available
             </span>
           )}
         </h3>
@@ -397,10 +397,10 @@ function SamplesSection({ studyNumber }: { studyNumber?: string | null }) {
                 <thead>
                   <tr className="border-b text-left text-xs text-text-muted">
                     <th className="pb-2 pr-4 font-medium">Sample Type</th>
-                    <th className="pb-2 pr-4 font-medium text-right">In Circulation</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Available</th>
+                    <th className="pb-2 pr-4 font-medium text-right">Marked Disp.</th>
+                    <th className="pb-2 pr-4 font-medium text-right">In Circ.</th>
                     <th className="pb-2 pr-4 font-medium text-right">Disposed</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Allocated</th>
-                    <th className="pb-2 pr-4 font-medium text-right">On Hold</th>
                     <th className="pb-2 font-medium text-right">Total</th>
                   </tr>
                 </thead>
@@ -408,10 +408,10 @@ function SamplesSection({ studyNumber }: { studyNumber?: string | null }) {
                   {samples.map((row) => (
                     <tr key={row.sample_type} className="border-b border-gray-100">
                       <td className="py-1.5 pr-4 font-medium">{row.sample_type}</td>
-                      <td className="py-1.5 pr-4 text-right">{formatNumber(row.in_circulation)}</td>
+                      <td className="py-1.5 pr-4 text-right font-medium">{formatNumber(row.available)}</td>
+                      <td className="py-1.5 pr-4 text-right text-text-muted">{row.marked_for_disposal || '—'}</td>
+                      <td className="py-1.5 pr-4 text-right text-text-muted">{formatNumber(row.in_circulation)}</td>
                       <td className="py-1.5 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
-                      <td className="py-1.5 pr-4 text-right text-text-muted">{row.allocated || '—'}</td>
-                      <td className="py-1.5 pr-4 text-right text-text-muted">{row.on_hold || '—'}</td>
                       <td className="py-1.5 text-right">{formatNumber(row.total_count)}</td>
                     </tr>
                   ))}
