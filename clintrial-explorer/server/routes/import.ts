@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { initSSE, sendSSE, endSSE } from '../lib/sse.js'
 import { runImport, getActiveJob, cancelActiveJob, type ImportOptions } from '../lib/import-orchestrator.js'
 import { loadSyncState } from '../lib/sync-state.js'
-import { wipClient, reportQuery } from '../lib/wip-api.js'
+import { wipClient, reportQuery, resolveTemplateId, createDocumentsBulk } from '../lib/wip-api.js'
 
 const router = Router()
 
@@ -174,6 +174,66 @@ router.post('/import/link-orphan-files', async (_req, res) => {
 
     res.json({ success: true, total_files: [...nctFiles.values()].reduce((s, a) => s + a.length, 0), trials_updated: linked, errors: errors.length, error_log: errors })
   } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+const INT_FIELDS = new Set([
+  'total_count', 'in_circulation', 'disposed', 'allocated', 'on_hold',
+  'unique_participants', 'distinct_timepoints',
+  'use_pk', 'use_biomarker', 'use_protein', 'use_genomics', 'use_pd', 'use_antibody', 'use_other',
+])
+const DATE_FIELDS = new Set(['earliest_collection', 'latest_collection', 'snapshot_date'])
+
+function parseCsvRows(text: string): Record<string, string>[] {
+  const lines = text.split('\n').filter((l) => l.trim())
+  if (lines.length < 2) return []
+  const headers = lines[0].split(',').map((h) => h.replace(/^"|"$/g, '').trim().toLowerCase())
+  return lines.slice(1).map((line) => {
+    const vals = line.split(',').map((v) => v.replace(/^"|"$/g, '').trim())
+    const row: Record<string, string> = {}
+    headers.forEach((h, i) => { row[h] = vals[i] ?? '' })
+    return row
+  })
+}
+
+router.post('/import/sami-summary', async (req, res) => {
+  try {
+    const csvText = req.body?.csv as string
+    if (!csvText) {
+      return res.status(400).json({ error: 'csv field is required in request body (raw CSV text)' })
+    }
+
+    const rows = parseCsvRows(csvText)
+    if (!rows.length) {
+      return res.status(400).json({ error: 'No data rows found in CSV' })
+    }
+
+    const templateId = await resolveTemplateId('CT_SAMI_STUDY_SUMMARY')
+    const docs = rows.map((row) => {
+      const data: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(row)) {
+        if (!v) continue
+        if (INT_FIELDS.has(k)) data[k] = parseInt(v, 10)
+        else if (DATE_FIELDS.has(k)) data[k] = v.slice(0, 10)
+        else data[k] = v
+      }
+      if (!data.source_system) data.source_system = 'SAMI'
+      if (!data.snapshot_date) data.snapshot_date = new Date().toISOString().slice(0, 10)
+      return data
+    })
+
+    const result = await createDocumentsBulk(templateId, docs)
+
+    res.json({
+      success: true,
+      total: rows.length,
+      created: result.created,
+      updated: result.updated,
+      errors: result.errors,
+    })
+  } catch (err) {
+    console.error('[import/sami-summary]', err)
     res.status(500).json({ error: (err as Error).message })
   }
 })
