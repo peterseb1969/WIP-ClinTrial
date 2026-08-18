@@ -4,7 +4,6 @@ import { ChevronRight, TestTubes } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { GlobalFilterBar } from '@/components/GlobalFilterBar'
 import { useSampleInventory, type StudySamples, type SamiRow } from '@/hooks/useSampleInventory'
 import { formatNumber } from '@/lib/utils'
 
@@ -62,8 +61,6 @@ export function SamplesPage() {
 
   return (
     <div className="space-y-4">
-      <GlobalFilterBar />
-
       <div className="flex items-center gap-3">
         <TestTubes className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-semibold text-text">Sample Inventory</h1>

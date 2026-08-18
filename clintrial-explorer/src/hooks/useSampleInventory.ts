@@ -71,18 +71,16 @@ function useAllSamiRows() {
 
 export function useSampleInventory() {
   const { data: allRows, isLoading, error } = useAllSamiRows()
-  const { trials: filteredTrials } = useFilteredTrials()
+  const { trials: filteredTrials, isLoading: trialsLoading } = useFilteredTrials()
 
   const studies = useMemo(() => {
-    if (!allRows) return []
+    if (!allRows || trialsLoading) return []
 
-    const filteredNctIds = filteredTrials
-      ? new Set(filteredTrials.map((t) => t.data.nct_id))
-      : null
+    const filteredNctIds = new Set(filteredTrials.map((t) => t.data.nct_id))
 
     const grouped = new Map<string, StudySamples>()
     for (const row of allRows) {
-      if (filteredNctIds && !filteredNctIds.has(row.nct_id)) continue
+      if (!filteredNctIds.has(row.nct_id)) continue
 
       let study = grouped.get(row.nct_id)
       if (!study) {
@@ -104,7 +102,7 @@ export function useSampleInventory() {
     }
 
     return [...grouped.values()].sort((a, b) => b.total_available - a.total_available)
-  }, [allRows, filteredTrials])
+  }, [allRows, filteredTrials, trialsLoading])
 
   const stats = useMemo(() => {
     if (!studies.length) return null
