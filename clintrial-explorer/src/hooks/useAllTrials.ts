@@ -65,7 +65,7 @@ function parseJsonArray(val: string | null): string[] {
   }
 }
 
-const ALL_TRIALS_SQL = `SELECT t.document_id, t.nct_id, t.title, t.brief_title, t.acronym,
+const ALL_TRIALS_SQL = `SELECT t.document_id, t.nct_id, t.org_study_id, t.title, t.brief_title, t.acronym,
                 t.data_status as status, t.phases, t.study_type, t.therapeutic_areas,
                 t.ta_pinned, t.enrollment, t.start_date, o.org_name as sponsor, t.interventions,
                 t.conditions, t.has_results, t.ctgov_url
