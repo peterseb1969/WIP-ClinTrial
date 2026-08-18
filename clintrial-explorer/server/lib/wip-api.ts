@@ -174,44 +174,13 @@ export async function createDocumentsBulk(
         allResults.push({ ...item, index: i + (item.index ?? 0) })
       }
     } catch (err) {
-      if (batch.length === 1) {
-        errors++
-        allResults.push({ index: i, status: 'error', error: err instanceof Error ? err.message : String(err) })
-      } else {
-        console.warn(`Bulk create batch failed (${batch.length} docs), retrying individually...`)
-        for (let j = 0; j < batch.length; j++) {
-          const version = getTemplateVersion(templateId)
-          const singleDoc = [{
-            template_id: templateId,
-            ...(version ? { template_version: version } : {}),
-            namespace: NAMESPACE,
-            data: batch[j],
-            created_by: 'clintrial-import',
-          }]
-          try {
-            const resp = (await wipPost('/api/document-store/documents', singleDoc)) as
-              | { results: BulkResult[] } | BulkResult[]
-            const items = Array.isArray(resp) ? resp : resp.results || []
-            const item = items[0]
-            if (!item) { errors++; allResults.push({ index: i + j, status: 'error', error: 'empty response' }); continue }
-            const status = item.status || ''
-            if (status === 'error') {
-              if (SKIP_ERROR_CODES.has(item.error_code || '')) skipped++
-              else errors++
-            } else if (status === 'unchanged' || status === 'skipped') {
-              skipped++
-            } else if ((item.version || 1) > 1) {
-              updated++
-            } else {
-              created++
-            }
-            allResults.push({ ...item, index: i + j })
-          } catch (retryErr) {
-            errors++
-            allResults.push({ index: i + j, status: 'error', error: retryErr instanceof Error ? retryErr.message : String(retryErr) })
-          }
-        }
-      }
+      errors += batch.length
+      console.error(`Bulk create batch error:`, err)
+      allResults.push(...batch.map((_, j) => ({
+        index: i + j,
+        status: 'error',
+        error: err instanceof Error ? err.message : String(err),
+      })))
     }
   }
 
