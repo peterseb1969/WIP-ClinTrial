@@ -35,7 +35,6 @@ import {
   useTrialSamples,
 } from '@/hooks/useTrialDetail'
 import { usePinTrial } from '@/hooks/useClassification'
-import { useRocheStudyMap } from '@/hooks/useFilteredTrials'
 import { formatPhase } from '@/lib/trial-utils'
 import { formatNumber } from '@/lib/utils'
 import { refetchUntil, sameSet } from '@/lib/refetch-until'
@@ -57,8 +56,7 @@ export function TrialDetailPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const { data: trial, isLoading, error, refetch } = useTrial(nctId || '')
   const pinMutation = usePinTrial()
-  const { data: rocheStudyMap } = useRocheStudyMap()
-  const rocheStudyNumber = nctId && rocheStudyMap ? rocheStudyMap.get(nctId) : null
+  const rocheStudyNumber = (trial?.data.org_study_id as string) || null
   const queryClient = useQueryClient()
   const [addingTA, setAddingTA] = useState(false)
   const [newTA, setNewTA] = useState('')
@@ -258,7 +256,7 @@ export function TrialDetailPage() {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'overview' && <OverviewTab data={d as unknown as Record<string, unknown>} studyNumber={(d.org_study_id as string) || rocheStudyNumber} />}
+      {activeTab === 'overview' && <OverviewTab data={d as unknown as Record<string, unknown>} studyNumber={rocheStudyNumber} />}
       {activeTab === 'outcomes' && <OutcomesTab nctId={d.nct_id} />}
       {activeTab === 'sites' && <SitesTab nctId={d.nct_id} />}
       {activeTab === 'aes' && <AEsTab nctId={d.nct_id} />}

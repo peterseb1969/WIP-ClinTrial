@@ -45,14 +45,23 @@ export async function wipUploadFile(
   filename: string,
   opts: { description?: string; tags?: string; category?: string; allowedTemplates?: string },
 ): Promise<{ file_id: string }> {
-  const blob = new Blob([fileBuffer], { type: 'application/pdf' })
-  const file = await wipClient.files.uploadFile(blob, filename, {
-    description: opts.description,
-    tags: opts.tags?.split(',').map((t) => t.trim()),
-    category: opts.category,
-    allowed_templates: opts.allowedTemplates?.split(',').map((t) => t.trim()),
+  const formData = new FormData()
+  formData.append('file', new Blob([fileBuffer], { type: 'application/pdf' }), filename)
+  formData.append('namespace', NAMESPACE)
+  if (opts.description) formData.append('description', opts.description)
+  if (opts.tags) formData.append('tags', opts.tags)
+  if (opts.category) formData.append('category', opts.category)
+  if (opts.allowedTemplates) formData.append('allowed_templates', opts.allowedTemplates)
+
+  const res = await fetch(`${WIP_BASE_URL}/api/document-store/files`, {
+    method: 'POST',
+    headers: { 'X-API-Key': WIP_API_KEY },
+    body: formData,
   })
-  return { file_id: file.file_id }
+  if (!res.ok) throw new Error(`WIP file upload failed: ${res.status} ${await res.text()}`)
+  const result = await res.json()
+  const item = Array.isArray(result) ? result[0] : result
+  return { file_id: item.file_id || item.id }
 }
 
 export type { ReportQueryResult } from '../../shared/reporting-types.js'

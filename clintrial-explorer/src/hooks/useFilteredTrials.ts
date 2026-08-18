@@ -6,25 +6,6 @@ import { useBookmarks } from './useBookmarks'
 import { useClassificationRules, enrichTherapeuticAreas, useTAAncestors } from './useClassificationRules'
 import { reportQuery } from '@/lib/reporting'
 
-/** Map of NCT IDs to Roche study numbers (from crosswalk + nct_id on CT_TA_STUDY) */
-export function useRocheStudyMap() {
-  return useQuery({
-    queryKey: ['clintrial', 'roche-study-map'],
-    queryFn: async () => {
-      const result = await reportQuery<{ nct_id: string; study_number: string }>(
-        `SELECT nct_id, study_number FROM doc_ct_ta_study__v3 WHERE nct_id IS NOT NULL AND nct_id != ''`,
-        [],
-        10000,
-      )
-      const map = new Map<string, string>()
-      for (const row of result.rows) {
-        map.set(row.nct_id, row.study_number)
-      }
-      return map
-    },
-    staleTime: 60000,
-  })
-}
 
 /** Map of NCT IDs to total in-circulation sample counts (for trials table + dashboard) */
 export function useSampleCounts() {
@@ -124,8 +105,6 @@ export function useFilteredTrials() {
   const { has: isBookmarked } = useBookmarks()
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
   const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds } = useDataAvailability()
-  const { data: rocheStudyMap } = useRocheStudyMap()
-
   // Enrich trials with rule-based TA classification and ontology ancestor walk
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
     if (!trials) return undefined
@@ -186,8 +165,8 @@ export function useFilteredTrials() {
       if (filters.has_outcomes === 'true' && outcomeNctIds && !outcomeNctIds.has(d.nct_id)) return false
       if (filters.has_baseline === 'true' && baselineNctIds && !baselineNctIds.has(d.nct_id)) return false
       if (filters.has_protocol === 'true' && protocolNctIds && !protocolNctIds.has(d.nct_id)) return false
-      if (filters.has_roche_id === 'true' && rocheStudyMap && !rocheStudyMap.has(d.nct_id)) return false
-      if (filters.has_roche_id === 'false' && rocheStudyMap && rocheStudyMap.has(d.nct_id)) return false
+      if (filters.has_roche_id === 'true' && !d.org_study_id) return false
+      if (filters.has_roche_id === 'false' && d.org_study_id) return false
       if (filters.has_samples === 'true' && samplesNctIds && !samplesNctIds.has(d.nct_id)) return false
 
       // Free-text search
@@ -199,7 +178,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, rocheStudyMap, samplesNctIds])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds])
 
   return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
 }

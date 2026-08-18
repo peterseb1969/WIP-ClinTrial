@@ -11,7 +11,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { type TrialDocument, allTrialsQueries } from '@/hooks/useAllTrials'
-import { useFilteredTrials, useRocheStudyMap, useSampleCounts } from '@/hooks/useFilteredTrials'
+import { useFilteredTrials, useSampleCounts } from '@/hooks/useFilteredTrials'
 import { useTrialFilters, trialFilters, type SingleFilterKey } from '@/hooks/useTrialFilters'
 import { reportQuery } from '@/lib/reporting'
 import { formatPhase } from '@/lib/trial-utils'
@@ -23,7 +23,6 @@ export function TrialsPage() {
   const navigate = useNavigate()
   const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
   const { filters, set: setFilter } = useTrialFilters()
-  const { data: rocheStudyMap } = useRocheStudyMap()
   const { data: sampleCounts } = useSampleCounts()
   const [page, setPage] = useState(1)
   const [aggregateOpen, setAggregateOpen] = useState(false)
@@ -129,7 +128,7 @@ export function TrialsPage() {
                     </Link>
                   </td>
                   <td className="px-3 py-2 font-mono text-xs text-text-muted">
-                    {rocheStudyMap?.get(trial.data.nct_id) || ''}
+                    {trial.data.org_study_id || ''}
                   </td>
                   <td className="max-w-xs truncate px-3 py-2" title={trial.data.brief_title || trial.data.title}>
                     {trial.data.brief_title || trial.data.title}

@@ -10,15 +10,14 @@ import { useRocheStudies, useRocheStudyDetail } from '@/hooks/useRocheStudies'
 const PAGE_SIZE = 50
 
 const TABLE_COLUMNS = [
-  { key: 'source', label: 'Source', width: 'w-20' },
   { key: 'study_number', label: 'Study #', width: 'w-28' },
   { key: 'study_phase', label: 'Phase', width: 'w-24' },
   { key: 'study_status', label: 'Status', width: 'w-28' },
   { key: 'study_type', label: 'Type', width: 'w-32' },
   { key: 'therapeutic_area', label: 'TA', width: 'w-20' },
+  { key: 'disease_area', label: 'Disease Area', width: 'w-36' },
   { key: 'indication', label: 'Indication', width: '' },
   { key: 'theme_molecule', label: 'Molecule', width: 'w-28' },
-  { key: 'nct_id', label: 'NCT ID', width: 'w-28' },
 ] as const
 
 const SKIP_DETAIL_KEYS = new Set([
@@ -31,7 +30,6 @@ export function RocheStudiesPage() {
   const { data: studies, isLoading, error } = useRocheStudies()
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [selectedSource, setSelectedSource] = useState<string | null>(null)
   const [filters, setFilters] = useState<Record<string, string>>({})
   const [tableOpen, setTableOpen] = useState(true)
 
@@ -50,7 +48,7 @@ export function RocheStudiesPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const { data: detail } = useRocheStudyDetail(selectedId, selectedSource)
+  const { data: detail } = useRocheStudyDetail(selectedId)
   const detailRef = useRef<HTMLDivElement>(null)
 
   const setFilter = (key: string, value: string) => {
@@ -64,7 +62,7 @@ export function RocheStudiesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-text">TA Portal / MDMS</h1>
+        <h1 className="text-2xl font-semibold text-text">TA Portal</h1>
         <span className="text-sm text-text-muted">
           {filtered.length} of {studies?.length ?? 0} studies
           {Object.values(filters).some(Boolean) && ' (filtered)'}
@@ -80,12 +78,10 @@ export function RocheStudiesPage() {
                 <h3 className="text-sm font-medium">
                   {String(detail.study_number || selectedId)}
                 </h3>
-                <Badge variant={selectedSource === 'ta_portal' ? 'primary' : 'muted'}>
-                  {selectedSource === 'ta_portal' ? 'TA Portal' : 'MDMS'}
-                </Badge>
+                <Badge variant="primary">TA Portal</Badge>
               </div>
               <button
-                onClick={() => { setSelectedId(null); setSelectedSource(null) }}
+                onClick={() => setSelectedId(null)}
                 className="rounded p-1 text-text-muted hover:bg-gray-100"
               >
                 <X className="h-4 w-4" />
@@ -140,10 +136,9 @@ export function RocheStudiesPage() {
                 <tbody>
                   {paginated.map((s) => (
                     <tr
-                      key={`${s.source}-${s.document_id}`}
+                      key={s.document_id}
                       onClick={() => {
                         setSelectedId(s.document_id)
-                        setSelectedSource(s.source)
                         setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
                       }}
                       className={cn(
@@ -151,19 +146,14 @@ export function RocheStudiesPage() {
                         selectedId === s.document_id && 'bg-primary/5',
                       )}
                     >
-                      <td className="px-2 py-1.5">
-                        <Badge variant={s.source === 'ta_portal' ? 'primary' : 'muted'}>
-                          {s.source === 'ta_portal' ? 'TA' : 'MDMS'}
-                        </Badge>
-                      </td>
                       <td className="px-2 py-1.5 font-mono">{s.study_number}</td>
                       <td className="px-2 py-1.5">{s.study_phase || '—'}</td>
                       <td className="px-2 py-1.5">{s.study_status || '—'}</td>
                       <td className="px-2 py-1.5 truncate max-w-[8rem]">{s.study_type || '—'}</td>
                       <td className="px-2 py-1.5">{s.therapeutic_area || '—'}</td>
+                      <td className="px-2 py-1.5 truncate max-w-[10rem]">{s.disease_area || '—'}</td>
                       <td className="px-2 py-1.5 truncate max-w-[12rem]">{s.indication || '—'}</td>
                       <td className="px-2 py-1.5">{s.theme_molecule || '—'}</td>
-                      <td className="px-2 py-1.5 font-mono">{s.nct_id || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
