@@ -186,12 +186,32 @@ const INT_FIELDS = new Set([
 ])
 const DATE_FIELDS = new Set(['earliest_collection', 'latest_collection', 'snapshot_date'])
 
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { current += '"'; i++ }
+      else if (ch === '"') inQuotes = false
+      else current += ch
+    } else {
+      if (ch === '"') inQuotes = true
+      else if (ch === ',') { fields.push(current.trim()); current = '' }
+      else current += ch
+    }
+  }
+  fields.push(current.trim())
+  return fields
+}
+
 function parseCsvRows(text: string): Record<string, string>[] {
   const lines = text.split('\n').filter((l) => l.trim())
   if (lines.length < 2) return []
-  const headers = lines[0].split(',').map((h) => h.replace(/^"|"$/g, '').trim().toLowerCase())
+  const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase())
   return lines.slice(1).map((line) => {
-    const vals = line.split(',').map((v) => v.replace(/^"|"$/g, '').trim())
+    const vals = parseCsvLine(line)
     const row: Record<string, string> = {}
     headers.forEach((h, i) => { row[h] = vals[i] ?? '' })
     return row
@@ -240,14 +260,14 @@ function parseTaPortalCsv(text: string): Record<string, string>[] {
   }
   if (headerIdx < 0) return []
 
-  const rawHeaders = lines[headerIdx].split(',').map((h) => h.replace(/^"|"$/g, '').trim())
+  const rawHeaders = parseCsvLine(lines[headerIdx])
   const fieldNames = rawHeaders.map((h) => TA_HEADER_MAP[h.toLowerCase()] || h.toLowerCase().replace(/[^a-z0-9]+/g, '_'))
 
   const rows: Record<string, string>[] = []
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const line = lines[i].trim()
     if (!line) continue
-    const vals = line.split(',').map((v) => v.replace(/^"|"$/g, '').trim())
+    const vals = parseCsvLine(line)
     if (!vals[0]) continue
     const row: Record<string, string> = {}
     fieldNames.forEach((f, j) => { row[f] = vals[j] ?? '' })
