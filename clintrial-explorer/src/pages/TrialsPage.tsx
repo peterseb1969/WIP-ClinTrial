@@ -278,6 +278,11 @@ function QuickFilters({
         }}
       />
       <FilterToggle
+        label="Has Samples"
+        active={filters.has_samples === 'true'}
+        onClick={() => trialFilters.toggle('has_samples', 'true')}
+      />
+      <FilterToggle
         label="Bookmarked"
         active={filters.bookmarked === 'true'}
         onClick={() => trialFilters.toggle('bookmarked', 'true')}

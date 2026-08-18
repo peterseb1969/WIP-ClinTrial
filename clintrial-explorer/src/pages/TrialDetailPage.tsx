@@ -31,6 +31,7 @@ import {
   useTrialAEs,
   useTrialBaselines,
   useTrialFiles,
+  useTrialSamples,
 } from '@/hooks/useTrialDetail'
 import { usePinTrial } from '@/hooks/useClassification'
 import { useRocheStudyMap } from '@/hooks/useFilteredTrials'
@@ -260,7 +261,7 @@ export function TrialDetailPage() {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'overview' && <OverviewTab data={d as unknown as Record<string, unknown>} />}
+      {activeTab === 'overview' && <OverviewTab data={d as unknown as Record<string, unknown>} studyNumber={rocheStudyNumber} />}
       {activeTab === 'outcomes' && <OutcomesTab nctId={d.nct_id} />}
       {activeTab === 'sites' && <SitesTab nctId={d.nct_id} />}
       {activeTab === 'aes' && <AEsTab nctId={d.nct_id} />}
@@ -270,7 +271,7 @@ export function TrialDetailPage() {
   )
 }
 
-function OverviewTab({ data: d }: { data: Record<string, unknown> }) {
+function OverviewTab({ data: d, studyNumber }: { data: Record<string, unknown>; studyNumber?: string | null }) {
   const summary = String(d.brief_summary || '')
   const enrollment = d.enrollment as number | undefined
   const startDate = String(d.start_date || '—')
@@ -333,7 +334,69 @@ function OverviewTab({ data: d }: { data: Record<string, unknown> }) {
           </pre>
         </Card>
       )}
+
+      <SamplesSection studyNumber={studyNumber} />
     </div>
+  )
+}
+
+function SamplesSection({ studyNumber }: { studyNumber?: string | null }) {
+  const { data: samples, isLoading } = useTrialSamples(studyNumber)
+
+  if (!studyNumber) return null
+  if (isLoading) return (
+    <Card className="lg:col-span-2">
+      <h3 className="mb-3 font-semibold">SAMI Samples</h3>
+      <LoadingSpinner />
+    </Card>
+  )
+  if (!samples || samples.length === 0) return (
+    <Card className="lg:col-span-2">
+      <h3 className="mb-3 font-semibold">SAMI Samples</h3>
+      <p className="text-sm text-text-muted">No sample data available for {studyNumber}.</p>
+    </Card>
+  )
+
+  const totalInCirculation = samples.reduce((s, r) => s + (r.in_circulation || 0), 0)
+  const totalAll = samples.reduce((s, r) => s + (r.total_count || 0), 0)
+  const snapshotDate = samples[0]?.snapshot_date
+
+  return (
+    <Card className="lg:col-span-2">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold">SAMI Samples</h3>
+        <div className="flex items-center gap-3 text-xs text-text-muted">
+          <span>{formatNumber(totalInCirculation)} available of {formatNumber(totalAll)} total</span>
+          {snapshotDate && <span>as of {snapshotDate}</span>}
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-xs text-text-muted">
+              <th className="pb-2 pr-4 font-medium">Sample Type</th>
+              <th className="pb-2 pr-4 font-medium text-right">In Circulation</th>
+              <th className="pb-2 pr-4 font-medium text-right">Disposed</th>
+              <th className="pb-2 pr-4 font-medium text-right">Allocated</th>
+              <th className="pb-2 pr-4 font-medium text-right">On Hold</th>
+              <th className="pb-2 font-medium text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {samples.map((row) => (
+              <tr key={row.sample_type} className="border-b border-gray-100">
+                <td className="py-1.5 pr-4 font-medium">{row.sample_type}</td>
+                <td className="py-1.5 pr-4 text-right">{formatNumber(row.in_circulation)}</td>
+                <td className="py-1.5 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
+                <td className="py-1.5 pr-4 text-right text-text-muted">{row.allocated || '—'}</td>
+                <td className="py-1.5 pr-4 text-right text-text-muted">{row.on_hold || '—'}</td>
+                <td className="py-1.5 text-right">{formatNumber(row.total_count)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   )
 }
 

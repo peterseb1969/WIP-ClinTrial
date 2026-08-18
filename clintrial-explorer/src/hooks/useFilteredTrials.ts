@@ -72,7 +72,23 @@ function useDataAvailability() {
     staleTime: 10 * 60 * 1000,
   })
 
-  return { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds }
+  const { data: samplesNctIds } = useQuery({
+    queryKey: ['clintrial', 'has-samples'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        `SELECT DISTINCT ta.nct_id
+         FROM doc_ct_sami_study_summary__v2 s
+         JOIN doc_ct_ta_study ta ON ta.study_number = s.study_number
+         WHERE s.source_system = 'SAMI' AND s.in_circulation > 0 AND ta.nct_id IS NOT NULL AND ta.nct_id != ''`,
+        [],
+        10000,
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  return { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds }
 }
 
 /** Returns all trials with therapeutic areas enriched by classification rules,
@@ -84,7 +100,7 @@ export function useFilteredTrials() {
   const { filters } = useTrialFilters()
   const { has: isBookmarked } = useBookmarks()
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
-  const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds } = useDataAvailability()
+  const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds } = useDataAvailability()
   const { data: rocheStudyMap } = useRocheStudyMap()
 
   // Enrich trials with rule-based TA classification and ontology ancestor walk
@@ -149,6 +165,7 @@ export function useFilteredTrials() {
       if (filters.has_protocol === 'true' && protocolNctIds && !protocolNctIds.has(d.nct_id)) return false
       if (filters.has_roche_id === 'true' && rocheStudyMap && !rocheStudyMap.has(d.nct_id)) return false
       if (filters.has_roche_id === 'false' && rocheStudyMap && rocheStudyMap.has(d.nct_id)) return false
+      if (filters.has_samples === 'true' && samplesNctIds && !samplesNctIds.has(d.nct_id)) return false
 
       // Free-text search
       if (filters.search) {
@@ -159,7 +176,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, rocheStudyMap])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, rocheStudyMap, samplesNctIds])
 
   return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
 }

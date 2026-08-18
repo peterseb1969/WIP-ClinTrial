@@ -20,6 +20,7 @@ export type SingleFilterKey =
   | 'has_outcomes'
   | 'has_protocol'
   | 'has_roche_id'
+  | 'has_samples'
   | 'bookmarked'
   | 'search'
 

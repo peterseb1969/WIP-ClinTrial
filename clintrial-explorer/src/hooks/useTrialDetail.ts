@@ -104,6 +104,36 @@ export function useTrialBaselines(nctId: string) {
   return useTrialRelated('doc_ct_trial_baseline', nctId, 'baselines')
 }
 
+export interface SamiSampleRow {
+  sample_type: string
+  total_count: number
+  in_circulation: number
+  disposed: number
+  allocated: number
+  on_hold: number
+  unique_participants: number
+  snapshot_date: string
+}
+
+export function useTrialSamples(studyNumber: string | null | undefined) {
+  return useQuery<SamiSampleRow[]>({
+    queryKey: ['clintrial', 'sami-samples', studyNumber],
+    queryFn: async () => {
+      const result = await reportQuery<SamiSampleRow>(
+        `SELECT sample_type, total_count, in_circulation, disposed, allocated, on_hold,
+                unique_participants, snapshot_date
+         FROM doc_ct_sami_study_summary__v2
+         WHERE study_number = $1 AND source_system = 'SAMI'
+         ORDER BY total_count DESC`,
+        [studyNumber!],
+      )
+      return result.rows
+    },
+    enabled: !!studyNumber,
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
 interface FileRef {
   file_id: string
   filename: string
