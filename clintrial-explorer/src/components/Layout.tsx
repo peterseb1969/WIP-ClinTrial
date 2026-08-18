@@ -15,6 +15,7 @@ import {
   Home,
   ChevronRight,
   LogOut,
+  TestTubes,
 } from 'lucide-react'
 import { WipFooter } from '@wip/react'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,7 @@ const navItems = [
   { to: '/adverse-events', icon: AlertTriangle, label: 'Adverse Events', adminOnly: false },
   { to: '/sites', icon: MapPin, label: 'Sites', adminOnly: false },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks', adminOnly: false },
+  { to: '/samples', icon: TestTubes, label: 'Samples', adminOnly: false },
   { to: '/roche-studies', icon: Building2, label: 'TA Portal', adminOnly: false },
   { to: '/settings', icon: Settings, label: 'Settings', adminOnly: false },
   { to: '/import', icon: Upload, label: 'Import', adminOnly: true },
@@ -42,6 +44,7 @@ const breadcrumbLabels: Record<string, string> = {
   'adverse-events': 'Adverse Events',
   sites: 'Sites',
   bookmarks: 'Bookmarks',
+  samples: 'Sample Inventory',
   settings: 'Settings',
   rules: 'Classification Rules',
   'roche-studies': 'TA Portal',
