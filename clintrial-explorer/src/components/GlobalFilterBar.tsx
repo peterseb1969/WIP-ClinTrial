@@ -23,6 +23,13 @@ const LABEL_MAP: Record<string, string> = {
   has_protocol: 'Has Protocol',
   has_roche_id: 'Roche ID',
   has_samples: 'Has Samples',
+  has_eligibility: 'Has Eligibility',
+  elig_pregnancy_excluded: 'Pregnancy Excluded',
+  elig_cns_excluded: 'CNS Excluded',
+  elig_hiv_excluded: 'HIV Excluded',
+  elig_autoimmune_excluded: 'Autoimmune Excluded',
+  elig_measurable: 'Measurable Disease Req.',
+  elig_healthy_volunteers: 'Healthy Volunteers',
   bookmarked: 'Bookmarked',
   search: 'Search',
 }

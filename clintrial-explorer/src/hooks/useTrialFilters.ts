@@ -21,6 +21,13 @@ export type SingleFilterKey =
   | 'has_protocol'
   | 'has_roche_id'
   | 'has_samples'
+  | 'has_eligibility'
+  | 'elig_pregnancy_excluded'
+  | 'elig_cns_excluded'
+  | 'elig_hiv_excluded'
+  | 'elig_autoimmune_excluded'
+  | 'elig_measurable'
+  | 'elig_healthy_volunteers'
   | 'bookmarked'
   | 'search'
 

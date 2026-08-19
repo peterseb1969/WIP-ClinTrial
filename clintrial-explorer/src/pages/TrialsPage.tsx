@@ -285,6 +285,44 @@ function QuickFilters({
         active={filters.bookmarked === 'true'}
         onClick={() => trialFilters.toggle('bookmarked', 'true')}
       />
+
+      {/* Eligibility criteria filters */}
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted self-center ml-2">Eligibility:</span>
+      <FilterToggle
+        label="Has Eligibility"
+        active={filters.has_eligibility === 'true'}
+        onClick={() => trialFilters.toggle('has_eligibility', 'true')}
+      />
+      <FilterToggle
+        label="Pregnancy Excl."
+        active={filters.elig_pregnancy_excluded === 'true'}
+        onClick={() => trialFilters.toggle('elig_pregnancy_excluded', 'true')}
+      />
+      <FilterToggle
+        label="CNS Excl."
+        active={filters.elig_cns_excluded === 'true'}
+        onClick={() => trialFilters.toggle('elig_cns_excluded', 'true')}
+      />
+      <FilterToggle
+        label="HIV Excl."
+        active={filters.elig_hiv_excluded === 'true'}
+        onClick={() => trialFilters.toggle('elig_hiv_excluded', 'true')}
+      />
+      <FilterToggle
+        label="Autoimmune Excl."
+        active={filters.elig_autoimmune_excluded === 'true'}
+        onClick={() => trialFilters.toggle('elig_autoimmune_excluded', 'true')}
+      />
+      <FilterToggle
+        label="Measurable Dz."
+        active={filters.elig_measurable === 'true'}
+        onClick={() => trialFilters.toggle('elig_measurable', 'true')}
+      />
+      <FilterToggle
+        label="Healthy Vol."
+        active={filters.elig_healthy_volunteers === 'true'}
+        onClick={() => trialFilters.toggle('elig_healthy_volunteers', 'true')}
+      />
     </div>
   )
 }

@@ -137,6 +137,47 @@ export function useTrialSamples(studyNumber: string | null | undefined) {
   })
 }
 
+export interface EligibilityData {
+  nct_id: string
+  min_age: number | null
+  max_age: number | null
+  ecog_min: number | null
+  ecog_max: number | null
+  pregnancy_excluded: boolean | null
+  cns_excluded: boolean | null
+  autoimmune_excluded: boolean | null
+  hiv_excluded: boolean | null
+  hbv_excluded: boolean | null
+  hcv_excluded: boolean | null
+  requires_measurable_disease: boolean | null
+  life_expectancy_weeks: number | null
+  accepts_healthy_volunteers: boolean | null
+  criteria_json: string | null
+  extraction_model: string
+  extracted_at: string | null
+}
+
+export function useTrialEligibility(nctId: string) {
+  return useQuery<EligibilityData | null>({
+    queryKey: ['clintrial', 'eligibility', nctId],
+    queryFn: async () => {
+      const result = await reportQuery<EligibilityData>(
+        `SELECT nct_id, min_age, max_age, ecog_min, ecog_max,
+                pregnancy_excluded, cns_excluded, autoimmune_excluded,
+                hiv_excluded, hbv_excluded, hcv_excluded,
+                requires_measurable_disease, life_expectancy_weeks,
+                accepts_healthy_volunteers, criteria_json,
+                extraction_model, extracted_at
+         FROM doc_ct_trial_eligibility WHERE nct_id = $1 LIMIT 1`,
+        [nctId],
+      )
+      return result.rows[0] ?? null
+    },
+    enabled: !!nctId,
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
 interface FileRef {
   file_id: string
   filename: string

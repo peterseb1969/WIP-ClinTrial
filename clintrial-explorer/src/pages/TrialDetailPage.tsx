@@ -15,6 +15,7 @@ import {
   X,
   Check,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react'
 import { useWipClient } from '@wip/react'
 import { Badge } from '@/components/Badge'
@@ -33,6 +34,7 @@ import {
   useTrialBaselines,
   useTrialFiles,
   useTrialSamples,
+  useTrialEligibility,
 } from '@/hooks/useTrialDetail'
 import { usePinTrial } from '@/hooks/useClassification'
 import { formatPhase } from '@/lib/trial-utils'
@@ -321,14 +323,7 @@ function OverviewTab({ data: d, studyNumber }: { data: Record<string, unknown>; 
         </Card>
       )}
 
-      {eligibility && (
-        <Card className="lg:col-span-2">
-          <h3 className="mb-3 font-semibold">Eligibility Criteria</h3>
-          <pre className="whitespace-pre-wrap text-sm leading-relaxed text-text-muted font-sans">
-            {eligibility}
-          </pre>
-        </Card>
-      )}
+      <EligibilitySection nctId={String(d.nct_id)} rawText={eligibility} />
 
       <SamplesSection studyNumber={studyNumber} />
     </div>
@@ -347,6 +342,156 @@ function useStickyToggle(key: string, defaultOpen = false) {
     })
   }, [key])
   return [open, toggle] as const
+}
+
+function BoolBadge({ value, label }: { value: boolean | null; label: string }) {
+  if (value === null || value === undefined) return null
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+      value ? 'bg-danger/10 text-danger' : 'bg-gray-100 text-text-muted'
+    }`}>
+      {value ? 'Yes' : 'No'} — {label}
+    </span>
+  )
+}
+
+function EligibilitySection({ nctId, rawText }: { nctId: string; rawText: string }) {
+  const { data: elig, isLoading } = useTrialEligibility(nctId)
+  const [showRaw, setShowRaw] = useState(false)
+  const [showCriteria, setShowCriteria] = useState(false)
+
+  interface Criterion {
+    type?: string
+    category?: string
+    text?: string
+    structured_value?: Record<string, unknown>
+  }
+
+  const criteria: Criterion[] = elig?.criteria_json
+    ? (() => { try { return JSON.parse(elig.criteria_json) } catch { return [] } })()
+    : []
+
+  const inclusion = criteria.filter((c) => c.type === 'inclusion')
+  const exclusion = criteria.filter((c) => c.type === 'exclusion')
+
+  return (
+    <Card className="lg:col-span-2">
+      <h3 className="mb-3 font-semibold">Eligibility Criteria</h3>
+
+      {isLoading && <LoadingSpinner />}
+
+      {elig && (
+        <div className="space-y-4">
+          {/* Structured summary */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {(elig.min_age != null || elig.max_age != null) && (
+              <div>
+                <dt className="text-xs text-text-muted">Age Range</dt>
+                <dd className="font-medium text-sm">
+                  {elig.min_age ?? '—'} – {elig.max_age ?? '—'} years
+                </dd>
+              </div>
+            )}
+            {(elig.ecog_min != null || elig.ecog_max != null) && (
+              <div>
+                <dt className="text-xs text-text-muted">ECOG Performance</dt>
+                <dd className="font-medium text-sm">
+                  {elig.ecog_min ?? '?'} – {elig.ecog_max ?? '?'}
+                </dd>
+              </div>
+            )}
+            {elig.life_expectancy_weeks != null && (
+              <div>
+                <dt className="text-xs text-text-muted">Min Life Expectancy</dt>
+                <dd className="font-medium text-sm">{elig.life_expectancy_weeks} weeks</dd>
+              </div>
+            )}
+          </div>
+
+          {/* Boolean exclusion badges */}
+          <div className="flex flex-wrap gap-1.5">
+            <BoolBadge value={elig.pregnancy_excluded} label="Pregnancy excluded" />
+            <BoolBadge value={elig.cns_excluded} label="CNS excluded" />
+            <BoolBadge value={elig.hiv_excluded} label="HIV excluded" />
+            <BoolBadge value={elig.hbv_excluded} label="HBV excluded" />
+            <BoolBadge value={elig.hcv_excluded} label="HCV excluded" />
+            <BoolBadge value={elig.autoimmune_excluded} label="Autoimmune excluded" />
+            <BoolBadge value={elig.requires_measurable_disease} label="Measurable disease req." />
+            <BoolBadge value={elig.accepts_healthy_volunteers} label="Healthy volunteers" />
+          </div>
+
+          {/* Extracted criteria */}
+          {criteria.length > 0 && (
+            <div>
+              <button
+                onClick={() => setShowCriteria(!showCriteria)}
+                className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                {showCriteria ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                {criteria.length} extracted criteria ({inclusion.length} inclusion, {exclusion.length} exclusion)
+              </button>
+              {showCriteria && (
+                <div className="mt-2 space-y-3">
+                  {inclusion.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-success mb-1">Inclusion ({inclusion.length})</h4>
+                      <ul className="space-y-1">
+                        {inclusion.map((c, i) => (
+                          <li key={i} className="flex gap-2 text-sm">
+                            <Badge variant="muted" className="shrink-0 text-[10px]">{c.category || 'OTHER'}</Badge>
+                            <span className="text-text-muted">{c.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {exclusion.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-danger mb-1">Exclusion ({exclusion.length})</h4>
+                      <ul className="space-y-1">
+                        {exclusion.map((c, i) => (
+                          <li key={i} className="flex gap-2 text-sm">
+                            <Badge variant="muted" className="shrink-0 text-[10px]">{c.category || 'OTHER'}</Badge>
+                            <span className="text-text-muted">{c.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <p className="text-[10px] text-text-muted">
+            Extracted by {elig.extraction_model} on {elig.extracted_at || '—'}
+          </p>
+        </div>
+      )}
+
+      {/* Raw eligibility text (always available as fallback) */}
+      {rawText && (
+        <div className={elig ? 'mt-3 border-t pt-3' : ''}>
+          <button
+            onClick={() => setShowRaw(!showRaw)}
+            className="flex items-center gap-1 text-xs text-text-muted hover:text-text"
+          >
+            {showRaw ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            Raw eligibility text
+          </button>
+          {showRaw && (
+            <pre className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-muted font-sans">
+              {rawText}
+            </pre>
+          )}
+        </div>
+      )}
+
+      {!elig && !isLoading && !rawText && (
+        <p className="text-sm text-text-muted">No eligibility data available.</p>
+      )}
+    </Card>
+  )
 }
 
 function SamplesSection({ studyNumber }: { studyNumber?: string | null }) {

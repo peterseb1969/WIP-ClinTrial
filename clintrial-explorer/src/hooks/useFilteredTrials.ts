@@ -95,6 +95,88 @@ function useDataAvailability() {
   return { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds }
 }
 
+/** Pre-compute sets of NCT IDs by eligibility criteria */
+function useEligibilityAvailability() {
+  const { data: eligNctIds } = useQuery({
+    queryKey: ['clintrial', 'has-eligibility'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility',
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: pregnancyExcluded } = useQuery({
+    queryKey: ['clintrial', 'elig-pregnancy-excluded'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE pregnancy_excluded = true',
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: cnsExcluded } = useQuery({
+    queryKey: ['clintrial', 'elig-cns-excluded'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE cns_excluded = true',
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: hivExcluded } = useQuery({
+    queryKey: ['clintrial', 'elig-hiv-excluded'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE hiv_excluded = true',
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: autoExcluded } = useQuery({
+    queryKey: ['clintrial', 'elig-autoimmune-excluded'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE autoimmune_excluded = true',
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: measurableRequired } = useQuery({
+    queryKey: ['clintrial', 'elig-measurable'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE requires_measurable_disease = true',
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: healthyVol } = useQuery({
+    queryKey: ['clintrial', 'elig-healthy-volunteers'],
+    queryFn: async () => {
+      const r = await reportQuery<{ nct_id: string }>(
+        'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE accepts_healthy_volunteers = true',
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  return { eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol }
+}
+
 /** Returns all trials with therapeutic areas enriched by classification rules,
  * then filtered by the current global filter state. */
 export function useFilteredTrials() {
@@ -105,6 +187,7 @@ export function useFilteredTrials() {
   const { has: isBookmarked } = useBookmarks()
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
   const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds } = useDataAvailability()
+  const { eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol } = useEligibilityAvailability()
   // Enrich trials with rule-based TA classification and ontology ancestor walk
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
     if (!trials) return undefined
@@ -169,6 +252,15 @@ export function useFilteredTrials() {
       if (filters.has_roche_id === 'false' && d.org_study_id) return false
       if (filters.has_samples === 'true' && samplesNctIds && !samplesNctIds.has(d.nct_id)) return false
 
+      // Eligibility filters
+      if (filters.has_eligibility === 'true' && eligNctIds && !eligNctIds.has(d.nct_id)) return false
+      if (filters.elig_pregnancy_excluded === 'true' && pregnancyExcluded && !pregnancyExcluded.has(d.nct_id)) return false
+      if (filters.elig_cns_excluded === 'true' && cnsExcluded && !cnsExcluded.has(d.nct_id)) return false
+      if (filters.elig_hiv_excluded === 'true' && hivExcluded && !hivExcluded.has(d.nct_id)) return false
+      if (filters.elig_autoimmune_excluded === 'true' && autoExcluded && !autoExcluded.has(d.nct_id)) return false
+      if (filters.elig_measurable === 'true' && measurableRequired && !measurableRequired.has(d.nct_id)) return false
+      if (filters.elig_healthy_volunteers === 'true' && healthyVol && !healthyVol.has(d.nct_id)) return false
+
       // Free-text search
       if (filters.search) {
         const q = filters.search.toLowerCase()
@@ -178,7 +270,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds, eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol])
 
   return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
 }
