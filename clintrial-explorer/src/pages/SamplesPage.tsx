@@ -58,6 +58,7 @@ export function SamplesPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set())
   const [minAvailable, setMinAvailable] = useState(0)
+  const [minMode, setMinMode] = useState<'each' | 'combined'>('each')
 
   if (isLoading) return <PageLoading message="Loading sample inventory..." />
   if (error) return <ErrorMessage message={(error as Error).message} />
@@ -85,11 +86,17 @@ export function SamplesPage() {
   const filtered = studies.filter((s) => {
     if (showBasketOnly && !basket.has(s.nct_id)) return false
     if (typeFilter.size > 0) {
-      const typeAvailable = s.rows
-        .filter((r) => typeFilter.has(r.sample_type))
-        .reduce((sum, r) => sum + (r.available || 0), 0)
-      if (typeAvailable === 0) return false
-      if (minAvailable > 0 && typeAvailable < minAvailable) return false
+      const matchingRows = s.rows.filter((r) => typeFilter.has(r.sample_type))
+      const hasAny = matchingRows.some((r) => r.available > 0)
+      if (!hasAny) return false
+      if (minAvailable > 0) {
+        if (minMode === 'each') {
+          if (!matchingRows.every((r) => r.available >= minAvailable)) return false
+        } else {
+          const total = matchingRows.reduce((sum, r) => sum + (r.available || 0), 0)
+          if (total < minAvailable) return false
+        }
+      }
     } else if (minAvailable > 0 && s.total_available < minAvailable) {
       return false
     }
@@ -241,6 +248,15 @@ export function SamplesPage() {
               onChange={(e) => { setMinAvailable(Number(e.target.value) || 0); setPage(1) }}
               className="w-20 rounded border border-gray-300 px-2 py-1.5 text-sm"
             />
+            {typeFilter.size > 1 && (
+              <button
+                onClick={() => setMinMode(minMode === 'each' ? 'combined' : 'each')}
+                className="rounded border px-2 py-1 text-xs font-medium text-text-muted hover:bg-gray-50"
+                title={minMode === 'each' ? 'Each selected type must meet the threshold' : 'Sum across selected types must meet the threshold'}
+              >
+                {minMode === 'each' ? 'per type' : 'combined'}
+              </button>
+            )}
           </div>
           {hasLocalFilters && (
             <button onClick={clearFilters} className="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs text-text-muted hover:bg-gray-50">
