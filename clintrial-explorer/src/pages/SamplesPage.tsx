@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, TestTubes } from 'lucide-react'
+import { ChevronRight, TestTubes, Download, Search, X } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
@@ -8,6 +8,11 @@ import { useSampleInventory, type StudySamples, type SamiRow } from '@/hooks/use
 import { formatNumber } from '@/lib/utils'
 
 const PAGE_SIZE = 50
+
+const SAMPLE_TYPE_OPTIONS = [
+  'Plasma', 'Serum', 'Blood', 'DNA', 'RNA', 'CSF', 'PBMC', 'Urine',
+  'Unstained fixed slide', 'H and E fixed slide', 'Fixed Block', 'Stool',
+]
 
 function useStickyToggle(key: string, defaultOpen = false) {
   const [open, setOpen] = useState(() => {
@@ -23,6 +28,35 @@ function useStickyToggle(key: string, defaultOpen = false) {
   return [open, toggle] as const
 }
 
+function exportCsv(studies: StudySamples[], detailed: boolean) {
+  let csv: string
+  if (detailed) {
+    csv = 'roche_id,nct_id,title,sample_type,available,marked_for_disposal,in_circulation,disposed,total,participants,snapshot_date\n'
+    for (const s of studies) {
+      for (const r of s.rows) {
+        csv += [s.org_study_id, s.nct_id, `"${(s.brief_title || '').replace(/"/g, '""')}"`,
+          r.sample_type, r.available, r.marked_for_disposal, r.in_circulation,
+          r.disposed, r.total_count, r.unique_participants, r.snapshot_date,
+        ].join(',') + '\n'
+      }
+    }
+  } else {
+    csv = 'roche_id,nct_id,title,total_available,plasma,serum,blood,dna,csf,tissue,other,total_count\n'
+    for (const s of studies) {
+      csv += [s.org_study_id, s.nct_id, `"${(s.brief_title || '').replace(/"/g, '""')}"`,
+        s.total_available, s.plasma, s.serum, s.blood, s.dna, s.csf, s.tissue, s.other, s.total_count,
+      ].join(',') + '\n'
+    }
+  }
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = detailed ? 'sample_inventory_detail.csv' : 'sample_inventory.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export function SamplesPage() {
   const { studies, stats, isLoading, error } = useSampleInventory()
   const [page, setPage] = useState(1)
@@ -30,10 +64,29 @@ export function SamplesPage() {
   const [sortAsc, setSortAsc] = useState(false)
   const [expanded, toggleExpanded] = useStickyToggle('clintrial-samples-expanded')
 
+  // Local sample filters
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set())
+  const [minAvailable, setMinAvailable] = useState(0)
+
   if (isLoading) return <PageLoading message="Loading sample inventory..." />
   if (error) return <ErrorMessage message={(error as Error).message} />
 
-  const sorted = [...studies].sort((a, b) => {
+  const filtered = studies.filter((s) => {
+    if (minAvailable > 0 && s.total_available < minAvailable) return false
+    if (typeFilter.size > 0) {
+      const hasType = s.rows.some((r) => r.available > 0 && typeFilter.has(r.sample_type))
+      if (!hasType) return false
+    }
+    if (search) {
+      const q = search.toLowerCase()
+      const searchable = `${s.org_study_id} ${s.nct_id} ${s.brief_title}`.toLowerCase()
+      if (!searchable.includes(q)) return false
+    }
+    return true
+  })
+
+  const sorted = [...filtered].sort((a, b) => {
     const av = (a as unknown as Record<string, unknown>)[sortKey]
     const bv = (b as unknown as Record<string, unknown>)[sortKey]
     const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv
@@ -49,6 +102,18 @@ export function SamplesPage() {
     else { setSortKey(key); setSortAsc(false) }
   }
 
+  const toggleType = (type: string) => {
+    setTypeFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(type)) next.delete(type); else next.add(type)
+      return next
+    })
+    setPage(1)
+  }
+
+  const clearFilters = () => { setSearch(''); setTypeFilter(new Set()); setMinAvailable(0); setPage(1) }
+  const hasLocalFilters = search || typeFilter.size > 0 || minAvailable > 0
+
   const SortHeader = ({ k, label, right }: { k: string; label: string; right?: boolean }) => (
     <th
       className={`cursor-pointer px-2 py-2.5 font-medium text-text-muted hover:text-text ${right ? 'text-right' : 'text-left'}`}
@@ -61,25 +126,91 @@ export function SamplesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <TestTubes className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-semibold text-text">Sample Inventory</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <TestTubes className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-semibold text-text">Sample Inventory</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportCsv(sorted, false)}
+            className="inline-flex items-center gap-1.5 rounded border px-2.5 py-1.5 text-xs font-medium text-text-muted hover:bg-gray-50"
+          >
+            <Download className="h-3.5 w-3.5" /> Summary CSV
+          </button>
+          <button
+            onClick={() => exportCsv(sorted, true)}
+            className="inline-flex items-center gap-1.5 rounded border px-2.5 py-1.5 text-xs font-medium text-text-muted hover:bg-gray-50"
+          >
+            <Download className="h-3.5 w-3.5" /> Detail CSV
+          </button>
+        </div>
       </div>
 
       {/* Stat tiles */}
       {stats && (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatTile label="Trials with Samples" value={formatNumber(stats.trialsWithSamples)} />
-          <StatTile label="Available Samples" value={formatNumber(stats.totalAvailable)} />
-          <StatTile label="Coverage" value={`${stats.coverage}%`} />
-          <StatTile label="Roche Studies" value={formatNumber(stats.totalStudies)} />
+          <StatTile label="Trials with Samples" value={formatNumber(filtered.length)} sub={`of ${formatNumber(studies.length)} total`} />
+          <StatTile label="Available Samples" value={formatNumber(filtered.reduce((s, st) => s + st.total_available, 0))} />
+          <StatTile label="Coverage" value={`${stats.coverage}%`} sub="of filtered trials" />
+          <StatTile label="Roche Studies" value={formatNumber(new Set(filtered.map((s) => s.org_study_id)).size)} />
         </div>
       )}
+
+      {/* Sample filters */}
+      <Card className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-2.5 top-2 h-4 w-4 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Search study #, NCT ID, or title..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              className="w-full rounded border border-gray-300 py-1.5 pl-8 pr-3 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs text-text-muted whitespace-nowrap">Min available:</label>
+            <input
+              type="number"
+              min={0}
+              step={100}
+              value={minAvailable || ''}
+              placeholder="0"
+              onChange={(e) => { setMinAvailable(Number(e.target.value) || 0); setPage(1) }}
+              className="w-20 rounded border border-gray-300 px-2 py-1.5 text-sm"
+            />
+          </div>
+          {hasLocalFilters && (
+            <button onClick={clearFilters} className="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs text-text-muted hover:bg-gray-50">
+              <X className="h-3 w-3" /> Clear
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <span className="text-xs text-text-muted self-center mr-1">Sample type:</span>
+          {SAMPLE_TYPE_OPTIONS.map((t) => (
+            <button
+              key={t}
+              onClick={() => toggleType(t)}
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                typeFilter.has(t)
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-text-muted hover:bg-gray-200'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </Card>
 
       {/* Expand/collapse toggle */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-text-muted">
-          {formatNumber(sorted.length)} studies with sample data
+          {formatNumber(sorted.length)} studies
+          {hasLocalFilters && ` (filtered from ${formatNumber(studies.length)})`}
         </span>
         <button
           onClick={toggleExpanded}
@@ -191,7 +322,9 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
           <th className="pb-1 pr-4 font-medium text-right">Marked Disp.</th>
           <th className="pb-1 pr-4 font-medium text-right">In Circ.</th>
           <th className="pb-1 pr-4 font-medium text-right">Disposed</th>
-          <th className="pb-1 font-medium text-right">Total</th>
+          <th className="pb-1 pr-4 font-medium text-right">Total</th>
+          <th className="pb-1 pr-4 font-medium text-right">Participants</th>
+          <th className="pb-1 font-medium text-right">Snapshot</th>
         </tr>
       </thead>
       <tbody>
@@ -202,7 +335,9 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
             <td className="py-1 pr-4 text-right text-text-muted">{row.marked_for_disposal || '—'}</td>
             <td className="py-1 pr-4 text-right text-text-muted">{formatNumber(row.in_circulation)}</td>
             <td className="py-1 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
-            <td className="py-1 text-right">{formatNumber(row.total_count)}</td>
+            <td className="py-1 pr-4 text-right">{formatNumber(row.total_count)}</td>
+            <td className="py-1 pr-4 text-right text-text-muted">{row.unique_participants || '—'}</td>
+            <td className="py-1 text-right text-text-muted">{row.snapshot_date}</td>
           </tr>
         ))}
       </tbody>
@@ -210,11 +345,12 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
   )
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <Card className="text-center">
       <p className="text-2xl font-bold text-text">{value}</p>
       <p className="text-xs text-text-muted">{label}</p>
+      {sub && <p className="text-[10px] text-text-muted">{sub}</p>}
     </Card>
   )
 }
