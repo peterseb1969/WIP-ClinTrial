@@ -297,7 +297,7 @@ export function SamplesPage() {
       </div>
 
       {/* Basket summary — shown in list-only view */}
-      {showBasketOnly && sorted.length > 0 && <BasketSummary studies={sorted} />}
+      {showBasketOnly && sorted.length > 0 && <BasketSummary studies={sorted} typeFilter={typeFilter} />}
 
       {/* Main table */}
       <Card className="overflow-hidden p-0">
@@ -329,6 +329,7 @@ export function SamplesPage() {
                   onToggleExpand={() => { toggleRow(study.nct_id); setAllExpanded(false) }}
                   inBasket={basket.has(study.nct_id)}
                   onToggleBasket={() => basket.toggle(study.nct_id)}
+                  typeFilter={typeFilter}
                 />
               ))}
               {paginated.length === 0 && (
@@ -357,12 +358,13 @@ export function SamplesPage() {
   )
 }
 
-function StudyRow({ study, expanded, onToggleExpand, inBasket, onToggleBasket }: {
+function StudyRow({ study, expanded, onToggleExpand, inBasket, onToggleBasket, typeFilter }: {
   study: StudySamples
   expanded: boolean
   onToggleExpand: () => void
   inBasket: boolean
   onToggleBasket: () => void
+  typeFilter: Set<string>
 }) {
   const n = (v: number) => v > 0 ? formatNumber(v) : <span className="text-gray-300">—</span>
 
@@ -408,7 +410,7 @@ function StudyRow({ study, expanded, onToggleExpand, inBasket, onToggleBasket }:
       {expanded && (
         <tr className="border-b border-gray-100">
           <td colSpan={13} className="bg-gray-50/30 px-6 py-2">
-            <DetailTable rows={study.rows} />
+            <DetailTable rows={typeFilter.size > 0 ? study.rows.filter((r) => typeFilter.has(r.sample_type)) : study.rows} />
           </td>
         </tr>
       )}
@@ -455,8 +457,10 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
   )
 }
 
-function BasketSummary({ studies }: { studies: StudySamples[] }) {
-  const allRows = studies.flatMap((s) => s.rows)
+function BasketSummary({ studies, typeFilter }: { studies: StudySamples[]; typeFilter: Set<string> }) {
+  const allRows = studies.flatMap((s) =>
+    typeFilter.size > 0 ? s.rows.filter((r) => typeFilter.has(r.sample_type)) : s.rows
+  )
   const byType = new Map<string, { available: number; total: number; participants: number }>()
   for (const r of allRows) {
     const entry = byType.get(r.sample_type) || { available: 0, total: 0, participants: 0 }
