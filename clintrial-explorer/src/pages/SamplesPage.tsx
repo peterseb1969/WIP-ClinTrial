@@ -175,6 +175,14 @@ export function SamplesPage() {
           <strong className="text-text">{basket.count}</strong>
           <span className="text-text-muted"> studies in list</span>
         </span>
+        {sorted.length > 0 && (
+          <button
+            onClick={() => basket.addAll(sorted.map((s) => s.nct_id))}
+            className="inline-flex items-center gap-1 rounded border border-primary/30 px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/5"
+          >
+            <ListPlus className="h-3 w-3" /> Add all visible ({sorted.length})
+          </button>
+        )}
         {basket.count > 0 && (
           <button
             onClick={() => { setShowBasketOnly(!showBasketOnly); setPage(1) }}

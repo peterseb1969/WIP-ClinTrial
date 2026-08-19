@@ -52,6 +52,12 @@ export function useStudyBasket() {
     persist()
   }, [])
 
+  const addAll = useCallback((nctIds: string[]) => {
+    snapshot = new Set(snapshot)
+    for (const id of nctIds) snapshot.add(id)
+    persist()
+  }, [])
+
   const clear = useCallback(() => {
     snapshot = new Set()
     persist()
@@ -59,5 +65,5 @@ export function useStudyBasket() {
 
   const has = useCallback((nctId: string) => basket.has(nctId), [basket])
 
-  return { basket, count: basket.size, add, remove, toggle, clear, has }
+  return { basket, count: basket.size, add, addAll, remove, toggle, clear, has }
 }
