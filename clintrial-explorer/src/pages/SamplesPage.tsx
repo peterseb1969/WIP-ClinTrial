@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, TestTubes, Download, Search, X } from 'lucide-react'
+import { ChevronRight, TestTubes, Download, Search, X, ListPlus, ListChecks, ListX } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { useSampleInventory, type StudySamples, type SamiRow } from '@/hooks/useSampleInventory'
+import { useStudyBasket } from '@/hooks/useStudyBasket'
 import { formatNumber } from '@/lib/utils'
 
 const PAGE_SIZE = 50
@@ -13,20 +14,6 @@ const SAMPLE_TYPE_OPTIONS = [
   'Plasma', 'Serum', 'Blood', 'DNA', 'RNA', 'CSF', 'PBMC', 'Urine',
   'Unstained fixed slide', 'H and E fixed slide', 'Fixed Block', 'Stool',
 ]
-
-function useStickyToggle(key: string, defaultOpen = false) {
-  const [open, setOpen] = useState(() => {
-    try { return localStorage.getItem(key) === 'true' } catch { return defaultOpen }
-  })
-  const toggle = useCallback(() => {
-    setOpen((prev) => {
-      const next = !prev
-      try { localStorage.setItem(key, String(next)) } catch { /* */ }
-      return next
-    })
-  }, [key])
-  return [open, toggle] as const
-}
 
 function exportCsv(studies: StudySamples[], detailed: boolean) {
   let csv: string
@@ -59,10 +46,13 @@ function exportCsv(studies: StudySamples[], detailed: boolean) {
 
 export function SamplesPage() {
   const { studies, stats, isLoading, error } = useSampleInventory()
+  const basket = useStudyBasket()
   const [page, setPage] = useState(1)
   const [sortKey, setSortKey] = useState<string>('total_available')
   const [sortAsc, setSortAsc] = useState(false)
-  const [expanded, toggleExpanded] = useStickyToggle('clintrial-samples-expanded')
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const [allExpanded, setAllExpanded] = useState(false)
+  const [showBasketOnly, setShowBasketOnly] = useState(false)
 
   // Local sample filters
   const [search, setSearch] = useState('')
@@ -72,7 +62,28 @@ export function SamplesPage() {
   if (isLoading) return <PageLoading message="Loading sample inventory..." />
   if (error) return <ErrorMessage message={(error as Error).message} />
 
+  const toggleRow = (nctId: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev)
+      if (next.has(nctId)) next.delete(nctId); else next.add(nctId)
+      return next
+    })
+  }
+
+  const toggleAllExpanded = () => {
+    if (allExpanded) {
+      setExpandedRows(new Set())
+      setAllExpanded(false)
+    } else {
+      setExpandedRows(new Set(studies.map((s) => s.nct_id)))
+      setAllExpanded(true)
+    }
+  }
+
+  const isRowExpanded = (nctId: string) => allExpanded || expandedRows.has(nctId)
+
   const filtered = studies.filter((s) => {
+    if (showBasketOnly && !basket.has(s.nct_id)) return false
     if (minAvailable > 0 && s.total_available < minAvailable) return false
     if (typeFilter.size > 0) {
       const hasType = s.rows.some((r) => r.available > 0 && typeFilter.has(r.sample_type))
@@ -111,8 +122,8 @@ export function SamplesPage() {
     setPage(1)
   }
 
-  const clearFilters = () => { setSearch(''); setTypeFilter(new Set()); setMinAvailable(0); setPage(1) }
-  const hasLocalFilters = search || typeFilter.size > 0 || minAvailable > 0
+  const clearFilters = () => { setSearch(''); setTypeFilter(new Set()); setMinAvailable(0); setShowBasketOnly(false); setPage(1) }
+  const hasLocalFilters = search || typeFilter.size > 0 || minAvailable > 0 || showBasketOnly
 
   const SortHeader = ({ k, label, right }: { k: string; label: string; right?: boolean }) => (
     <th
@@ -156,6 +167,35 @@ export function SamplesPage() {
           <StatTile label="Roche Studies" value={formatNumber(new Set(filtered.map((s) => s.org_study_id)).size)} />
         </div>
       )}
+
+      {/* Basket bar */}
+      <div className="flex items-center gap-3 rounded-lg border bg-surface px-4 py-2.5 text-sm">
+        <ListChecks className="h-4 w-4 text-primary" />
+        <span>
+          <strong className="text-text">{basket.count}</strong>
+          <span className="text-text-muted"> studies in list</span>
+        </span>
+        {basket.count > 0 && (
+          <>
+            <button
+              onClick={() => { setShowBasketOnly(!showBasketOnly); setPage(1) }}
+              className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                showBasketOnly
+                  ? 'bg-primary text-white'
+                  : 'border border-primary/30 text-primary hover:bg-primary/5'
+              }`}
+            >
+              {showBasketOnly ? 'Showing list only' : 'Show list only'}
+            </button>
+            <button
+              onClick={basket.clear}
+              className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs text-text-muted hover:bg-gray-50"
+            >
+              <ListX className="h-3 w-3" /> Clear list
+            </button>
+          </>
+        )}
+      </div>
 
       {/* Sample filters */}
       <Card className="space-y-3">
@@ -213,10 +253,10 @@ export function SamplesPage() {
           {hasLocalFilters && ` (filtered from ${formatNumber(studies.length)})`}
         </span>
         <button
-          onClick={toggleExpanded}
+          onClick={toggleAllExpanded}
           className="rounded border px-2.5 py-1 text-xs font-medium text-text-muted hover:bg-gray-50"
         >
-          {expanded ? 'Collapse all details' : 'Expand all details'}
+          {allExpanded ? 'Collapse all details' : 'Expand all details'}
         </button>
       </div>
 
@@ -227,6 +267,7 @@ export function SamplesPage() {
             <thead>
               <tr className="border-b bg-gray-50/50 text-xs">
                 <th className="w-8 px-2 py-2.5" />
+                <th className="w-8 px-1 py-2.5" />
                 <SortHeader k="org_study_id" label="Roche ID" />
                 <SortHeader k="nct_id" label="NCT ID" />
                 <th className="px-2 py-2.5 text-left font-medium text-text-muted">Title</th>
@@ -242,11 +283,18 @@ export function SamplesPage() {
             </thead>
             <tbody>
               {paginated.map((study) => (
-                <StudyRow key={study.nct_id} study={study} expanded={expanded} />
+                <StudyRow
+                  key={study.nct_id}
+                  study={study}
+                  expanded={isRowExpanded(study.nct_id)}
+                  onToggleExpand={() => { toggleRow(study.nct_id); setAllExpanded(false) }}
+                  inBasket={basket.has(study.nct_id)}
+                  onToggleBasket={() => basket.toggle(study.nct_id)}
+                />
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="px-3 py-12 text-center text-text-muted">
+                  <td colSpan={13} className="px-3 py-12 text-center text-text-muted">
                     No studies with sample data match the current filters.
                   </td>
                 </tr>
@@ -270,14 +318,31 @@ export function SamplesPage() {
   )
 }
 
-function StudyRow({ study, expanded }: { study: StudySamples; expanded: boolean }) {
+function StudyRow({ study, expanded, onToggleExpand, inBasket, onToggleBasket }: {
+  study: StudySamples
+  expanded: boolean
+  onToggleExpand: () => void
+  inBasket: boolean
+  onToggleBasket: () => void
+}) {
   const n = (v: number) => v > 0 ? formatNumber(v) : <span className="text-gray-300">—</span>
 
   return (
     <>
       <tr className="border-b border-gray-100 hover:bg-gray-50/50">
         <td className="px-2 py-1.5">
-          <ChevronRight className={`h-3.5 w-3.5 text-text-muted transition-transform ${expanded ? 'rotate-90' : ''}`} />
+          <button onClick={onToggleExpand} className="rounded p-0.5 hover:bg-gray-200">
+            <ChevronRight className={`h-3.5 w-3.5 text-text-muted transition-transform ${expanded ? 'rotate-90' : ''}`} />
+          </button>
+        </td>
+        <td className="px-1 py-1.5">
+          <button
+            onClick={onToggleBasket}
+            title={inBasket ? 'Remove from list' : 'Add to list'}
+            className={`rounded p-0.5 transition-colors ${inBasket ? 'text-primary' : 'text-gray-300 hover:text-primary/60'}`}
+          >
+            <ListPlus className="h-3.5 w-3.5" />
+          </button>
         </td>
         <td className="px-2 py-1.5 font-mono text-xs text-primary">
           {study.org_study_id}
@@ -303,7 +368,7 @@ function StudyRow({ study, expanded }: { study: StudySamples; expanded: boolean 
       </tr>
       {expanded && (
         <tr className="border-b border-gray-100">
-          <td colSpan={12} className="bg-gray-50/30 px-6 py-2">
+          <td colSpan={13} className="bg-gray-50/30 px-6 py-2">
             <DetailTable rows={study.rows} />
           </td>
         </tr>
