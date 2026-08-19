@@ -176,24 +176,32 @@ export function SamplesPage() {
           <span className="text-text-muted"> studies in list</span>
         </span>
         {basket.count > 0 && (
-          <>
-            <button
-              onClick={() => { setShowBasketOnly(!showBasketOnly); setPage(1) }}
-              className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                showBasketOnly
-                  ? 'bg-primary text-white'
-                  : 'border border-primary/30 text-primary hover:bg-primary/5'
-              }`}
-            >
-              {showBasketOnly ? 'Showing list only' : 'Show list only'}
-            </button>
-            <button
-              onClick={basket.clear}
-              className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs text-text-muted hover:bg-gray-50"
-            >
-              <ListX className="h-3 w-3" /> Clear list
-            </button>
-          </>
+          <button
+            onClick={() => { setShowBasketOnly(!showBasketOnly); setPage(1) }}
+            className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors ${
+              showBasketOnly
+                ? 'bg-primary text-white'
+                : 'border border-primary/30 text-primary hover:bg-primary/5'
+            }`}
+          >
+            {showBasketOnly ? 'Showing list only' : 'Show list only'}
+          </button>
+        )}
+        {showBasketOnly && basket.count === 0 && (
+          <button
+            onClick={() => { setShowBasketOnly(false); setPage(1) }}
+            className="rounded bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800"
+          >
+            List is empty — show all
+          </button>
+        )}
+        {basket.count > 0 && (
+          <button
+            onClick={() => { basket.clear(); setShowBasketOnly(false) }}
+            className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs text-text-muted hover:bg-gray-50"
+          >
+            <ListX className="h-3 w-3" /> Clear list
+          </button>
         )}
       </div>
 
