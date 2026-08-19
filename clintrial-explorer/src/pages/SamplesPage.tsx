@@ -84,10 +84,14 @@ export function SamplesPage() {
 
   const filtered = studies.filter((s) => {
     if (showBasketOnly && !basket.has(s.nct_id)) return false
-    if (minAvailable > 0 && s.total_available < minAvailable) return false
     if (typeFilter.size > 0) {
-      const hasType = s.rows.some((r) => r.available > 0 && typeFilter.has(r.sample_type))
-      if (!hasType) return false
+      const typeAvailable = s.rows
+        .filter((r) => typeFilter.has(r.sample_type))
+        .reduce((sum, r) => sum + (r.available || 0), 0)
+      if (typeAvailable === 0) return false
+      if (minAvailable > 0 && typeAvailable < minAvailable) return false
+    } else if (minAvailable > 0 && s.total_available < minAvailable) {
+      return false
     }
     if (search) {
       const q = search.toLowerCase()
