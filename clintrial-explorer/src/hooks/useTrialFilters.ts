@@ -28,6 +28,7 @@ export type SingleFilterKey =
   | 'elig_autoimmune_excluded'
   | 'elig_measurable'
   | 'elig_healthy_volunteers'
+  | 'elig_search'
   | 'bookmarked'
   | 'search'
 

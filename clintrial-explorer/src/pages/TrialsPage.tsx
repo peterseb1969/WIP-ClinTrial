@@ -293,6 +293,18 @@ function QuickFilters({
         active={filters.has_eligibility === 'true'}
         onClick={() => trialFilters.toggle('has_eligibility', 'true')}
       />
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-text-muted" />
+        <input
+          type="text"
+          placeholder="Search criteria (e.g. BRCA, HER2)..."
+          value={filters.elig_search || ''}
+          onChange={(e) => trialFilters.set('elig_search', e.target.value || null)}
+          className={`rounded-md border py-1 pl-7 pr-2 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-primary ${
+            filters.elig_search ? 'border-primary bg-primary/5 text-primary' : 'border-gray-300 text-text-muted'
+          }`}
+        />
+      </div>
       <FilterToggle
         label="Pregnancy Excl."
         active={filters.elig_pregnancy_excluded === 'true'}

@@ -30,6 +30,7 @@ const LABEL_MAP: Record<string, string> = {
   elig_autoimmune_excluded: 'Autoimmune Excluded',
   elig_measurable: 'Measurable Disease Req.',
   elig_healthy_volunteers: 'Healthy Volunteers',
+  elig_search: 'Eligibility Search',
   bookmarked: 'Bookmarked',
   search: 'Search',
 }

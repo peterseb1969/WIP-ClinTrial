@@ -177,6 +177,26 @@ function useEligibilityAvailability() {
   return { eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol }
 }
 
+/** Full-text search on eligibility criteria_json — returns matching NCT IDs ranked by relevance */
+function useEligibilitySearch(query: string | undefined) {
+  return useQuery({
+    queryKey: ['clintrial', 'elig-fts', query],
+    queryFn: async () => {
+      if (!query) return null
+      const r = await reportQuery<{ nct_id: string }>(
+        `SELECT nct_id FROM clintrial.doc_ct_trial_eligibility__v1
+         WHERE criteria_json_tsv @@ plainto_tsquery('english', $1)
+         ORDER BY ts_rank(criteria_json_tsv, plainto_tsquery('english', $1)) DESC`,
+        [query],
+        10000,
+      )
+      return new Set(r.rows.map((row) => row.nct_id))
+    },
+    enabled: !!query && query.length >= 2,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 /** Returns all trials with therapeutic areas enriched by classification rules,
  * then filtered by the current global filter state. */
 export function useFilteredTrials() {
@@ -188,6 +208,7 @@ export function useFilteredTrials() {
   const { data: countryNctIds } = useTrialsByCountries(filters.country)
   const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds } = useDataAvailability()
   const { eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol } = useEligibilityAvailability()
+  const { data: eligSearchNctIds } = useEligibilitySearch(filters.elig_search)
   // Enrich trials with rule-based TA classification and ontology ancestor walk
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
     if (!trials) return undefined
@@ -260,6 +281,7 @@ export function useFilteredTrials() {
       if (filters.elig_autoimmune_excluded === 'true' && autoExcluded && !autoExcluded.has(d.nct_id)) return false
       if (filters.elig_measurable === 'true' && measurableRequired && !measurableRequired.has(d.nct_id)) return false
       if (filters.elig_healthy_volunteers === 'true' && healthyVol && !healthyVol.has(d.nct_id)) return false
+      if (filters.elig_search && eligSearchNctIds && !eligSearchNctIds.has(d.nct_id)) return false
 
       // Free-text search
       if (filters.search) {
@@ -270,7 +292,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds, eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds, eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol, eligSearchNctIds])
 
   return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
 }
