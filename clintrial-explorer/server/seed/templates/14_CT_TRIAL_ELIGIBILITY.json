@@ -1,0 +1,27 @@
+{
+  "value": "CT_TRIAL_ELIGIBILITY",
+  "label": "Trial Eligibility Criteria",
+  "description": "AI-extracted structured eligibility criteria per trial. One document per nct_id with top-level filterable fields and a criteria array with categorized individual criteria.",
+  "namespace": "clintrial",
+  "identity_fields": ["nct_id", "extraction_model"],
+  "fields": [
+    {"name": "nct_id", "label": "NCT ID", "type": "string", "mandatory": true},
+    {"name": "min_age", "label": "Minimum Age (years)", "type": "integer"},
+    {"name": "max_age", "label": "Maximum Age (years)", "type": "integer"},
+    {"name": "ecog_min", "label": "ECOG Min", "type": "integer"},
+    {"name": "ecog_max", "label": "ECOG Max", "type": "integer"},
+    {"name": "pregnancy_excluded", "label": "Pregnancy Excluded", "type": "boolean"},
+    {"name": "cns_excluded", "label": "CNS Excluded", "type": "boolean"},
+    {"name": "autoimmune_excluded", "label": "Autoimmune Excluded", "type": "boolean"},
+    {"name": "hiv_excluded", "label": "HIV Excluded", "type": "boolean"},
+    {"name": "hbv_excluded", "label": "HBV Excluded", "type": "boolean"},
+    {"name": "hcv_excluded", "label": "HCV Excluded", "type": "boolean"},
+    {"name": "requires_measurable_disease", "label": "Requires Measurable Disease", "type": "boolean"},
+    {"name": "life_expectancy_weeks", "label": "Life Expectancy (weeks)", "type": "integer"},
+    {"name": "accepts_healthy_volunteers", "label": "Accepts Healthy Volunteers", "type": "boolean"},
+    {"name": "criteria_json", "label": "Criteria (JSON)", "type": "string", "full_text_indexed": true},
+    {"name": "extraction_model", "label": "Extraction Model", "type": "string", "mandatory": true},
+    {"name": "extracted_at", "label": "Extracted At", "type": "date"}
+  ],
+  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+}
