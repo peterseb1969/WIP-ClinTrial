@@ -14,6 +14,9 @@ export interface SamiRow {
   disposed: number
   total_count: number
   unique_participants: number
+  distinct_timepoints: number
+  earliest_collection: string | null
+  latest_collection: string | null
   snapshot_date: string
 }
 
@@ -55,7 +58,8 @@ function useAllSamiRows() {
         `SELECT t.nct_id, t.org_study_id, t.brief_title,
                 s.sample_type, s.available, s.marked_for_disposal,
                 s.in_circulation, s.disposed, s.total_count,
-                s.unique_participants, s.snapshot_date
+                s.unique_participants, s.distinct_timepoints,
+                s.earliest_collection, s.latest_collection, s.snapshot_date
          FROM doc_ct_sami_study_summary s
          JOIN doc_ct_trial t ON t.org_study_id = s.study_number
          WHERE s.source_system = 'SAMI'

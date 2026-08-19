@@ -296,6 +296,9 @@ export function SamplesPage() {
         </button>
       </div>
 
+      {/* Basket summary — shown in list-only view */}
+      {showBasketOnly && sorted.length > 0 && <BasketSummary studies={sorted} />}
+
       {/* Main table */}
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
@@ -425,7 +428,8 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
           <th className="pb-1 pr-4 font-medium text-right">Disposed</th>
           <th className="pb-1 pr-4 font-medium text-right">Total</th>
           <th className="pb-1 pr-4 font-medium text-right">Participants</th>
-          <th className="pb-1 font-medium text-right">Snapshot</th>
+          <th className="pb-1 pr-4 font-medium text-right">Timepoints</th>
+          <th className="pb-1 font-medium text-right">Collection Period</th>
         </tr>
       </thead>
       <tbody>
@@ -438,11 +442,66 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
             <td className="py-1 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
             <td className="py-1 pr-4 text-right">{formatNumber(row.total_count)}</td>
             <td className="py-1 pr-4 text-right text-text-muted">{row.unique_participants || '—'}</td>
-            <td className="py-1 text-right text-text-muted">{row.snapshot_date}</td>
+            <td className="py-1 pr-4 text-right text-text-muted">{row.distinct_timepoints || '—'}</td>
+            <td className="py-1 text-right text-text-muted">
+              {row.earliest_collection && row.latest_collection
+                ? `${row.earliest_collection} – ${row.latest_collection}`
+                : row.earliest_collection || row.latest_collection || '—'}
+            </td>
           </tr>
         ))}
       </tbody>
     </table>
+  )
+}
+
+function BasketSummary({ studies }: { studies: StudySamples[] }) {
+  const allRows = studies.flatMap((s) => s.rows)
+  const byType = new Map<string, { available: number; total: number; participants: number }>()
+  for (const r of allRows) {
+    const entry = byType.get(r.sample_type) || { available: 0, total: 0, participants: 0 }
+    entry.available += r.available || 0
+    entry.total += r.total_count || 0
+    entry.participants += r.unique_participants || 0
+    byType.set(r.sample_type, entry)
+  }
+  const sorted = [...byType.entries()].sort((a, b) => b[1].available - a[1].available)
+  const totalAvailable = sorted.reduce((s, [, v]) => s + v.available, 0)
+  const totalAll = sorted.reduce((s, [, v]) => s + v.total, 0)
+
+  return (
+    <Card>
+      <h3 className="mb-2 font-semibold">
+        List Summary
+        <span className="ml-2 text-sm font-normal text-text-muted">
+          {studies.length} studies — {formatNumber(totalAvailable)} available of {formatNumber(totalAll)} total
+        </span>
+      </h3>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-left text-text-muted">
+              <th className="pb-1 pr-4 font-medium">Sample Type</th>
+              <th className="pb-1 pr-4 font-medium text-right">Available</th>
+              <th className="pb-1 pr-4 font-medium text-right">Total</th>
+              <th className="pb-1 font-medium text-right">Studies</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.filter(([, v]) => v.available > 0).map(([type, v]) => (
+              <tr key={type} className="border-t border-gray-100">
+                <td className="py-1 pr-4 font-medium">{type}</td>
+                <td className="py-1 pr-4 text-right font-medium">{formatNumber(v.available)}</td>
+                <td className="py-1 pr-4 text-right text-text-muted">{formatNumber(v.total)}</td>
+                <td className="py-1 text-right text-text-muted">
+                  {studies.filter((s) => s.rows.some((r) => r.sample_type === type && r.available > 0)).length}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   )
 }
 
