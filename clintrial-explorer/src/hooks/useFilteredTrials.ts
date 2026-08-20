@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAllTrials, useTrialsByCountries, type TrialDocument } from './useAllTrials'
 import { useTrialFilters } from './useTrialFilters'
+import { useGlobalSearch } from './useGlobalSearch'
 import { useBookmarks } from './useBookmarks'
 import { useClassificationRules, enrichTherapeuticAreas, useTAAncestors } from './useClassificationRules'
 import { reportQuery } from '@/lib/reporting'
@@ -209,6 +210,7 @@ export function useFilteredTrials() {
   const { aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds } = useDataAvailability()
   const { eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol } = useEligibilityAvailability()
   const { data: eligSearchNctIds } = useEligibilitySearch(filters.elig_search)
+  const { data: globalSearchResult } = useGlobalSearch(filters.fts_search)
   // Enrich trials with rule-based TA classification and ontology ancestor walk
   const enrichedTrials = useMemo<TrialDocument[] | undefined>(() => {
     if (!trials) return undefined
@@ -282,6 +284,7 @@ export function useFilteredTrials() {
       if (filters.elig_measurable === 'true' && measurableRequired && !measurableRequired.has(d.nct_id)) return false
       if (filters.elig_healthy_volunteers === 'true' && healthyVol && !healthyVol.has(d.nct_id)) return false
       if (filters.elig_search && eligSearchNctIds && !eligSearchNctIds.has(d.nct_id)) return false
+      if (filters.fts_search && globalSearchResult && !globalSearchResult.nctIds.has(d.nct_id)) return false
 
       // Free-text search
       if (filters.search) {
@@ -292,7 +295,7 @@ export function useFilteredTrials() {
 
       return true
     })
-  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds, eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol, eligSearchNctIds])
+  }, [enrichedTrials, filters, isBookmarked, countryNctIds, aeNctIds, outcomeNctIds, baselineNctIds, protocolNctIds, samplesNctIds, eligNctIds, pregnancyExcluded, cnsExcluded, hivExcluded, autoExcluded, measurableRequired, healthyVol, eligSearchNctIds, globalSearchResult])
 
-  return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch }
+  return { trials: filtered, allTrials: enrichedTrials, isLoading, error, refetch, globalSearchMatches: globalSearchResult?.matches }
 }

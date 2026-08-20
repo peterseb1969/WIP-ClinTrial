@@ -3,12 +3,40 @@
   "label": "Organization",
   "description": "Clinical trial sponsors and collaborating organizations",
   "namespace": "clintrial",
-  "identity_fields": ["org_name"],
-  "fields": [
-    {"name": "org_name", "label": "Organization Name", "type": "string", "mandatory": true},
-    {"name": "org_type", "label": "Organization Type", "type": "string", "mandatory": false},
-    {"name": "country", "label": "Country", "type": "term", "mandatory": false, "terminology_ref": "COUNTRY"},
-    {"name": "description", "label": "Description", "type": "string", "mandatory": false}
+  "identity_fields": [
+    "org_name"
   ],
-  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+  "fields": [
+    {
+      "name": "org_name",
+      "label": "Organization Name",
+      "type": "string",
+      "mandatory": true,
+      "full_text_indexed": true
+    },
+    {
+      "name": "org_type",
+      "label": "Organization Type",
+      "type": "string",
+      "mandatory": false
+    },
+    {
+      "name": "country",
+      "label": "Country",
+      "type": "term",
+      "mandatory": false,
+      "terminology_ref": "COUNTRY"
+    },
+    {
+      "name": "description",
+      "label": "Description",
+      "type": "string",
+      "mandatory": false,
+      "full_text_indexed": true
+    }
+  ],
+  "reporting": {
+    "sync_enabled": true,
+    "sync_strategy": "latest_only"
+  }
 }

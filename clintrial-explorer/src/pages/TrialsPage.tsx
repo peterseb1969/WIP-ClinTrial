@@ -21,7 +21,7 @@ const PAGE_SIZE = 25
 
 export function TrialsPage() {
   const navigate = useNavigate()
-  const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
+  const { trials: filtered, allTrials, isLoading, error, refetch, globalSearchMatches } = useFilteredTrials()
   const { filters, set: setFilter } = useTrialFilters()
   const { data: sampleCounts } = useSampleCounts()
   const [page, setPage] = useState(1)
@@ -65,15 +65,29 @@ export function TrialsPage() {
 
       {/* Search + quick filters */}
       <div className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-          <input
-            type="text"
-            placeholder="Search NCT ID, title, conditions, molecules..."
-            value={filters.search || ''}
-            onChange={(e) => updateSingleFilter('search', e.target.value || null)}
-            className="w-full rounded-lg border border-gray-300 bg-surface py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            <input
+              type="text"
+              placeholder="Quick filter: NCT ID, title, conditions, molecules..."
+              value={filters.search || ''}
+              onChange={(e) => updateSingleFilter('search', e.target.value || null)}
+              className="w-full rounded-lg border border-gray-300 bg-surface py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/50" />
+            <input
+              type="text"
+              placeholder="Deep search: descriptions, outcomes, AEs, sites..."
+              value={filters.fts_search || ''}
+              onChange={(e) => updateSingleFilter('fts_search', e.target.value || null)}
+              className={`w-full rounded-lg border bg-surface py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary ${
+                filters.fts_search ? 'border-primary bg-primary/5' : 'border-gray-300'
+              }`}
+            />
+          </div>
         </div>
 
         {/* Quick filters */}
@@ -130,8 +144,17 @@ export function TrialsPage() {
                   <td className="px-3 py-2 font-mono text-xs text-text-muted">
                     {trial.data.org_study_id || ''}
                   </td>
-                  <td className="max-w-xs truncate px-3 py-2" title={trial.data.brief_title || trial.data.title}>
-                    {trial.data.brief_title || trial.data.title}
+                  <td className="max-w-xs px-3 py-2" title={trial.data.brief_title || trial.data.title}>
+                    <div className="truncate">{trial.data.brief_title || trial.data.title}</div>
+                    {globalSearchMatches?.get(trial.data.nct_id) && (
+                      <div className="flex gap-1 mt-0.5">
+                        {[...globalSearchMatches.get(trial.data.nct_id)!.sources].map((s) => (
+                          <span key={s} className="rounded bg-primary/10 px-1 py-px text-[9px] font-medium text-primary">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-2">
                     <StatusBadge status={trial.data.status} />

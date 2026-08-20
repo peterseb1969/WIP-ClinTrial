@@ -3,17 +3,67 @@
   "label": "TA Portal Product",
   "description": "Medicinal product record from the TA Portal with classification, role, and safety information.",
   "namespace": "clintrial",
-  "identity_fields": ["product_name", "ro_number"],
-  "fields": [
-    {"name": "product_name", "label": "Product Name", "type": "string", "mandatory": true},
-    {"name": "ro_number", "label": "RO Number", "type": "string", "mandatory": true},
-    {"name": "product_code", "label": "Product Code", "type": "string"},
-    {"name": "product_type", "label": "Product Type", "type": "term", "terminology_ref": "CT_TA_PRODUCT_TYPE"},
-    {"name": "product_role", "label": "Medicinal Product Role", "type": "term", "terminology_ref": "CT_TA_PRODUCT_ROLE"},
-    {"name": "ref_safety_info", "label": "Reference Safety Information", "type": "term", "terminology_ref": "CT_TA_REF_SAFETY_INFO"},
-    {"name": "med_product_type", "label": "Medicinal Product Type", "type": "term", "terminology_ref": "CT_TA_MED_PRODUCT_TYPE"},
-    {"name": "generic_name", "label": "Product Generic Name", "type": "string"},
-    {"name": "theme_molecule", "label": "Theme Molecule", "type": "string"}
+  "identity_fields": [
+    "product_name",
+    "ro_number"
   ],
-  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+  "fields": [
+    {
+      "name": "product_name",
+      "label": "Product Name",
+      "type": "string",
+      "mandatory": true,
+      "full_text_indexed": true
+    },
+    {
+      "name": "ro_number",
+      "label": "RO Number",
+      "type": "string",
+      "mandatory": true
+    },
+    {
+      "name": "product_code",
+      "label": "Product Code",
+      "type": "string"
+    },
+    {
+      "name": "product_type",
+      "label": "Product Type",
+      "type": "term",
+      "terminology_ref": "CT_TA_PRODUCT_TYPE"
+    },
+    {
+      "name": "product_role",
+      "label": "Medicinal Product Role",
+      "type": "term",
+      "terminology_ref": "CT_TA_PRODUCT_ROLE"
+    },
+    {
+      "name": "ref_safety_info",
+      "label": "Reference Safety Information",
+      "type": "term",
+      "terminology_ref": "CT_TA_REF_SAFETY_INFO"
+    },
+    {
+      "name": "med_product_type",
+      "label": "Medicinal Product Type",
+      "type": "term",
+      "terminology_ref": "CT_TA_MED_PRODUCT_TYPE"
+    },
+    {
+      "name": "generic_name",
+      "label": "Product Generic Name",
+      "type": "string",
+      "full_text_indexed": true
+    },
+    {
+      "name": "theme_molecule",
+      "label": "Theme Molecule",
+      "type": "string"
+    }
+  ],
+  "reporting": {
+    "sync_enabled": true,
+    "sync_strategy": "latest_only"
+  }
 }

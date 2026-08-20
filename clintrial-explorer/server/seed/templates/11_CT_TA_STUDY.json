@@ -3,35 +3,162 @@
   "label": "TA Portal Study",
   "description": "Roche internal study record from the TA Portal. Linked to CT_TRIAL via org_study_id = study_number.",
   "namespace": "clintrial",
-  "identity_fields": ["study_number"],
-  "fields": [
-    {"name": "study_number", "label": "Study Number", "type": "string", "mandatory": true},
-    {"name": "study_name", "label": "Study Name", "type": "string", "mandatory": true},
-    {"name": "study_short_title", "label": "Study Short Title", "type": "string"},
-    {"name": "accountable_party", "label": "Accountable Party", "type": "term", "terminology_ref": "CT_TA_ACCOUNTABLE_PARTY"},
-    {"name": "executing_party", "label": "Executing Party", "type": "term", "terminology_ref": "CT_TA_EXECUTING_PARTY"},
-    {"name": "study_phase", "label": "Study Phase", "type": "term", "terminology_ref": "CT_TA_STUDY_PHASE"},
-    {"name": "mgmt_model", "label": "Management Model", "type": "term", "terminology_ref": "CT_TA_MGMT_MODEL"},
-    {"name": "study_status", "label": "Study Status", "type": "term", "terminology_ref": "CT_TA_STUDY_STATUS"},
-    {"name": "study_stage", "label": "Study Stage", "type": "term", "terminology_ref": "CT_TA_STUDY_STAGE"},
-    {"name": "study_type", "label": "Study Type", "type": "term", "terminology_ref": "CT_TA_STUDY_TYPE"},
-    {"name": "therapeutic_area", "label": "Therapeutic Area", "type": "term", "terminology_ref": "CT_TA_THERAPEUTIC_AREA"},
-    {"name": "disease_area", "label": "Disease Area", "type": "term", "terminology_ref": "CT_TA_DISEASE_AREA"},
-    {"name": "indication", "label": "Indication", "type": "string"},
-    {"name": "theme_molecule", "label": "Theme Molecule", "type": "string"},
-    {"name": "non_lead_molecule", "label": "Non-Lead Molecule", "type": "string"},
-    {"name": "sponsor_type", "label": "Sponsor Type", "type": "term", "terminology_ref": "CT_TA_SPONSOR_TYPE"},
-    {"name": "theme", "label": "Theme", "type": "string"},
-    {"name": "actual_enrolled", "label": "Actual Enrolled", "type": "string"},
-    {"name": "actual_screened", "label": "Actual Screened", "type": "string"},
-    {"name": "dt_protocol_approval", "label": "Protocol Approval Date", "type": "string"},
-    {"name": "dt_first_site_activation", "label": "First Site Activation", "type": "string"},
-    {"name": "dt_first_screening", "label": "First Screening", "type": "string"},
-    {"name": "dt_first_enrolled", "label": "First Enrolled", "type": "string"},
-    {"name": "dt_last_enrolled", "label": "Last Enrolled", "type": "string"},
-    {"name": "dt_last_visit", "label": "Last Visit", "type": "string"},
-    {"name": "dt_complete_db_lock", "label": "Complete DB Lock", "type": "string"},
-    {"name": "dt_clinical_closure", "label": "Clinical Closure", "type": "string"}
+  "identity_fields": [
+    "study_number"
   ],
-  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+  "fields": [
+    {
+      "name": "study_number",
+      "label": "Study Number",
+      "type": "string",
+      "mandatory": true
+    },
+    {
+      "name": "study_name",
+      "label": "Study Name",
+      "type": "string",
+      "mandatory": true,
+      "full_text_indexed": true
+    },
+    {
+      "name": "study_short_title",
+      "label": "Study Short Title",
+      "type": "string"
+    },
+    {
+      "name": "accountable_party",
+      "label": "Accountable Party",
+      "type": "term",
+      "terminology_ref": "CT_TA_ACCOUNTABLE_PARTY"
+    },
+    {
+      "name": "executing_party",
+      "label": "Executing Party",
+      "type": "term",
+      "terminology_ref": "CT_TA_EXECUTING_PARTY"
+    },
+    {
+      "name": "study_phase",
+      "label": "Study Phase",
+      "type": "term",
+      "terminology_ref": "CT_TA_STUDY_PHASE"
+    },
+    {
+      "name": "mgmt_model",
+      "label": "Management Model",
+      "type": "term",
+      "terminology_ref": "CT_TA_MGMT_MODEL"
+    },
+    {
+      "name": "study_status",
+      "label": "Study Status",
+      "type": "term",
+      "terminology_ref": "CT_TA_STUDY_STATUS"
+    },
+    {
+      "name": "study_stage",
+      "label": "Study Stage",
+      "type": "term",
+      "terminology_ref": "CT_TA_STUDY_STAGE"
+    },
+    {
+      "name": "study_type",
+      "label": "Study Type",
+      "type": "term",
+      "terminology_ref": "CT_TA_STUDY_TYPE"
+    },
+    {
+      "name": "therapeutic_area",
+      "label": "Therapeutic Area",
+      "type": "term",
+      "terminology_ref": "CT_TA_THERAPEUTIC_AREA"
+    },
+    {
+      "name": "disease_area",
+      "label": "Disease Area",
+      "type": "term",
+      "terminology_ref": "CT_TA_DISEASE_AREA"
+    },
+    {
+      "name": "indication",
+      "label": "Indication",
+      "type": "string",
+      "full_text_indexed": true
+    },
+    {
+      "name": "theme_molecule",
+      "label": "Theme Molecule",
+      "type": "string"
+    },
+    {
+      "name": "non_lead_molecule",
+      "label": "Non-Lead Molecule",
+      "type": "string"
+    },
+    {
+      "name": "sponsor_type",
+      "label": "Sponsor Type",
+      "type": "term",
+      "terminology_ref": "CT_TA_SPONSOR_TYPE"
+    },
+    {
+      "name": "theme",
+      "label": "Theme",
+      "type": "string"
+    },
+    {
+      "name": "actual_enrolled",
+      "label": "Actual Enrolled",
+      "type": "string"
+    },
+    {
+      "name": "actual_screened",
+      "label": "Actual Screened",
+      "type": "string"
+    },
+    {
+      "name": "dt_protocol_approval",
+      "label": "Protocol Approval Date",
+      "type": "string"
+    },
+    {
+      "name": "dt_first_site_activation",
+      "label": "First Site Activation",
+      "type": "string"
+    },
+    {
+      "name": "dt_first_screening",
+      "label": "First Screening",
+      "type": "string"
+    },
+    {
+      "name": "dt_first_enrolled",
+      "label": "First Enrolled",
+      "type": "string"
+    },
+    {
+      "name": "dt_last_enrolled",
+      "label": "Last Enrolled",
+      "type": "string"
+    },
+    {
+      "name": "dt_last_visit",
+      "label": "Last Visit",
+      "type": "string"
+    },
+    {
+      "name": "dt_complete_db_lock",
+      "label": "Complete DB Lock",
+      "type": "string"
+    },
+    {
+      "name": "dt_clinical_closure",
+      "label": "Clinical Closure",
+      "type": "string"
+    }
+  ],
+  "reporting": {
+    "sync_enabled": true,
+    "sync_strategy": "latest_only"
+  }
 }

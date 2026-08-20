@@ -31,6 +31,7 @@ const LABEL_MAP: Record<string, string> = {
   elig_measurable: 'Measurable Disease Req.',
   elig_healthy_volunteers: 'Healthy Volunteers',
   elig_search: 'Eligibility Search',
+  fts_search: 'Deep Search',
   bookmarked: 'Bookmarked',
   search: 'Search',
 }

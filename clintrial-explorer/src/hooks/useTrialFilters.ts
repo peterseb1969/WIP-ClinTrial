@@ -29,6 +29,7 @@ export type SingleFilterKey =
   | 'elig_measurable'
   | 'elig_healthy_volunteers'
   | 'elig_search'
+  | 'fts_search'
   | 'bookmarked'
   | 'search'
 
