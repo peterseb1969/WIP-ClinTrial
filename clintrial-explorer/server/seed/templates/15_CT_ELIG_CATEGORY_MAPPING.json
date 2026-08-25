@@ -1,0 +1,18 @@
+{
+  "value": "CT_ELIG_CATEGORY_MAPPING",
+  "label": "Eligibility Category Mapping",
+  "description": "Maps raw AI-extracted eligibility categories to canonical categories and semantic groups",
+  "namespace": "clintrial",
+  "identity_fields": ["raw_category"],
+  "fields": [
+    { "name": "raw_category", "label": "Raw Category", "type": "string", "mandatory": true },
+    { "name": "canonical_category", "label": "Canonical Category", "type": "string", "mandatory": true },
+    { "name": "semantic_group", "label": "Semantic Group", "type": "term", "terminology_ref": "CT_SEMANTIC_GROUP" },
+    { "name": "confidence", "label": "Confidence", "type": "string", "validation": { "enum": ["manual", "auto"] } },
+    { "name": "notes", "label": "Notes", "type": "string" }
+  ],
+  "reporting": {
+    "sync_enabled": true,
+    "sync_strategy": "latest_only"
+  }
+}

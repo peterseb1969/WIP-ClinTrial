@@ -1,0 +1,18 @@
+{
+  "value": "CT_ELIG_SV_KEY_MAPPING",
+  "label": "Eligibility Structured Value Key Mapping",
+  "description": "Maps raw structured_value keys to canonical keys with optional value transforms, scoped per semantic group",
+  "namespace": "clintrial",
+  "identity_fields": ["semantic_group", "source_key"],
+  "fields": [
+    { "name": "semantic_group", "label": "Semantic Group", "type": "term", "terminology_ref": "CT_SEMANTIC_GROUP", "mandatory": true },
+    { "name": "source_key", "label": "Source Key", "type": "string", "mandatory": true },
+    { "name": "canonical_key", "label": "Canonical Key", "type": "string", "mandatory": true },
+    { "name": "transform", "label": "Transform", "type": "string", "validation": { "enum": ["none", "weeks_to_days", "months_to_days", "years_to_days"] } },
+    { "name": "notes", "label": "Notes", "type": "string" }
+  ],
+  "reporting": {
+    "sync_enabled": true,
+    "sync_strategy": "latest_only"
+  }
+}

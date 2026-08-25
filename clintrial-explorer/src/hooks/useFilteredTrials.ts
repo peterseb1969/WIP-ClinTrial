@@ -39,6 +39,8 @@ function useDataAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_ae',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -50,6 +52,8 @@ function useDataAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_outcome',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -61,6 +65,8 @@ function useDataAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_baseline',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -72,6 +78,8 @@ function useDataAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         "SELECT DISTINCT nct_id FROM doc_ct_trial WHERE file_references_json IS NOT NULL AND file_references_json != '[]'",
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -103,6 +111,8 @@ function useEligibilityAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -114,6 +124,8 @@ function useEligibilityAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE pregnancy_excluded = true',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -125,6 +137,8 @@ function useEligibilityAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE cns_excluded = true',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -136,6 +150,8 @@ function useEligibilityAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE hiv_excluded = true',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -147,6 +163,8 @@ function useEligibilityAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE autoimmune_excluded = true',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -158,6 +176,8 @@ function useEligibilityAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE requires_measurable_disease = true',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -169,6 +189,8 @@ function useEligibilityAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         'SELECT DISTINCT nct_id FROM doc_ct_trial_eligibility WHERE accepts_healthy_volunteers = true',
+        [],
+        10000,
       )
       return new Set(r.rows.map((row) => row.nct_id))
     },
@@ -289,7 +311,7 @@ export function useFilteredTrials() {
       // Free-text search
       if (filters.search) {
         const q = filters.search.toLowerCase()
-        const searchable = [d.nct_id, d.title, d.brief_title, d.acronym, ...(d.conditions || []), ...(d.interventions || [])].filter(Boolean).join(' ').toLowerCase()
+        const searchable = [d.nct_id, d.org_study_id, d.title, d.brief_title, d.acronym, ...(d.conditions || []), ...(d.interventions || [])].filter(Boolean).join(' ').toLowerCase()
         if (!searchable.includes(q)) return false
       }
 
