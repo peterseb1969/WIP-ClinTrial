@@ -22,7 +22,7 @@ const LABEL_MAP: Record<string, string> = {
   has_outcomes: 'Has Outcomes',
   has_protocol: 'Has Protocol',
   has_roche_id: 'Roche ID',
-  has_samples: 'Has Samples',
+  has_samples: 'Has Available Samples',
   has_eligibility: 'Has Eligibility',
   elig_pregnancy_excluded: 'Pregnancy Excluded',
   elig_cns_excluded: 'CNS Excluded',

@@ -424,27 +424,46 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
       <thead>
         <tr className="text-left text-text-muted">
           <th className="pb-1 pr-4 font-medium">Sample Type</th>
+          <th className="pb-1 pr-4 font-medium">Phase</th>
+          <th className="pb-1 pr-4 font-medium">Event</th>
           <th className="pb-1 pr-4 font-medium text-right">Available</th>
-          <th className="pb-1 pr-4 font-medium text-right">Marked Disp.</th>
-          <th className="pb-1 pr-4 font-medium text-right">In Circ.</th>
-          <th className="pb-1 pr-4 font-medium text-right">Disposed</th>
           <th className="pb-1 pr-4 font-medium text-right">Total</th>
           <th className="pb-1 pr-4 font-medium text-right">Participants</th>
-          <th className="pb-1 pr-4 font-medium">Event</th>
           <th className="pb-1 font-medium text-right">Collection Period</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => (
-          <tr key={row.sample_type} className="border-t border-gray-100">
+        {[...rows].sort((a, b) => {
+          const anchorOrder = (s: string | null) => {
+            if (!s) return 999
+            if (s === 'SCREENING') return 0
+            if (s === 'BASELINE') return 1
+            if (s.startsWith('CYCLE_')) return 2 + parseInt(s.split('_')[1] || '0')
+            if (s === 'END_OF_TREATMENT') return 500
+            return 600
+          }
+          const aa = anchorOrder(a.anchor); const ba = anchorOrder(b.anchor)
+          if (aa !== ba) return aa - ba
+          return (a.seconds_from_anchor ?? 0) - (b.seconds_from_anchor ?? 0)
+        }).map((row, i) => (
+          <tr key={`${row.sample_type}-${row.clinical_event}-${i}`} className="border-t border-gray-100">
             <td className="py-1 pr-4 font-medium">{row.sample_type}</td>
+            <td className="py-1 pr-4">
+              {row.phase ? (
+                <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                  row.phase === 'SCREENING' ? 'bg-blue-50 text-blue-700' :
+                  row.phase === 'BASELINE' ? 'bg-green-50 text-green-700' :
+                  row.phase === 'ON_TREATMENT' ? 'bg-purple-50 text-purple-700' :
+                  row.phase === 'END_OF_TREATMENT' ? 'bg-amber-50 text-amber-700' :
+                  row.phase === 'FOLLOW_UP' ? 'bg-cyan-50 text-cyan-700' :
+                  'bg-gray-50 text-gray-600'
+                }`}>{row.phase.replace(/_/g, ' ')}</span>
+              ) : <span className="text-text-muted text-xs">—</span>}
+            </td>
+            <td className="py-1 pr-4 text-text-muted text-xs">{row.clinical_event || '—'}</td>
             <td className="py-1 pr-4 text-right font-medium">{formatNumber(row.available)}</td>
-            <td className="py-1 pr-4 text-right text-text-muted">{row.marked_for_disposal || '—'}</td>
-            <td className="py-1 pr-4 text-right text-text-muted">{formatNumber(row.in_circulation)}</td>
-            <td className="py-1 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
             <td className="py-1 pr-4 text-right">{formatNumber(row.total_count)}</td>
             <td className="py-1 pr-4 text-right text-text-muted">{row.unique_participants || '—'}</td>
-            <td className="py-1 pr-4 text-text-muted">{row.clinical_event || '—'}</td>
             <td className="py-1 text-right text-text-muted">
               {row.earliest_collection && row.latest_collection
                 ? `${row.earliest_collection} – ${row.latest_collection}`
