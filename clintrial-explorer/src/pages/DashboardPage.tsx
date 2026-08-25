@@ -101,7 +101,7 @@ export function DashboardPage() {
 
       {/* Sample stats chips */}
       {sampleCounts && filtered && (() => {
-        const withSamples = filtered.filter((t) => sampleCounts.has(t.data.nct_id))
+        const withSamples = filtered.filter((t) => (sampleCounts.get(t.data.nct_id) ?? 0) > 0)
         const totalSamples = withSamples.reduce((s, t) => s + (sampleCounts.get(t.data.nct_id) || 0), 0)
         if (!withSamples.length) return null
         return (
