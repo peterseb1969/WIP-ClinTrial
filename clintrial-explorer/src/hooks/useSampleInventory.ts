@@ -65,7 +65,7 @@ function useAllSamiRows() {
          WHERE s.source_system = 'SAMI'
          ORDER BY s.available DESC`,
         [],
-        100000,
+        50000,
       )
       return result.rows
     },
