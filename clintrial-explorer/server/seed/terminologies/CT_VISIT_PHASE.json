@@ -1,0 +1,18 @@
+{
+  "value": "CT_VISIT_PHASE",
+  "label": "Clinical Visit Phase",
+  "description": "Canonical visit phases for clinical trial sample collection timepoints",
+  "namespace": "clintrial",
+  "terms": [
+    { "value": "SCREENING", "label": "Screening" },
+    { "value": "BASELINE", "label": "Baseline" },
+    { "value": "ON_TREATMENT", "label": "On Treatment" },
+    { "value": "END_OF_TREATMENT", "label": "End of Treatment" },
+    { "value": "FOLLOW_UP", "label": "Follow-Up" },
+    { "value": "UNSCHEDULED", "label": "Unscheduled" },
+    { "value": "ARCHIVAL", "label": "Archival / Tissue" },
+    { "value": "PROCEDURE", "label": "Procedure" },
+    { "value": "DISEASE_PROGRESSION", "label": "Disease Progression" },
+    { "value": "NOT_SPECIFIED", "label": "Not Specified" }
+  ]
+}

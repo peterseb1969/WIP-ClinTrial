@@ -430,7 +430,7 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
           <th className="pb-1 pr-4 font-medium text-right">Disposed</th>
           <th className="pb-1 pr-4 font-medium text-right">Total</th>
           <th className="pb-1 pr-4 font-medium text-right">Participants</th>
-          <th className="pb-1 pr-4 font-medium text-right">Timepoints</th>
+          <th className="pb-1 pr-4 font-medium">Event</th>
           <th className="pb-1 font-medium text-right">Collection Period</th>
         </tr>
       </thead>
@@ -444,7 +444,7 @@ function DetailTable({ rows }: { rows: SamiRow[] }) {
             <td className="py-1 pr-4 text-right text-text-muted">{row.disposed || '—'}</td>
             <td className="py-1 pr-4 text-right">{formatNumber(row.total_count)}</td>
             <td className="py-1 pr-4 text-right text-text-muted">{row.unique_participants || '—'}</td>
-            <td className="py-1 pr-4 text-right text-text-muted">{row.distinct_timepoints || '—'}</td>
+            <td className="py-1 pr-4 text-text-muted">{row.clinical_event || '—'}</td>
             <td className="py-1 text-right text-text-muted">
               {row.earliest_collection && row.latest_collection
                 ? `${row.earliest_collection} – ${row.latest_collection}`

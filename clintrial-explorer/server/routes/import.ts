@@ -369,4 +369,53 @@ router.post('/import/sami-summary', async (req, res) => {
   }
 })
 
+router.post('/import/sami-detail', async (req, res) => {
+  try {
+    const csvText = req.body?.csv as string
+    if (!csvText) {
+      return res.status(400).json({ error: 'csv field is required in request body (raw CSV text)' })
+    }
+
+    const rows = parseCsvRows(csvText)
+    if (!rows.length) {
+      return res.status(400).json({ error: 'No data rows found in CSV' })
+    }
+
+    const templateId = await resolveTemplateId('CT_SAMI_STUDY_DETAIL')
+    const docs = rows.map((row) => {
+      const data: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(row)) {
+        if (!v) continue
+        if (INT_FIELDS.has(k)) data[k] = parseInt(v, 10)
+        else if (DATE_FIELDS.has(k)) data[k] = v.slice(0, 10)
+        else data[k] = v
+      }
+      if (!data.source_system) data.source_system = 'SAMI'
+      if (!data.clinical_event) data.clinical_event = 'NA'
+      if (!data.snapshot_date) data.snapshot_date = new Date().toISOString().slice(0, 10)
+      return data
+    })
+
+    const result = await createDocumentsBulk(templateId, docs)
+
+    const errorSample = result.results
+      .filter((r) => r.status === 'error' && !SKIP_ERROR_CODES.has(r.error_code || ''))
+      .slice(0, 10)
+      .map((r) => ({ index: r.index, error: r.error, error_code: r.error_code }))
+
+    res.json({
+      success: true,
+      total: rows.length,
+      created: result.created,
+      updated: result.updated,
+      skipped: result.skipped,
+      errors: result.errors,
+      error_sample: errorSample,
+    })
+  } catch (err) {
+    console.error('[import/sami-detail]', err)
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
 export default router

@@ -8,13 +8,13 @@ export interface SamiRow {
   org_study_id: string
   brief_title: string
   sample_type: string
+  clinical_event: string
   available: number
   marked_for_disposal: number
   in_circulation: number
   disposed: number
   total_count: number
   unique_participants: number
-  distinct_timepoints: number
   earliest_collection: string | null
   latest_collection: string | null
   snapshot_date: string
@@ -56,16 +56,16 @@ function useAllSamiRows() {
     queryFn: async () => {
       const result = await reportQuery<SamiRow>(
         `SELECT t.nct_id, t.org_study_id, t.brief_title,
-                s.sample_type, s.available, s.marked_for_disposal,
+                s.sample_type, s.clinical_event, s.available, s.marked_for_disposal,
                 s.in_circulation, s.disposed, s.total_count,
-                s.unique_participants, s.distinct_timepoints,
+                s.unique_participants,
                 s.earliest_collection, s.latest_collection, s.snapshot_date
-         FROM doc_ct_sami_study_summary s
+         FROM doc_ct_sami_study_detail s
          JOIN doc_ct_trial t ON t.org_study_id = s.study_number
          WHERE s.source_system = 'SAMI'
          ORDER BY s.available DESC`,
         [],
-        50000,
+        100000,
       )
       return result.rows
     },

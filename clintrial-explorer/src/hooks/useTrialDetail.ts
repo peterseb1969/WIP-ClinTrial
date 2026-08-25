@@ -122,10 +122,10 @@ export function useTrialSamples(studyNumber: string | null | undefined) {
     queryKey: ['clintrial', 'sami-samples', studyNumber],
     queryFn: async () => {
       const result = await reportQuery<SamiSampleRow>(
-        `SELECT sample_type, total_count, available, marked_for_disposal,
+        `SELECT sample_type, clinical_event, total_count, available, marked_for_disposal,
                 in_circulation, disposed, allocated, on_hold,
                 unique_participants, snapshot_date
-         FROM doc_ct_sami_study_summary
+         FROM doc_ct_sami_study_detail
          WHERE study_number = $1 AND source_system = 'SAMI'
          ORDER BY total_count DESC`,
         [studyNumber!],

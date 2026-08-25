@@ -15,7 +15,7 @@ export function useSampleCounts() {
     queryFn: async () => {
       const result = await reportQuery<{ nct_id: string; samples: number }>(
         `SELECT t.nct_id, SUM(s.available)::INT AS samples
-         FROM doc_ct_sami_study_summary s
+         FROM doc_ct_sami_study_detail s
          JOIN doc_ct_trial t ON t.org_study_id = s.study_number
          WHERE s.source_system = 'SAMI'
          GROUP BY t.nct_id`,
@@ -91,7 +91,7 @@ function useDataAvailability() {
     queryFn: async () => {
       const r = await reportQuery<{ nct_id: string }>(
         `SELECT DISTINCT nct_id FROM doc_ct_trial
-         WHERE org_study_id IN (SELECT DISTINCT study_number FROM doc_ct_sami_study_summary WHERE available > 0)
+         WHERE org_study_id IN (SELECT DISTINCT study_number FROM doc_ct_sami_study_detail WHERE available > 0)
          AND nct_id IS NOT NULL`,
         [],
         10000,

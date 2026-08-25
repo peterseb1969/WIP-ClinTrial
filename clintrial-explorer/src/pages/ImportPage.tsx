@@ -379,9 +379,9 @@ export function ImportPage() {
           endpoint="/server-api/import/ta-studies"
         />
         <CsvUploadCard
-          title="SAMI Sample Summary"
-          description="Upload CSV from the Snowflake refresh query. Creates or updates CT_SAMI_STUDY_SUMMARY documents."
-          endpoint="/server-api/import/sami-summary"
+          title="SAMI Sample Detail"
+          description="Upload CSV from the Snowflake refresh query (study × sample_type × clinical_event). Creates or updates CT_SAMI_STUDY_DETAIL documents."
+          endpoint="/server-api/import/sami-detail"
         />
       </div>
     </div>

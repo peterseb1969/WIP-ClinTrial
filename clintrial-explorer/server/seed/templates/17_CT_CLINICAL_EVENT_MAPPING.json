@@ -1,0 +1,17 @@
+{
+  "value": "CT_CLINICAL_EVENT_MAPPING",
+  "label": "Clinical Event Mapping",
+  "description": "Maps raw SAMI CLINICAL_EVENT values to normalized visit phases, anchors, and seconds-from-anchor for universal timeline positioning",
+  "namespace": "clintrial",
+  "identity_fields": ["raw_event"],
+  "fields": [
+    { "name": "raw_event", "label": "Raw Event", "type": "string", "mandatory": true },
+    { "name": "phase", "label": "Visit Phase", "type": "term", "terminology_ref": "CT_VISIT_PHASE" },
+    { "name": "anchor", "label": "Time Anchor", "type": "string" },
+    { "name": "seconds_from_anchor", "label": "Seconds from Anchor", "type": "integer" }
+  ],
+  "reporting": {
+    "sync_enabled": true,
+    "sync_strategy": "latest_only"
+  }
+}
