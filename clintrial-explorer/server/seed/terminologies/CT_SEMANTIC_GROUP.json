@@ -4,48 +4,1241 @@
   "description": "Controlled vocabulary for the 43 semantic groups used to classify eligibility criteria categories",
   "namespace": "clintrial",
   "terms": [
-    { "value": "PRIOR_TREATMENT", "label": "Prior Treatment" },
-    { "value": "DIAGNOSIS", "label": "Diagnosis / Disease" },
-    { "value": "LAB_VALUES", "label": "Lab Values / Organ Function" },
-    { "value": "PREGNANCY_CONTRACEPTION", "label": "Pregnancy & Contraception" },
-    { "value": "INFECTION", "label": "Infection" },
-    { "value": "CONCOMITANT_MEDS", "label": "Concomitant Medications" },
-    { "value": "OTHER", "label": "Other" },
-    { "value": "CARDIAC", "label": "Cardiac / Cardiovascular" },
-    { "value": "STUDY_LOGISTICS", "label": "Study Logistics & Consent" },
-    { "value": "AGE", "label": "Age / Demographics" },
-    { "value": "CNS", "label": "CNS" },
-    { "value": "PERFORMANCE_STATUS", "label": "Performance Status" },
-    { "value": "ALLERGY", "label": "Allergy / Hypersensitivity" },
-    { "value": "SURGERY", "label": "Surgery / Procedures" },
-    { "value": "OTHER_MALIGNANCY", "label": "Other Malignancy" },
-    { "value": "MEDICAL_HISTORY", "label": "Medical History" },
-    { "value": "BIOMARKER", "label": "Biomarker" },
-    { "value": "AUTOIMMUNE", "label": "Autoimmune" },
-    { "value": "SUBSTANCE_ABUSE", "label": "Substance Abuse" },
-    { "value": "OPHTHALMOLOGIC", "label": "Ophthalmologic" },
-    { "value": "GI_FUNCTION", "label": "GI Function" },
-    { "value": "DISEASE_STAGE", "label": "Disease Stage" },
-    { "value": "MEASURABLE_DISEASE", "label": "Measurable Disease" },
-    { "value": "LIFE_EXPECTANCY", "label": "Life Expectancy" },
-    { "value": "BLEEDING_COAGULATION", "label": "Bleeding / Coagulation" },
-    { "value": "LIVER_DISEASE", "label": "Liver Disease" },
-    { "value": "MEDICAL_CONDITION", "label": "Medical Condition" },
-    { "value": "VACCINATION", "label": "Vaccination" },
-    { "value": "BODY_WEIGHT", "label": "Body Weight / BMI" },
-    { "value": "WASHOUT_TIMING", "label": "Washout / Timing" },
-    { "value": "PSYCHIATRIC", "label": "Psychiatric" },
-    { "value": "CLINICAL_SCORE", "label": "Clinical Score" },
-    { "value": "IMAGING", "label": "Imaging" },
-    { "value": "PULMONARY", "label": "Pulmonary" },
-    { "value": "RENAL", "label": "Renal" },
-    { "value": "TRANSPLANT", "label": "Transplant" },
-    { "value": "VASCULAR", "label": "Vascular" },
-    { "value": "CONTRAINDICATION", "label": "Contraindication" },
-    { "value": "METABOLIC", "label": "Metabolic" },
-    { "value": "GENETIC", "label": "Genetic" },
-    { "value": "HISTOLOGY", "label": "Histology" },
-    { "value": "VITAL_SIGNS", "label": "Vital Signs" },
-    { "value": "POPULATION", "label": "Population" }
-  ]
+    {
+      "value": "PRIOR_TREATMENT",
+      "label": "Prior Treatment"
+    },
+    {
+      "value": "DIAGNOSIS",
+      "label": "Diagnosis / Disease"
+    },
+    {
+      "value": "LAB_VALUES",
+      "label": "Lab Values / Organ Function"
+    },
+    {
+      "value": "PREGNANCY_CONTRACEPTION",
+      "label": "Pregnancy & Contraception"
+    },
+    {
+      "value": "INFECTION",
+      "label": "Infection"
+    },
+    {
+      "value": "CONCOMITANT_MEDS",
+      "label": "Concomitant Medications"
+    },
+    {
+      "value": "OTHER",
+      "label": "Other"
+    },
+    {
+      "value": "CARDIAC",
+      "label": "Cardiac / Cardiovascular"
+    },
+    {
+      "value": "STUDY_LOGISTICS",
+      "label": "Study Logistics & Consent"
+    },
+    {
+      "value": "AGE",
+      "label": "Age / Demographics"
+    },
+    {
+      "value": "CNS",
+      "label": "CNS"
+    },
+    {
+      "value": "PERFORMANCE_STATUS",
+      "label": "Performance Status"
+    },
+    {
+      "value": "ALLERGY",
+      "label": "Allergy / Hypersensitivity"
+    },
+    {
+      "value": "SURGERY",
+      "label": "Surgery / Procedures"
+    },
+    {
+      "value": "OTHER_MALIGNANCY",
+      "label": "Other Malignancy"
+    },
+    {
+      "value": "MEDICAL_HISTORY",
+      "label": "Medical History"
+    },
+    {
+      "value": "BIOMARKER",
+      "label": "Biomarker"
+    },
+    {
+      "value": "AUTOIMMUNE",
+      "label": "Autoimmune"
+    },
+    {
+      "value": "SUBSTANCE_ABUSE",
+      "label": "Substance Abuse"
+    },
+    {
+      "value": "OPHTHALMOLOGIC",
+      "label": "Ophthalmologic"
+    },
+    {
+      "value": "GI_FUNCTION",
+      "label": "GI Function"
+    },
+    {
+      "value": "DISEASE_STAGE",
+      "label": "Disease Stage"
+    },
+    {
+      "value": "MEASURABLE_DISEASE",
+      "label": "Measurable Disease"
+    },
+    {
+      "value": "LIFE_EXPECTANCY",
+      "label": "Life Expectancy"
+    },
+    {
+      "value": "BLEEDING_COAGULATION",
+      "label": "Bleeding / Coagulation"
+    },
+    {
+      "value": "LIVER_DISEASE",
+      "label": "Liver Disease"
+    },
+    {
+      "value": "MEDICAL_CONDITION",
+      "label": "Medical Condition"
+    },
+    {
+      "value": "VACCINATION",
+      "label": "Vaccination"
+    },
+    {
+      "value": "BODY_WEIGHT",
+      "label": "Body Weight / BMI"
+    },
+    {
+      "value": "WASHOUT_TIMING",
+      "label": "Washout / Timing"
+    },
+    {
+      "value": "PSYCHIATRIC",
+      "label": "Psychiatric"
+    },
+    {
+      "value": "CLINICAL_SCORE",
+      "label": "Clinical Score"
+    },
+    {
+      "value": "IMAGING",
+      "label": "Imaging"
+    },
+    {
+      "value": "PULMONARY",
+      "label": "Pulmonary"
+    },
+    {
+      "value": "RENAL",
+      "label": "Renal"
+    },
+    {
+      "value": "TRANSPLANT",
+      "label": "Transplant"
+    },
+    {
+      "value": "VASCULAR",
+      "label": "Vascular"
+    },
+    {
+      "value": "CONTRAINDICATION",
+      "label": "Contraindication"
+    },
+    {
+      "value": "METABOLIC",
+      "label": "Metabolic"
+    },
+    {
+      "value": "GENETIC",
+      "label": "Genetic"
+    },
+    {
+      "value": "HISTOLOGY",
+      "label": "Histology"
+    },
+    {
+      "value": "VITAL_SIGNS",
+      "label": "Vital Signs"
+    },
+    {
+      "value": "POPULATION",
+      "label": "Population"
+    },
+    {
+      "value": "AGE__GENDER",
+      "label": "gender",
+      "description": "Canonical key under AGE"
+    },
+    {
+      "value": "AGE__MAX_AGE",
+      "label": "max_age",
+      "description": "Canonical key under AGE"
+    },
+    {
+      "value": "AGE__MIN_AGE",
+      "label": "min_age",
+      "description": "Canonical key under AGE"
+    },
+    {
+      "value": "AGE__UNIT",
+      "label": "unit",
+      "description": "Canonical key under AGE"
+    },
+    {
+      "value": "ALLERGY__ALLERGEN",
+      "label": "allergen",
+      "description": "Canonical key under ALLERGY"
+    },
+    {
+      "value": "ALLERGY__SEVERITY",
+      "label": "severity",
+      "description": "Canonical key under ALLERGY"
+    },
+    {
+      "value": "AUTOIMMUNE__AUTOIMMUNE_EXCLUDED",
+      "label": "autoimmune_excluded",
+      "description": "Canonical key under AUTOIMMUNE"
+    },
+    {
+      "value": "AUTOIMMUNE__CONDITION",
+      "label": "condition",
+      "description": "Canonical key under AUTOIMMUNE"
+    },
+    {
+      "value": "AUTOIMMUNE__EXCEPTION",
+      "label": "exception",
+      "description": "Canonical key under AUTOIMMUNE"
+    },
+    {
+      "value": "BLEEDING_COAGULATION__BLEEDING_EXCLUDED",
+      "label": "bleeding_excluded",
+      "description": "Canonical key under BLEEDING_COAGULATION"
+    },
+    {
+      "value": "BLEEDING_COAGULATION__CONDITION",
+      "label": "condition",
+      "description": "Canonical key under BLEEDING_COAGULATION"
+    },
+    {
+      "value": "BLEEDING_COAGULATION__INR_MAX",
+      "label": "inr_max",
+      "description": "Canonical key under BLEEDING_COAGULATION"
+    },
+    {
+      "value": "BODY_WEIGHT__BMI_MAX",
+      "label": "bmi_max",
+      "description": "Canonical key under BODY_WEIGHT"
+    },
+    {
+      "value": "BODY_WEIGHT__BMI_MIN",
+      "label": "bmi_min",
+      "description": "Canonical key under BODY_WEIGHT"
+    },
+    {
+      "value": "BODY_WEIGHT__WEIGHT_MAX_KG",
+      "label": "weight_max_kg",
+      "description": "Canonical key under BODY_WEIGHT"
+    },
+    {
+      "value": "BODY_WEIGHT__WEIGHT_MIN_KG",
+      "label": "weight_min_kg",
+      "description": "Canonical key under BODY_WEIGHT"
+    },
+    {
+      "value": "CARDIAC__CONDITION",
+      "label": "condition",
+      "description": "Canonical key under CARDIAC"
+    },
+    {
+      "value": "CARDIAC__DBP_MAX",
+      "label": "dbp_max",
+      "description": "Canonical key under CARDIAC"
+    },
+    {
+      "value": "CARDIAC__LVEF_MIN",
+      "label": "lvef_min",
+      "description": "Canonical key under CARDIAC"
+    },
+    {
+      "value": "CARDIAC__NYHA_MAX",
+      "label": "nyha_max",
+      "description": "Canonical key under CARDIAC"
+    },
+    {
+      "value": "CARDIAC__QTCF_MAX",
+      "label": "qtcf_max",
+      "description": "Canonical key under CARDIAC"
+    },
+    {
+      "value": "CARDIAC__SBP_MAX",
+      "label": "sbp_max",
+      "description": "Canonical key under CARDIAC"
+    },
+    {
+      "value": "CARDIAC__WASHOUT_MONTHS",
+      "label": "washout_months",
+      "description": "Canonical key under CARDIAC"
+    },
+    {
+      "value": "CNS__CNS_EXCLUDED",
+      "label": "cns_excluded",
+      "description": "Canonical key under CNS"
+    },
+    {
+      "value": "CNS__CONDITION",
+      "label": "condition",
+      "description": "Canonical key under CNS"
+    },
+    {
+      "value": "CNS__EXCEPTION",
+      "label": "exception",
+      "description": "Canonical key under CNS"
+    },
+    {
+      "value": "CONCOMITANT_MEDS__DRUG",
+      "label": "drug",
+      "description": "Canonical key under CONCOMITANT_MEDS"
+    },
+    {
+      "value": "CONCOMITANT_MEDS__EXCEPTION",
+      "label": "exception",
+      "description": "Canonical key under CONCOMITANT_MEDS"
+    },
+    {
+      "value": "CONCOMITANT_MEDS__REQUIREMENT",
+      "label": "requirement",
+      "description": "Canonical key under CONCOMITANT_MEDS"
+    },
+    {
+      "value": "CONCOMITANT_MEDS__WASHOUT_DAYS",
+      "label": "washout_days",
+      "description": "Canonical key under CONCOMITANT_MEDS"
+    },
+    {
+      "value": "DIAGNOSIS__BIOMARKER",
+      "label": "biomarker",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__CONFIRMATION_METHOD",
+      "label": "confirmation_method",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__DIAGNOSIS",
+      "label": "diagnosis",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__DURATION_MONTHS",
+      "label": "duration_months",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__EXCLUDED_DIAGNOSIS",
+      "label": "excluded_diagnosis",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__GENDER",
+      "label": "gender",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__HISTOLOGY",
+      "label": "histology",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__MEASURABLE_DISEASE",
+      "label": "measurable_disease",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__PRIOR_TREATMENT",
+      "label": "prior_treatment",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__SEVERITY",
+      "label": "severity",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "DIAGNOSIS__STAGE",
+      "label": "stage",
+      "description": "Canonical key under DIAGNOSIS"
+    },
+    {
+      "value": "INFECTION__ACTIVE_INFECTION_EXCLUDED",
+      "label": "active_infection_excluded",
+      "description": "Canonical key under INFECTION"
+    },
+    {
+      "value": "INFECTION__HBV_EXCLUDED",
+      "label": "hbv_excluded",
+      "description": "Canonical key under INFECTION"
+    },
+    {
+      "value": "INFECTION__HCV_EXCLUDED",
+      "label": "hcv_excluded",
+      "description": "Canonical key under INFECTION"
+    },
+    {
+      "value": "INFECTION__HIV_EXCLUDED",
+      "label": "hiv_excluded",
+      "description": "Canonical key under INFECTION"
+    },
+    {
+      "value": "INFECTION__INFECTION_TYPE",
+      "label": "infection_type",
+      "description": "Canonical key under INFECTION"
+    },
+    {
+      "value": "INFECTION__WASHOUT_DAYS",
+      "label": "washout_days",
+      "description": "Canonical key under INFECTION"
+    },
+    {
+      "value": "LAB_VALUES__ALBUMIN_MIN",
+      "label": "albumin_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__ALP_MAX",
+      "label": "alp_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__ALT_MAX",
+      "label": "alt_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__ANC_MIN",
+      "label": "anc_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__AST_ALT_MAX",
+      "label": "ast_alt_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__AST_MAX",
+      "label": "ast_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__BILIRUBIN_MAX",
+      "label": "bilirubin_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__CONDITION",
+      "label": "condition",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__CREATININE_CLEARANCE_MIN",
+      "label": "creatinine_clearance_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__CREATININE_MAX",
+      "label": "creatinine_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__EXCEPTION",
+      "label": "exception",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__GFR_MIN",
+      "label": "gfr_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__GILBERT_EXCEPTION",
+      "label": "gilbert_exception",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__HBA1C_MAX",
+      "label": "hba1c_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__HEMATOCRIT_MIN",
+      "label": "hematocrit_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__HEMOGLOBIN_MAX",
+      "label": "hemoglobin_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__HEMOGLOBIN_MIN",
+      "label": "hemoglobin_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__INR_MAX",
+      "label": "inr_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__LAB_TEST",
+      "label": "lab_test",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__LVEF_MIN",
+      "label": "lvef_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__LYMPHOCYTE_MIN",
+      "label": "lymphocyte_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__MAX_VALUE",
+      "label": "max_value",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__MIN_VALUE",
+      "label": "min_value",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__OPERATOR",
+      "label": "operator",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__PLATELETS_MIN",
+      "label": "platelets_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__PROTEINURIA_MAX",
+      "label": "proteinuria_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__REFERENCE",
+      "label": "reference",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__REQUIREMENT",
+      "label": "requirement",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__TIMING_DAYS",
+      "label": "timing_days",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__UNIT",
+      "label": "unit",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__WBC_MAX",
+      "label": "wbc_max",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "LAB_VALUES__WBC_MIN",
+      "label": "wbc_min",
+      "description": "Canonical key under LAB_VALUES"
+    },
+    {
+      "value": "OTHER_MALIGNANCY__EXCEPTION",
+      "label": "exception",
+      "description": "Canonical key under OTHER_MALIGNANCY"
+    },
+    {
+      "value": "OTHER_MALIGNANCY__LOOKBACK_YEARS",
+      "label": "lookback_years",
+      "description": "Canonical key under OTHER_MALIGNANCY"
+    },
+    {
+      "value": "OTHER_MALIGNANCY__PRIOR_MALIGNANCY_EXCLUDED",
+      "label": "prior_malignancy_excluded",
+      "description": "Canonical key under OTHER_MALIGNANCY"
+    },
+    {
+      "value": "PERFORMANCE_STATUS__ECOG_MAX",
+      "label": "ecog_max",
+      "description": "Canonical key under PERFORMANCE_STATUS"
+    },
+    {
+      "value": "PERFORMANCE_STATUS__ECOG_MIN",
+      "label": "ecog_min",
+      "description": "Canonical key under PERFORMANCE_STATUS"
+    },
+    {
+      "value": "PERFORMANCE_STATUS__KARNOFSKY_MIN",
+      "label": "karnofsky_min",
+      "description": "Canonical key under PERFORMANCE_STATUS"
+    },
+    {
+      "value": "PERFORMANCE_STATUS__SCALE",
+      "label": "scale",
+      "description": "Canonical key under PERFORMANCE_STATUS"
+    },
+    {
+      "value": "PREGNANCY_CONTRACEPTION__APPLIES_TO",
+      "label": "applies_to",
+      "description": "Canonical key under PREGNANCY_CONTRACEPTION"
+    },
+    {
+      "value": "PREGNANCY_CONTRACEPTION__BREASTFEEDING_EXCLUDED",
+      "label": "breastfeeding_excluded",
+      "description": "Canonical key under PREGNANCY_CONTRACEPTION"
+    },
+    {
+      "value": "PREGNANCY_CONTRACEPTION__CONTRACEPTION_REQUIRED",
+      "label": "contraception_required",
+      "description": "Canonical key under PREGNANCY_CONTRACEPTION"
+    },
+    {
+      "value": "PREGNANCY_CONTRACEPTION__DURATION_MONTHS",
+      "label": "duration_months",
+      "description": "Canonical key under PREGNANCY_CONTRACEPTION"
+    },
+    {
+      "value": "PREGNANCY_CONTRACEPTION__PREGNANCY_EXCLUDED",
+      "label": "pregnancy_excluded",
+      "description": "Canonical key under PREGNANCY_CONTRACEPTION"
+    },
+    {
+      "value": "PREGNANCY_CONTRACEPTION__PREGNANCY_TEST_REQUIRED",
+      "label": "pregnancy_test_required",
+      "description": "Canonical key under PREGNANCY_CONTRACEPTION"
+    },
+    {
+      "value": "PRIOR_TREATMENT__DRUG",
+      "label": "drug",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__EXCEPTION",
+      "label": "exception",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__MAX_PRIOR_LINES",
+      "label": "max_prior_lines",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__MIN_DURATION_WEEKS",
+      "label": "min_duration_weeks",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__MIN_PRIOR_LINES",
+      "label": "min_prior_lines",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__PRIOR_THERAPY_EXCLUDED",
+      "label": "prior_therapy_excluded",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__RECOVERY_REQUIRED",
+      "label": "recovery_required",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__STATUS",
+      "label": "status",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__TREATMENT_NAIVE",
+      "label": "treatment_naive",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__WASHOUT_DAYS",
+      "label": "washout_days",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "PRIOR_TREATMENT__WASHOUT_HALF_LIVES",
+      "label": "washout_half_lives",
+      "description": "Canonical key under PRIOR_TREATMENT"
+    },
+    {
+      "value": "SUBSTANCE_ABUSE__SUBSTANCE_EXCLUDED",
+      "label": "substance_excluded",
+      "description": "Canonical key under SUBSTANCE_ABUSE"
+    },
+    {
+      "value": "SURGERY__PROCEDURE",
+      "label": "procedure",
+      "description": "Canonical key under SURGERY"
+    },
+    {
+      "value": "SURGERY__WASHOUT_DAYS",
+      "label": "washout_days",
+      "description": "Canonical key under SURGERY"
+    }
+  ],
+  "ontology": {
+    "relationships": [
+      {
+        "source": "CT_SEMANTIC_GROUP:AGE__GENDER",
+        "target": "CT_SEMANTIC_GROUP:AGE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:AGE__MAX_AGE",
+        "target": "CT_SEMANTIC_GROUP:AGE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:AGE__MIN_AGE",
+        "target": "CT_SEMANTIC_GROUP:AGE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:AGE__UNIT",
+        "target": "CT_SEMANTIC_GROUP:AGE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:ALLERGY__ALLERGEN",
+        "target": "CT_SEMANTIC_GROUP:ALLERGY",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:ALLERGY__SEVERITY",
+        "target": "CT_SEMANTIC_GROUP:ALLERGY",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:AUTOIMMUNE__AUTOIMMUNE_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:AUTOIMMUNE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:AUTOIMMUNE__CONDITION",
+        "target": "CT_SEMANTIC_GROUP:AUTOIMMUNE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:AUTOIMMUNE__EXCEPTION",
+        "target": "CT_SEMANTIC_GROUP:AUTOIMMUNE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:BLEEDING_COAGULATION__BLEEDING_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:BLEEDING_COAGULATION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:BLEEDING_COAGULATION__CONDITION",
+        "target": "CT_SEMANTIC_GROUP:BLEEDING_COAGULATION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:BLEEDING_COAGULATION__INR_MAX",
+        "target": "CT_SEMANTIC_GROUP:BLEEDING_COAGULATION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:BODY_WEIGHT__BMI_MAX",
+        "target": "CT_SEMANTIC_GROUP:BODY_WEIGHT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:BODY_WEIGHT__BMI_MIN",
+        "target": "CT_SEMANTIC_GROUP:BODY_WEIGHT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:BODY_WEIGHT__WEIGHT_MAX_KG",
+        "target": "CT_SEMANTIC_GROUP:BODY_WEIGHT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:BODY_WEIGHT__WEIGHT_MIN_KG",
+        "target": "CT_SEMANTIC_GROUP:BODY_WEIGHT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CARDIAC__CONDITION",
+        "target": "CT_SEMANTIC_GROUP:CARDIAC",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CARDIAC__DBP_MAX",
+        "target": "CT_SEMANTIC_GROUP:CARDIAC",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CARDIAC__LVEF_MIN",
+        "target": "CT_SEMANTIC_GROUP:CARDIAC",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CARDIAC__NYHA_MAX",
+        "target": "CT_SEMANTIC_GROUP:CARDIAC",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CARDIAC__QTCF_MAX",
+        "target": "CT_SEMANTIC_GROUP:CARDIAC",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CARDIAC__SBP_MAX",
+        "target": "CT_SEMANTIC_GROUP:CARDIAC",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CARDIAC__WASHOUT_MONTHS",
+        "target": "CT_SEMANTIC_GROUP:CARDIAC",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CNS__CNS_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:CNS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CNS__CONDITION",
+        "target": "CT_SEMANTIC_GROUP:CNS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CNS__EXCEPTION",
+        "target": "CT_SEMANTIC_GROUP:CNS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS__DRUG",
+        "target": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS__EXCEPTION",
+        "target": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS__REQUIREMENT",
+        "target": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS__WASHOUT_DAYS",
+        "target": "CT_SEMANTIC_GROUP:CONCOMITANT_MEDS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__BIOMARKER",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__CONFIRMATION_METHOD",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__DIAGNOSIS",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__DURATION_MONTHS",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__EXCLUDED_DIAGNOSIS",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__GENDER",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__HISTOLOGY",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__MEASURABLE_DISEASE",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__PRIOR_TREATMENT",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__SEVERITY",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:DIAGNOSIS__STAGE",
+        "target": "CT_SEMANTIC_GROUP:DIAGNOSIS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:INFECTION__ACTIVE_INFECTION_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:INFECTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:INFECTION__HBV_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:INFECTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:INFECTION__HCV_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:INFECTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:INFECTION__HIV_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:INFECTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:INFECTION__INFECTION_TYPE",
+        "target": "CT_SEMANTIC_GROUP:INFECTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:INFECTION__WASHOUT_DAYS",
+        "target": "CT_SEMANTIC_GROUP:INFECTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__ALBUMIN_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__ALP_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__ALT_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__ANC_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__AST_ALT_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__AST_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__BILIRUBIN_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__CONDITION",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__CREATININE_CLEARANCE_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__CREATININE_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__EXCEPTION",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__GFR_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__GILBERT_EXCEPTION",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__HBA1C_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__HEMATOCRIT_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__HEMOGLOBIN_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__HEMOGLOBIN_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__INR_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__LAB_TEST",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__LVEF_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__LYMPHOCYTE_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__MAX_VALUE",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__MIN_VALUE",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__OPERATOR",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__PLATELETS_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__PROTEINURIA_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__REFERENCE",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__REQUIREMENT",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__TIMING_DAYS",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__UNIT",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__WBC_MAX",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:LAB_VALUES__WBC_MIN",
+        "target": "CT_SEMANTIC_GROUP:LAB_VALUES",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:OTHER_MALIGNANCY__EXCEPTION",
+        "target": "CT_SEMANTIC_GROUP:OTHER_MALIGNANCY",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:OTHER_MALIGNANCY__LOOKBACK_YEARS",
+        "target": "CT_SEMANTIC_GROUP:OTHER_MALIGNANCY",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:OTHER_MALIGNANCY__PRIOR_MALIGNANCY_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:OTHER_MALIGNANCY",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS__ECOG_MAX",
+        "target": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS__ECOG_MIN",
+        "target": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS__KARNOFSKY_MIN",
+        "target": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS__SCALE",
+        "target": "CT_SEMANTIC_GROUP:PERFORMANCE_STATUS",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION__APPLIES_TO",
+        "target": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION__BREASTFEEDING_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION__CONTRACEPTION_REQUIRED",
+        "target": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION__DURATION_MONTHS",
+        "target": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION__PREGNANCY_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION__PREGNANCY_TEST_REQUIRED",
+        "target": "CT_SEMANTIC_GROUP:PREGNANCY_CONTRACEPTION",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__DRUG",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__EXCEPTION",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__MAX_PRIOR_LINES",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__MIN_DURATION_WEEKS",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__MIN_PRIOR_LINES",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__PRIOR_THERAPY_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__RECOVERY_REQUIRED",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__STATUS",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__TREATMENT_NAIVE",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__WASHOUT_DAYS",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT__WASHOUT_HALF_LIVES",
+        "target": "CT_SEMANTIC_GROUP:PRIOR_TREATMENT",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:SUBSTANCE_ABUSE__SUBSTANCE_EXCLUDED",
+        "target": "CT_SEMANTIC_GROUP:SUBSTANCE_ABUSE",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:SURGERY__PROCEDURE",
+        "target": "CT_SEMANTIC_GROUP:SURGERY",
+        "type": "part_of"
+      },
+      {
+        "source": "CT_SEMANTIC_GROUP:SURGERY__WASHOUT_DAYS",
+        "target": "CT_SEMANTIC_GROUP:SURGERY",
+        "type": "part_of"
+      }
+    ]
+  }
 }

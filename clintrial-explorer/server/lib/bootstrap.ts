@@ -3,8 +3,8 @@
  * terms, ontology relationships, and templates from embedded seed data.
  */
 
-import { wipClient } from './wip-api.js'
-import { readFileSync, readdirSync } from 'fs'
+import { wipClient, resolveTemplateId, createDocumentsBulk } from './wip-api.js'
+import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -186,7 +186,13 @@ export async function runBootstrap(
       if (data.value !== BOOTSTRAP_RECORD_VALUE) templatesCreated.push(data.value)
     }
 
-    // Step 6: Write the BOOTSTRAP_RECORD audit doc (provenance trail —
+    // Step 6: Load seed data (mapping documents from CSV files)
+    const dataDir = join(SEED_DIR, 'data')
+    if (existsSync(dataDir)) {
+      await loadSeedData(dataDir, progress)
+    }
+
+    // Step 7: Write the BOOTSTRAP_RECORD audit doc (provenance trail —
     // CLAUDE.md "Namespace Bootstrap on Launch", rule 3). The create response
     // above already carries template_id + version, so this write cannot race
     // the template cache — the former 6s sleep is gone (CASE-727).
@@ -297,5 +303,165 @@ function mapField(f: AnyObj): AnyObj {
   if (f.validation) field.validation = f.validation
   if (f.enum) field.validation = { ...field.validation, enum: f.enum }
 
+  // Array-of-object template ref
+  if (f.type === 'array' && f.items?.template_ref) {
+    field.array_template_ref = f.items.template_ref
+    if (f.items.template_ref_version) field.array_template_ref_version = f.items.template_ref_version
+  }
+  if (f.array_template_ref) field.array_template_ref = f.array_template_ref
+  if (f.array_template_ref_version) field.array_template_ref_version = f.array_template_ref_version
+
+  if (f.full_text_indexed) field.full_text_indexed = true
+
   return field
+}
+
+// ─── Seed data loading (mapping documents from CSV) ───
+
+interface SeedDataConfig {
+  file: string
+  template: string
+  columns: Record<string, 'string' | 'integer' | 'skip'>
+}
+
+const SEED_DATA_FILES: SeedDataConfig[] = [
+  {
+    file: 'elig_category_mappings.csv',
+    template: 'CT_ELIG_CATEGORY_MAPPING',
+    columns: {
+      original_category: 'string',
+      canonical_category: 'string',
+      original_count: 'skip',
+    },
+  },
+  {
+    file: 'elig_semantic_group_mappings.csv',
+    template: 'CT_ELIG_CATEGORY_MAPPING',
+    columns: {
+      original_category: 'string',
+      semantic_group: 'string',
+      original_count: 'skip',
+    },
+  },
+  {
+    file: 'elig_sv_key_mappings.csv',
+    template: 'CT_ELIG_SV_KEY_MAPPING',
+    columns: {
+      semantic_group: 'string',
+      canonical_key: 'string',
+      source_key: 'string',
+      transform: 'string',
+      source_count: 'skip',
+    },
+  },
+  {
+    file: 'clinical_event_mappings.csv',
+    template: 'CT_CLINICAL_EVENT_MAPPING',
+    columns: {
+      raw_event: 'string',
+      sample_count: 'skip',
+      phase: 'string',
+      anchor: 'string',
+      seconds_from_anchor: 'integer',
+    },
+  },
+]
+
+function parseSeedCsv(text: string): Record<string, string>[] {
+  const lines = text.split('\n').filter((l) => l.trim())
+  if (lines.length < 2) return []
+  const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''))
+  return lines.slice(1).map((line) => {
+    const vals: string[] = []
+    let current = ''
+    let inQuotes = false
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; continue }
+      if (ch === ',' && !inQuotes) { vals.push(current); current = ''; continue }
+      current += ch
+    }
+    vals.push(current)
+    const row: Record<string, string> = {}
+    headers.forEach((h, i) => { row[h] = (vals[i] ?? '').trim() })
+    return row
+  })
+}
+
+async function loadSeedData(
+  dataDir: string,
+  progress: (step: string, detail: string) => void,
+): Promise<void> {
+  // Phase 1: Load category mappings (needs merging two files)
+  const catMapPath = join(dataDir, 'elig_category_mappings.csv')
+  const sgMapPath = join(dataDir, 'elig_semantic_group_mappings.csv')
+
+  if (existsSync(catMapPath)) {
+    progress('seed-data', 'Loading eligibility category mappings...')
+    const catRows = parseSeedCsv(readFileSync(catMapPath, 'utf-8'))
+    const sgRows = existsSync(sgMapPath) ? parseSeedCsv(readFileSync(sgMapPath, 'utf-8')) : []
+
+    // Build semantic group lookup
+    const sgMap = new Map<string, string>()
+    for (const row of sgRows) {
+      if (row.original_category && row.semantic_group) {
+        sgMap.set(row.original_category, row.semantic_group)
+      }
+    }
+
+    const templateId = await resolveTemplateId('CT_ELIG_CATEGORY_MAPPING')
+    const docs: Record<string, unknown>[] = catRows.map((row) => {
+      const data: Record<string, unknown> = {
+        raw_category: row.original_category,
+        canonical_category: row.canonical_category,
+        confidence: 'manual',
+      }
+      const sg = sgMap.get(row.canonical_category)
+      if (sg) data.semantic_group = sg
+      return data
+    })
+
+    const result = await createDocumentsBulk(templateId, docs)
+    progress('seed-data', `Category mappings: ${result.created} created, ${result.skipped} skipped`)
+  }
+
+  // Phase 2: Load SV key mappings
+  const svPath = join(dataDir, 'elig_sv_key_mappings.csv')
+  if (existsSync(svPath)) {
+    progress('seed-data', 'Loading SV key mappings...')
+    const rows = parseSeedCsv(readFileSync(svPath, 'utf-8'))
+    const templateId = await resolveTemplateId('CT_ELIG_SV_KEY_MAPPING')
+    const seen = new Set<string>()
+    const docs: Record<string, unknown>[] = []
+    for (const row of rows) {
+      if (!row.source_count || parseInt(row.source_count) === 0) continue
+      const key = `${row.semantic_group}::${row.source_key}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      docs.push({
+        semantic_group: row.semantic_group,
+        source_key: row.source_key,
+        canonical_key: row.canonical_key,
+        transform: row.transform || 'none',
+      })
+    }
+    const result = await createDocumentsBulk(templateId, docs)
+    progress('seed-data', `SV key mappings: ${result.created} created, ${result.skipped} skipped`)
+  }
+
+  // Phase 3: Load clinical event mappings
+  const evPath = join(dataDir, 'clinical_event_mappings.csv')
+  if (existsSync(evPath)) {
+    progress('seed-data', 'Loading clinical event mappings...')
+    const rows = parseSeedCsv(readFileSync(evPath, 'utf-8'))
+    const templateId = await resolveTemplateId('CT_CLINICAL_EVENT_MAPPING')
+    const docs: Record<string, unknown>[] = rows.map((row) => {
+      const data: Record<string, unknown> = { raw_event: row.raw_event }
+      if (row.phase) data.phase = row.phase
+      if (row.anchor) data.anchor = row.anchor
+      if (row.seconds_from_anchor) data.seconds_from_anchor = parseInt(row.seconds_from_anchor)
+      return data
+    })
+    const result = await createDocumentsBulk(templateId, docs)
+    progress('seed-data', `Clinical event mappings: ${result.created} created, ${result.skipped} skipped`)
+  }
 }

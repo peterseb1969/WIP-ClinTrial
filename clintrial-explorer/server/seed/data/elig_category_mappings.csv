@@ -1,0 +1,3407 @@
+original_category,canonical_category,original_count
+"PRIOR_THERAPY","PRIOR_THERAPY",3995
+"DIAGNOSIS","DIAGNOSIS",3530
+"INFECTION","INFECTION",2763
+"prior_treatment","prior_treatment",2623
+"ORGAN_FUNCTION_LABS","ORGAN_FUNCTION_LABS",2279
+"OTHER","OTHER",2262
+"age","age",2176
+"CARDIAC","CARDIAC",2045
+"PREGNANCY_CONTRACEPTION","PREGNANCY_CONTRACEPTION",1817
+"CONCOMITANT_MEDS","CONCOMITANT_MEDS",1571
+"performance_status","performance_status",1256
+"CNS","CNS",1238
+"disease","disease",1184
+"SURGERY","SURGERY",1178
+"pregnancy","pregnancy",1175
+"ALLERGY","ALLERGY",1110
+"CONSENT","CONSENT",943
+"STUDY_LOGISTICS","STUDY_LOGISTICS",925
+"BIOMARKER","BIOMARKER",828
+"medication","medication",761
+"OTHER_MALIGNANCY","OTHER_MALIGNANCY",730
+"disease_status","disease_status",710
+"medical_history","medical_history",701
+"life_expectancy","life_expectancy",647
+"MEASURABLE_DISEASE","MEASURABLE_DISEASE",633
+"contraception","contraception",590
+"lab_values","lab_values",590
+"AUTOIMMUNE","AUTOIMMUNE",568
+"SUBSTANCE_ABUSE","SUBSTANCE_ABUSE",559
+"OPHTHALMOLOGIC","OPHTHALMOLOGIC",542
+"DISEASE_STAGE","DISEASE_STAGE",530
+"GI_FUNCTION","GI_FUNCTION",523
+"organ_function","organ_function",518
+"LIVER_DISEASE","LIVER_DISEASE",487
+"medical_condition","medical_condition",420
+"BLEEDING_COAGULATION","BLEEDING_COAGULATION",410
+"WASHOUT_TIMING","WASHOUT_TIMING",403
+"laboratory","laboratory",398
+"VACCINATION","VACCINATION",397
+"cardiovascular","cardiovascular",362
+"PSYCHIATRIC","PSYCHIATRIC",348
+"CLINICAL_SCORE","CLINICAL_SCORE",314
+"treatment","treatment",312
+"lab","lab",292
+"malignancy","malignancy",286
+"reproductive","reproductive",285
+"prior_malignancy","prior_malignancy",275
+"infectious_disease","infectious_disease",275
+"BODY_WEIGHT","BODY_WEIGHT",272
+"hypersensitivity","hypersensitivity",266
+"compliance","compliance",258
+"general","general",244
+"cns_disease","cns_disease",226
+"informed_consent","informed_consent",220
+"concomitant_medication","concomitant_medication",218
+"comorbidity","comorbidity",215
+"imaging","imaging",160
+"DISEASE_DURATION","DISEASE_DURATION",156
+"pulmonary","pulmonary",152
+"hiv","hiv",141
+"renal_function","renal_function",141
+"demographics","demographics",133
+"gastrointestinal","gastrointestinal",131
+"concurrent_medication","concurrent_medication",129
+"treatment_history","treatment_history",128
+"hypertension","hypertension",118
+"procedure","procedure",112
+"medical","medical",112
+"coagulation","coagulation",111
+"bleeding","bleeding",104
+"cns_metastases","cns_metastases",102
+"prior_surgery","prior_surgery",100
+"autoimmune_disease","autoimmune_disease",98
+"substance_use","substance_use",97
+"toxicity","toxicity",95
+"safety","safety",95
+"wound_healing","wound_healing",94
+"immunosuppression","immunosuppression",92
+"prior_medication","prior_medication",91
+"vascular","vascular",89
+"bmi","bmi",89
+"ocular","ocular",86
+"disease_specific","disease_specific",86
+"health_status","health_status",83
+"anticoagulation","anticoagulation",81
+"study_participation","study_participation",81
+"drug_allergy","drug_allergy",80
+"liver_function","liver_function",77
+"viral_infection","viral_infection",77
+"disease_type","disease_type",76
+"serology","serology",75
+"performance","performance",75
+"transplant","transplant",75
+"general_health","general_health",74
+"neurological","neurological",73
+"contraindication","contraindication",72
+"renal","renal",72
+"disease_characteristics","disease_characteristics",72
+"pregnancy_status","pregnancy_status",72
+"neuropathy","neuropathy",71
+"ocular_condition","ocular_condition",71
+"allergies","ALLERGY",70
+"disease_severity","disease_severity",70
+"disease_diagnosis","disease_diagnosis",67
+"hepatic","hepatic",67
+"pregnancy_test","pregnancy_test",66
+"prior_study","prior_study",62
+"hematologic","hematologic",61
+"disease_state","disease_state",61
+"drug_interaction","drug_interaction",60
+"pulmonary_function","pulmonary_function",60
+"metabolic","metabolic",58
+"malignancy_history","malignancy_history",57
+"cardiac_function","cardiac_function",57
+"genetic","genetic",56
+"histology","histology",55
+"hepatic_function","hepatic_function",55
+"disease_activity","disease_activity",53
+"prior_immunotherapy","prior_immunotherapy",53
+"reproductive_health","reproductive_health",53
+"comorbidities","comorbidity",52
+"disease_assessment","disease_assessment",52
+"concurrent_treatment","concurrent_treatment",52
+"hepatitis","hepatitis",51
+"ecog","ecog",51
+"vital_signs","vital_signs",50
+"population","population",49
+"concurrent_study","concurrent_study",49
+"weight","weight",49
+"gi","gi",49
+"Laboratory Values","Laboratory Values",49
+"lifestyle","lifestyle",48
+"hematology","hematology",48
+"immunodeficiency","immunodeficiency",48
+"hepatitis_b","hepatitis_b",46
+"smoking","smoking",45
+"disease_progression","disease_progression",44
+"proteinuria","proteinuria",43
+"hiv_status","hiv_status",43
+"symptoms","symptoms",43
+"visual_acuity","visual_acuity",43
+"clinical","clinical",43
+"cancer_history","cancer_history",42
+"cardiac_disease","cardiac_disease",41
+"infection_status","infection_status",40
+"disease_extent","disease_extent",39
+"prior_chemotherapy","prior_chemotherapy",39
+"disease_history","disease_history",38
+"concomitant_therapy","concomitant_therapy",38
+"vaccine","vaccine",37
+"prior_transplant","prior_transplant",37
+"tuberculosis","tuberculosis",37
+"recent_surgery","recent_surgery",36
+"concurrent_trial","concurrent_trial",36
+"blood_donation","blood_donation",36
+"immunotherapy","immunotherapy",36
+"pulmonary_disease","pulmonary_disease",36
+"diabetes","diabetes",36
+"transplantation","transplantation",36
+"active_infection","active_infection",36
+"hepatitis_c","hepatitis_c",35
+"lung_disease","lung_disease",34
+"functional_status","functional_status",34
+"concurrent_therapy","concurrent_therapy",34
+"blood_pressure","blood_pressure",34
+"respiratory","respiratory",33
+"biopsy","biopsy",33
+"specimen","specimen",33
+"vascular_disease","vascular_disease",33
+"cns_involvement","cns_involvement",32
+"virology","virology",32
+"gi_complications","gi_complications",32
+"Drug Hypersensitivity","Drug Hypersensitivity",31
+"timing","timing",31
+"adverse_event","adverse_event",31
+"concomitant_disease","concomitant_disease",31
+"study_compliance","study_compliance",31
+"radiation","radiation",30
+"investigational_drug","investigational_drug",30
+"treatment_eligibility","treatment_eligibility",30
+"investigational_agent","investigational_agent",30
+"concomitant_treatment","concomitant_treatment",30
+"condition","condition",30
+"effusion","effusion",30
+"treatment_status","treatment_status",30
+"coagulopathy","coagulopathy",30
+"liver","liver",29
+"pregnancy_lactation","pregnancy_lactation",29
+"tissue","tissue",28
+"systemic_disease","systemic_disease",28
+"hematologic_function","hematologic_function",28
+"Lab Function","Lab Function",28
+"gender","gender",27
+"medication_history","medication_history",27
+"infectious","infectious",27
+"pathology","pathology",27
+"hemoptysis","hemoptysis",27
+"cardiovascular_disease","cardiovascular_disease",27
+"cohort4","cohort4",27
+"hemorrhage","hemorrhage",26
+"immune_status","immune_status",26
+"metastatic_disease","metastatic_disease",26
+"cardiac_history","cardiac_history",26
+"ocular_surgery","ocular_surgery",26
+"protocol_compliance","protocol_compliance",26
+"medical_status","medical_status",26
+"corticosteroids","corticosteroids",26
+"ability","ability",26
+"lab_abnormality","lab_abnormality",25
+"neurologic","neurologic",25
+"hypercalcemia","hypercalcemia",25
+"ophthalmological","ophthalmological",25
+"prior_toxicity","prior_toxicity",24
+"prognosis","prognosis",23
+"anthropometric","anthropometric",23
+"prior_radiotherapy","prior_radiotherapy",23
+"mri_safety","mri_safety",23
+"vision","vision",23
+"Part 2: CHB Participants","Part 2: CHB Participants",23
+"disease_measurability","MEASURABLE_DISEASE",22
+"cancer","cancer",22
+"physical","physical",22
+"tissue_availability","tissue_availability",22
+"pain","pain",22
+"hypertensive_crisis","hypertensive_crisis",22
+"prior_trial","prior_trial",22
+"Disease/Condition","Disease/Condition",22
+"endocrine","endocrine",21
+"immunology","immunology",21
+"viral_serology","viral_serology",21
+"language","language",21
+"gi_disease","gi_disease",20
+"enrollment","enrollment",20
+"Allergy/Hypersensitivity","Allergy/Hypersensitivity",20
+"organ_transplant","organ_transplant",19
+"mri_contraindication","mri_contraindication",19
+"thromboembolism","thromboembolism",19
+"prior_study_participation","prior_study_participation",19
+"study_procedures","study_procedures",19
+"disease_measurement","disease_measurement",19
+"brain_metastases","brain_metastases",19
+"prior_radiation","prior_radiation",19
+"concurrent_studies","concurrent_study",18
+"transplant_status","transplant_status",18
+"lab_test","lab_test",18
+"treatment_response","treatment_response",18
+"bleeding_risk","bleeding_risk",18
+"prohibited_medication","prohibited_medication",18
+"cancer_specific","cancer_specific",18
+"randomization_step2","randomization_step2",18
+"wound","wound",17
+"hbv","hbv",17
+"legal","legal",17
+"Minor Surgery","Minor Surgery",17
+"cerebrovascular","cerebrovascular",17
+"her2_status","her2_status",17
+"infection_history","infection_history",17
+"recovery","recovery",17
+"prior_enrollment","prior_enrollment",17
+"cognitive","cognitive",17
+"Live Vaccine","Live Vaccine",17
+"surgical","surgical",17
+"lab_findings","lab_findings",17
+"viral_load","viral_load",16
+"reproductive_status","reproductive_status",16
+"antibiotics","antibiotics",16
+"mutation","mutation",16
+"hepatic_disease","hepatic_disease",16
+"diet","diet",16
+"heart_failure","heart_failure",16
+"tissue_sample","tissue_sample",16
+"drug_sensitivity","drug_sensitivity",16
+"clinical_status","clinical_status",16
+"Concurrent Ocular Conditions","Concurrent Ocular Conditions",16
+"organ_dysfunction","organ_dysfunction",15
+"transfusion","transfusion",15
+"ophthalmology","ophthalmology",15
+"symptom_severity","symptom_severity",15
+"disease_criteria","disease_criteria",15
+"disease_control","disease_control",15
+"assessment","assessment",15
+"thrombosis","thrombosis",15
+"prior_procedure","prior_procedure",15
+"eligibility","eligibility",15
+"ocular_disease","ocular_disease",15
+"Bevacizumab-Specific Exclusions","Bevacizumab-Specific Exclusions",15
+"allergic_reaction","allergic_reaction",15
+"prior_studies","prior_study",14
+"lung_function","lung_function",14
+"bone_marrow_function","bone_marrow_function",14
+"ophthalmic","ophthalmic",14
+"radiotherapy","radiotherapy",14
+"Respiratory disease","Respiratory disease",14
+"prior_participation","prior_participation",14
+"contraception_male","contraception_male",14
+"severity","severity",14
+"medical_procedure","medical_procedure",13
+"absorption","absorption",13
+"tumor_characteristics","tumor_characteristics",13
+"fertility","fertility",13
+"bleeding_disorder","bleeding_disorder",13
+"venous_access","venous_access",13
+"disease_burden","disease_burden",13
+"major_surgery","major_surgery",13
+"contraception_female","contraception_female",13
+"crossover_step3","crossover_step3",13
+"Pregnancy and Lactation","Pregnancy and Lactation",13
+"medical_device","medical_device",12
+"hcv","hcv",12
+"vascular_access","vascular_access",12
+"genetic_mutation","genetic_mutation",12
+"prior_trial_participation","prior_trial_participation",12
+"investigational_therapy","investigational_therapy",12
+"Viral Status","Viral Status",12
+"cohort2","cohort2",12
+"cardiac_pulmonary","cardiac_pulmonary",12
+"nutrition","nutrition",12
+"Ocular - Study Eye","Ocular - Study Eye",12
+"General Safety","General Safety",12
+"procedural","procedural",12
+"treatment_plan","treatment_plan",11
+"bone_marrow","bone_marrow",11
+"coinfection","coinfection",11
+"prior_cancer","prior_cancer",11
+"cardiac_event","cardiac_event",11
+"trauma","trauma",11
+"viral_hepatitis","viral_hepatitis",11
+"washout","washout",11
+"concurrent_illness","concurrent_illness",11
+"ascites","ascites",11
+"cancer_type","cancer_type",11
+"behavioral","behavioral",11
+"stroke","stroke",11
+"allergy_history","allergy_history",11
+"menopausal_status","menopausal_status",11
+"prior_investigational_drug","prior_investigational_drug",11
+"study_requirement","study_requirement",11
+"hemoglobin","hemoglobin",11
+"malabsorption","malabsorption",11
+"family_history","family_history",10
+"disease_confirmation","disease_confirmation",10
+"alcohol","alcohol",10
+"Prior Transplantation","Prior Transplantation",10
+"age_gender","age_gender",10
+"fluid_accumulation","fluid_accumulation",10
+"metastasis","metastasis",10
+"complications","complications",10
+"immunostimulatory_agents","immunostimulatory_agents",10
+"screening","screening",10
+"prior_research","prior_research",10
+"Excluded Medications","Excluded Medications",10
+"functional","functional",10
+"stem_cell_transplant","stem_cell_transplant",10
+"administrative","administrative",10
+"treatment_timing","treatment_timing",10
+"bilirubin","bilirubin",10
+"immune","immune",10
+"Eye Disease","Eye Disease",10
+"cohort3","cohort3",10
+"gi_bleeding","gi_bleeding",10
+"medication_timing","medication_timing",10
+"glaucoma","glaucoma",10
+"Myocardial Infarction","Myocardial Infarction",10
+"congestive_heart_failure","congestive_heart_failure",10
+"Lab Values - Hematologic","Lab Values - Hematologic",10
+"Prior Malignancies","prior_malignancy",9
+"male_contraception","contraception_male",9
+"immunological","immunological",9
+"alcohol_use","alcohol_use",9
+"medication_stability","medication_stability",9
+"prior_disease","prior_disease",9
+"leptomeningeal_disease","leptomeningeal_disease",9
+"renal_disease","renal_disease",9
+"nsaid","nsaid",9
+"biospecimen","biospecimen",9
+"trial_participation","trial_participation",9
+"technology","technology",9
+"ethnicity","ethnicity",9
+"ocular_inflammation","ocular_inflammation",9
+"Drug-Specific (Atezolizumab)","Drug-Specific (Atezolizumab)",9
+"tumor_size","tumor_size",9
+"seizure","seizure",9
+"toxicity_recovery","toxicity_recovery",9
+"organ_disease","organ_disease",9
+"ocular_infection","ocular_infection",9
+"investigator_discretion","investigator_discretion",9
+"asthma_specific","asthma_specific",9
+"liver_status","liver_status",9
+"hospitalization","hospitalization",9
+"viral","viral",9
+"Stratum S - Lab values","Stratum S - Lab values",9
+"opportunistic_infection","opportunistic_infection",8
+"ability_to_participate","ability_to_participate",8
+"cd4_count","cd4_count",8
+"treatment_requirement","treatment_requirement",8
+"breastfeeding","breastfeeding",8
+"genetic_condition","genetic_condition",8
+"cognition","cognition",8
+"study_enrollment","study_enrollment",8
+"physical_exam","physical_exam",8
+"drug_screen","drug_screen",8
+"spinal_cord","spinal_cord",8
+"electrolytes","electrolytes",8
+"thyroid","thyroid",8
+"substance","substance",8
+"symptom_control","symptom_control",8
+"indication","indication",8
+"pml","pml",8
+"diagnostic_test","diagnostic_test",8
+"survival","survival",8
+"corticosteroid_use","corticosteroid_use",8
+"contraception_women","contraception_women",8
+"contraception_men","contraception_men",8
+"tissue_requirement","tissue_requirement",8
+"surgery_trauma","surgery_trauma",8
+"staging","staging",8
+"medication_restriction","medication_restriction",8
+"prior_treatment_washout","prior_treatment_washout",8
+"thromboembolic","thromboembolic",8
+"follow_up","follow_up",8
+"HIV infection","HIV infection",8
+"ophthalmic_pathology","ophthalmic_pathology",8
+"other_disease","other_disease",8
+"hbv_status","hbv_status",8
+"immunosuppressive_medication","immunosuppressive_medication",8
+"Part 1: SAD and MAD in Healthy Volunteers","Part 1: SAD and MAD in Healthy Volunteers",8
+"Autoimmune disease exceptions","Autoimmune disease exceptions",8
+"history","history",7
+"metastases","metastases",7
+"chemotherapy","chemotherapy",7
+"ecog_performance","ecog_performance",7
+"hormonal_therapy","hormonal_therapy",7
+"pleural_effusion","pleural_effusion",7
+"ocular_pathology","ocular_pathology",7
+"diagnostic","diagnostic",7
+"drug_intolerance","drug_intolerance",7
+"disease_location","disease_location",7
+"lung","lung",7
+"retinal_pathology","retinal_pathology",7
+"study_design","study_design",7
+"communication","communication",7
+"functional_capacity","functional_capacity",7
+"prior_study_drugs","prior_study_drugs",7
+"Intercurrent Illness","Intercurrent Illness",7
+"geographic","geographic",7
+"Prior Therapy Timing","Prior Therapy Timing",7
+"tumor_location","tumor_location",7
+"bleeding_history","bleeding_history",7
+"prior_condition","prior_condition",7
+"radiation_exposure","radiation_exposure",7
+"recent_illness","recent_illness",7
+"gi_history","gi_history",7
+"anthropometry","anthropometry",7
+"cancer_stage","cancer_stage",7
+"documentation","documentation",7
+"gi_absorption","gi_absorption",7
+"antiplatelet","antiplatelet",7
+"immunostimulatory","immunostimulatory",7
+"skin_condition","skin_condition",7
+"kidney_function","kidney_function",7
+"ocular_treatment","ocular_treatment",7
+"age_and_diagnosis","age_and_diagnosis",7
+"platelet_count","platelet_count",7
+"other_study","other_study",7
+"immunologic","immunologic",7
+"Peripheral Vascular Disease","Peripheral Vascular Disease",7
+"wash_out_period","wash_out_period",7
+"pregnancy_related","pregnancy_related",7
+"Lab Values - Hepatic","Lab Values - Hepatic",7
+"Concurrent Systemic Conditions","Concurrent Systemic Conditions",7
+"planned_treatment","treatment_plan",6
+"drug_screening","drug_screen",6
+"primary_condition","primary_condition",6
+"tumor_tissue","tumor_tissue",6
+"hormone_therapy","hormone_therapy",6
+"treatment_indication","treatment_indication",6
+"disability","disability",6
+"study_partner","study_partner",6
+"mri","mri",6
+"cognitive_status","cognitive_status",6
+"psychiatric_history","psychiatric_history",6
+"living_situation","living_situation",6
+"insurance","insurance",6
+"cognitive_assessment","cognitive_assessment",6
+"disease_etiology","disease_etiology",6
+"blood_products","blood_products",6
+"diagnostic_requirements","diagnostic_requirements",6
+"cns_condition","cns_condition",6
+"surgery_history","surgery_history",6
+"sensory","sensory",6
+"uncontrolled_condition","uncontrolled_condition",6
+"prior_event","prior_event",6
+"Severe Infection","Severe Infection",6
+"hepatic_encephalopathy","hepatic_encephalopathy",6
+"kidney_disease","kidney_disease",6
+"surgical_history","surgical_history",6
+"healthy_volunteers","healthy_volunteers",6
+"ole","ole",6
+"platelet","platelet",6
+"age_risk_group","age_risk_group",6
+"gi_condition","gi_condition",6
+"mobility","mobility",6
+"recent_treatment","recent_treatment",6
+"diagnosis_confirmation","diagnosis_confirmation",6
+"other_conditions","other_conditions",6
+"pregnancy_prevention","pregnancy_prevention",6
+"drug_contraindication","drug_contraindication",6
+"medication_administration","medication_administration",6
+"prior_anticancer_therapy","prior_anticancer_therapy",6
+"smoking_history","smoking_history",6
+"stroke_history","stroke_history",6
+"lesion_characteristics","lesion_characteristics",6
+"Laboratory Functions","Laboratory Functions",6
+"lab_abnormalities","lab_abnormality",5
+"fever","fever",5
+"tumor_type","tumor_type",5
+"medication_tolerance","medication_tolerance",5
+"medication_contraindication","medication_contraindication",5
+"adherence","adherence",5
+"Prior monoclonal antibody","Prior monoclonal antibody",5
+"symptom_management","symptom_management",5
+"disease_stability","disease_stability",5
+"risk_assessment","risk_assessment",5
+"hepatitis_status","hepatitis_status",5
+"cohort_specific","cohort_specific",5
+"disease_complication","disease_complication",5
+"body_composition","body_composition",5
+"dietary_restriction","dietary_restriction",5
+"weight_stability","weight_stability",5
+"legal_status","legal_status",5
+"imaging_contraindication","imaging_contraindication",5
+"leptomeningeal","leptomeningeal",5
+"stage_2_specific","stage_2_specific",5
+"stage","stage",5
+"inflammation","inflammation",5
+"planned_procedure","planned_procedure",5
+"treatment_duration","treatment_duration",5
+"transplant_history","transplant_history",5
+"illness","illness",5
+"donation","donation",5
+"prior_drug","prior_drug",5
+"social","social",5
+"geography","geography",5
+"ocular_trauma","ocular_trauma",5
+"safety_concern","safety_concern",5
+"Drug Metabolism","Drug Metabolism",5
+"Lab/Biomarker","Lab/Biomarker",5
+"physical_characteristics","physical_characteristics",5
+"autoimmune_exceptions","autoimmune_exceptions",5
+"suicide_risk","suicide_risk",5
+"prior_investigational","prior_investigational",5
+"receptor_status","receptor_status",5
+"treatment_setting","treatment_setting",5
+"tobacco","tobacco",5
+"acute_illness","acute_illness",5
+"hcv_disease","hcv_disease",5
+"mental_health","mental_health",5
+"prior_systemic_therapy","prior_systemic_therapy",5
+"prior_treatment_timing","prior_treatment_timing",5
+"age_and_gender","age_and_gender",5
+"medication_allergy","medication_allergy",5
+"medication_interaction","medication_interaction",5
+"antibody_allergy","antibody_allergy",5
+"surgery_recovery","surgery_recovery",5
+"active_disease","active_disease",5
+"concurrent_condition","concurrent_condition",5
+"weight_loss","weight_loss",5
+"glucose","glucose",5
+"albumin","albumin",5
+"glaucoma_surgery","glaucoma_surgery",5
+"uncontrolled_disease","uncontrolled_disease",5
+"reproduction","reproduction",5
+"gastrointestinal_disease","gastrointestinal_disease",5
+"cohort1","cohort1",5
+"hepatic_patients","hepatic_patients",5
+"immunization","immunization",5
+"molecular_marker","molecular_marker",5
+"ecg","ecg",5
+"surgery_timing","surgery_timing",5
+"Allergy Testing","Allergy Testing",5
+"planned_surgery","planned_surgery",5
+"pregnancy_reproductive","pregnancy_reproductive",5
+"caregiver","caregiver",5
+"pregnancy_and_contraception","pregnancy_and_contraception",5
+"co_existing_condition","co_existing_condition",5
+"liver_enzymes","liver_enzymes",5
+"other_trials","other_trials",5
+"procedure_feasibility","procedure_feasibility",5
+"oct_safety","oct_safety",5
+"bone_disease","bone_disease",5
+"refractive_error","refractive_error",5
+"uveitis","uveitis",5
+"Prior Bevacizumab","Prior Bevacizumab",5
+"Chronic Corticosteroids","Chronic Corticosteroids",5
+"prior_therapy_washout","prior_therapy_washout",5
+"prior_medical_history","prior_medical_history",5
+"prior_treatment_phase2a","prior_treatment_phase2a",5
+"cancer_diagnosis","cancer_diagnosis",5
+"willingness","willingness",5
+"Laboratory Abnormalities","Laboratory Abnormalities",5
+"second_malignancy","second_malignancy",5
+"abdominal_complications","abdominal_complications",5
+"drug_reaction","drug_reaction",5
+"Disease-Specific Exclusions","Disease-Specific Exclusions",5
+"gi_obstruction","gi_obstruction",5
+"biomarker_testing","biomarker_testing",5
+"lesion","lesion",5
+"immunosuppressive","immunosuppressive",5
+"Bleeding Diathesis","Bleeding Diathesis",5
+"cohort_b_specific","cohort_b_specific",5
+"cohort_e_specific","cohort_e_specific",5
+"age_module_specific","age_module_specific",5
+"Ophthalmic Disease","Ophthalmic Disease",5
+"Recent Exacerbation","Recent Exacerbation",5
+"Prior Medications (within 3 weeks)","Prior Medications (within 3 weeks)",5
+"Cognitive remediation intervention","Cognitive remediation intervention",5
+"dietary","diet",4
+"secondary_malignancy","second_malignancy",4
+"lymphoma_type","lymphoma_type",4
+"medication_intolerance","medication_intolerance",4
+"treatment_initiation","treatment_initiation",4
+"systemic_corticosteroid","systemic_corticosteroid",4
+"pregnancy_breastfeeding","pregnancy_breastfeeding",4
+"symptom_duration","symptom_duration",4
+"ventilation","ventilation",4
+"stability","stability",4
+"recent_procedure","recent_procedure",4
+"qt_prolongation","qt_prolongation",4
+"intraocular_pressure","intraocular_pressure",4
+"lactation","lactation",4
+"tissue_sampling","tissue_sampling",4
+"regional","regional",4
+"sex","sex",4
+"tumor_status","tumor_status",4
+"prior_adverse_event","prior_adverse_event",4
+"drug","drug",4
+"prior_biopsy","prior_biopsy",4
+"bilateral_disease","bilateral_disease",4
+"cardiopulmonary","cardiopulmonary",4
+"concomitant_condition","concomitant_condition",4
+"antiviral","antiviral",4
+"cognitive_function","cognitive_function",4
+"ole_specific","ole_specific",4
+"disease_histology","disease_histology",4
+"thromboembolic_disease","thromboembolic_disease",4
+"anc","anc",4
+"corticosteroid_therapy","corticosteroid_therapy",4
+"diagnosis_subset","diagnosis_subset",4
+"diabetes_type","diabetes_type",4
+"History of Malignancy","History of Malignancy",4
+"Drug-Specific (Ipatasertib)","Drug-Specific (Ipatasertib)",4
+"immunoglobulin","immunoglobulin",4
+"resource","resource",4
+"surgical_status","surgical_status",4
+"thrombotic_event","thrombotic_event",4
+"cohort","cohort",4
+"risk_factor","risk_factor",4
+"mutation_status","mutation_status",4
+"prior_therapy_toxicity","prior_therapy_toxicity",4
+"prior_study_enrollment","prior_study_enrollment",4
+"lab_bilirubin","lab_bilirubin",4
+"lab_platelet","lab_platelet",4
+"gastric","gastric",4
+"pancreatitis","pancreatitis",4
+"QT Interval","QT Interval",4
+"asthma","asthma",4
+"cirrhosis","cirrhosis",4
+"tumor_marker","tumor_marker",4
+"CNS History","CNS History",4
+"liver_biopsy","liver_biopsy",4
+"retinopathy","retinopathy",4
+"systemic_therapy","systemic_therapy",4
+"cns_lesions","cns_lesions",4
+"expansion_cohort","expansion_cohort",4
+"symptom_onset","symptom_onset",4
+"seizure_disorder","seizure_disorder",4
+"genetic_syndrome","genetic_syndrome",4
+"hormone_receptor","hormone_receptor",4
+"non_study_eye","non_study_eye",4
+"neurological_disease","neurological_disease",4
+"transformation","transformation",4
+"residual_disease","residual_disease",4
+"growth","growth",4
+"prior_clinical_trials","prior_clinical_trials",4
+"disease_response","disease_response",4
+"diabetic_retinopathy","diabetic_retinopathy",4
+"tumor_specimen","tumor_specimen",4
+"Other Medical Conditions","Other Medical Conditions",4
+"symptom_scale","symptom_scale",4
+"lab_results","lab_results",4
+"radiation_therapy","radiation_therapy",4
+"peripheral_neuropathy","peripheral_neuropathy",4
+"etiology","etiology",4
+"birth_history","birth_history",4
+"tobacco_use","tobacco_use",4
+"clinical_trial","clinical_trial",4
+"systemic_infection","systemic_infection",4
+"swallowing","swallowing",4
+"contraception_requirement","contraception_requirement",4
+"disease_manifestation","disease_manifestation",4
+"Experimental drugs","Experimental drugs",4
+"enrollment_status","enrollment_status",4
+"bone_age","bone_age",4
+"CNS Malignancy","CNS Malignancy",4
+"cardiac_condition","cardiac_condition",4
+"investigational","investigational",4
+"dermatologic","dermatologic",4
+"eye_condition","eye_condition",4
+"active_malignancy","active_malignancy",4
+"resectability","resectability",4
+"retinal_condition","retinal_condition",4
+"Prior Stem Cell Transplant","Prior Stem Cell Transplant",4
+"Cerebrovascular Disease","Cerebrovascular Disease",4
+"cohort_c_specific","cohort_c_specific",4
+"cohort_d_specific","cohort_d_specific",4
+"ECOG Performance Status","ECOG Performance Status",4
+"Abdominal Fistula","Abdominal Fistula",4
+"angiographic","angiographic",4
+"concomitant_illness","concomitant_illness",4
+"Prior Ocular Treatment","Prior Ocular Treatment",4
+"Drug Allergies","drug_allergy",3
+"infection_hiv","HIV infection",3
+"protocol","protocol",3
+"intolerance","intolerance",3
+"joint_disease","joint_disease",3
+"drug_resistance","drug_resistance",3
+"organ_type","organ_type",3
+"concurrent_disease","concurrent_disease",3
+"psychological","psychological",3
+"Organ Transplant Status","Organ Transplant Status",3
+"Blood Pressure Control","Blood Pressure Control",3
+"immunosuppressants","immunosuppressants",3
+"acute_infection","acute_infection",3
+"cardiovascular_history","cardiovascular_history",3
+"blood_transfusion","blood_transfusion",3
+"refraction","refraction",3
+"fellow_eye","fellow_eye",3
+"cardiac_dysfunction","cardiac_dysfunction",3
+"transplant_type","transplant_type",3
+"reproductive_potential","reproductive_potential",3
+"testing","testing",3
+"tolerability","tolerability",3
+"disease_staging","disease_staging",3
+"medical_fitness","medical_fitness",3
+"kidney","kidney",3
+"lab_criteria","lab_criteria",3
+"genetic_marker","genetic_marker",3
+"psychiatric_risk","psychiatric_risk",3
+"sensory_function","sensory_function",3
+"concomitant","concomitant",3
+"setting","setting",3
+"varices","varices",3
+"platinum_resistance","platinum_resistance",3
+"prior_response","prior_response",3
+"neurotoxicity","neurotoxicity",3
+"disease_marker","disease_marker",3
+"prior_investigational_agent","prior_investigational_agent",3
+"inhibitor_status","inhibitor_status",3
+"thrombotic_risk","thrombotic_risk",3
+"immunomodulator","immunomodulator",3
+"dependency","dependency",3
+"body_measurement","body_measurement",3
+"study_population","study_population",3
+"anterior_chamber","anterior_chamber",3
+"Retinal Disease","Retinal Disease",3
+"disease_grade","disease_grade",3
+"dermatological","dermatological",3
+"hematological","hematological",3
+"drug_administration","drug_administration",3
+"heart_rate","heart_rate",3
+"prior_diagnosis","prior_diagnosis",3
+"immunostimulation","immunostimulation",3
+"prior_exposure","prior_exposure",3
+"neurological_condition","neurological_condition",3
+"prior_biologic","prior_biologic",3
+"prior_biologic_therapy","prior_biologic_therapy",3
+"oxygen_requirement","oxygen_requirement",3
+"smoking_status","smoking_status",3
+"hcv_genotype","hcv_genotype",3
+"syndrome","syndrome",3
+"physical_measurement","physical_measurement",3
+"access","access",3
+"prior_immunosuppression","prior_immunosuppression",3
+"lab_hemoglobin","lab_hemoglobin",3
+"lab_anc","lab_anc",3
+"prior_vaccination","prior_vaccination",3
+"ecog_status","ecog_status",3
+"diagnostic_procedure","diagnostic_procedure",3
+"cns_status","cns_status",3
+"part_b_specific","part_b_specific",3
+"diagnosis_copd","diagnosis_copd",3
+"respiratory_infection","respiratory_infection",3
+"patient_population","patient_population",3
+"functional_assessment","functional_assessment",3
+"corticosteroid_dose","corticosteroid_dose",3
+"age_and_population","age_and_population",3
+"liver_cirrhosis","liver_cirrhosis",3
+"pregnancy_intent","pregnancy_intent",3
+"prior_car_t","prior_car_t",3
+"hcv_infection","hcv_infection",3
+"gi_disorders","gi_disorders",3
+"cyp3a_inhibitors","cyp3a_inhibitors",3
+"variceal_bleeding","variceal_bleeding",3
+"randomized_phase","randomized_phase",3
+"organ_transplant_history","organ_transplant_history",3
+"toxicity_history","toxicity_history",3
+"Diseases/Symptoms","Diseases/Symptoms",3
+"acute_condition","acute_condition",3
+"hypoglycemia","hypoglycemia",3
+"weight_change","weight_change",3
+"cardiac_electrical","cardiac_electrical",3
+"thyroid_disease","thyroid_disease",3
+"treatment_decision","treatment_decision",3
+"her2_expression","her2_expression",3
+"ocular_history","ocular_history",3
+"neutrophil_count","neutrophil_count",3
+"Monoclonal Antibody Allergy","Monoclonal Antibody Allergy",3
+"duration","duration",3
+"tumor_assessment","tumor_assessment",3
+"Tissue Specimen","Tissue Specimen",3
+"hiv_serology","hiv_serology",3
+"cataract","cataract",3
+"bowel_disease","bowel_disease",3
+"Prior Treatment Response","Prior Treatment Response",3
+"Tumor Stage","Tumor Stage",3
+"vascular_invasion","vascular_invasion",3
+"hcc_subtype","hcc_subtype",3
+"nsaid_use","nsaid_use",3
+"device","device",3
+"asthma_control","asthma_control",3
+"Surgery Type","Surgery Type",3
+"Blood Counts","Blood Counts",3
+"psychiatric_status","psychiatric_status",3
+"clinical_condition","clinical_condition",3
+"location","location",3
+"anaphylaxis_history","anaphylaxis_history",3
+"steroid_use","steroid_use",3
+"current_medications","current_medications",3
+"monoclonal_antibody","monoclonal_antibody",3
+"activity","activity",3
+"medication_use","medication_use",3
+"cnv","cnv",3
+"contraception_fertility","contraception_fertility",3
+"washout_period","washout_period",3
+"medical_contraindication","medical_contraindication",3
+"cns_infection","cns_infection",3
+"effusion_ascites","effusion_ascites",3
+"hcv_status","hcv_status",3
+"drug_tolerance","drug_tolerance",3
+"disease_definition","disease_definition",3
+"Lesion Size","Lesion Size",3
+"her2_gastric_cancer","her2_gastric_cancer",3
+"Comorbid Disease","Comorbid Disease",3
+"disease_comorbidity","Comorbid Disease",3
+"hearing_status","hearing_status",3
+"asthma_exacerbation","asthma_exacerbation",3
+"bleeding_coagulopathy","bleeding_coagulopathy",3
+"disease_subtype","disease_subtype",3
+"study_completion","study_completion",3
+"plasma_exchange","plasma_exchange",3
+"uncontrolled_illness","uncontrolled_illness",3
+"cns_lymphoma","cns_lymphoma",3
+"cardiac_device","cardiac_device",3
+"investigator_judgment","investigator_judgment",3
+"treatment_cohort","treatment_cohort",3
+"Risk Behavior","Risk Behavior",3
+"menopause_status","menopause_status",3
+"allergies_intolerances","allergies_intolerances",3
+"connective_tissue_disease","connective_tissue_disease",3
+"Prior Rituximab","Prior Rituximab",3
+"Psychiatric Disorder","Psychiatric Disorder",3
+"Prior investigational therapy","Prior investigational therapy",3
+"General Exclusion","General Exclusion",3
+"pulmonary_history","pulmonary_history",3
+"Traumatic Injury","Traumatic Injury",3
+"Palliative Radiation","Palliative Radiation",3
+"Prior Laser Treatment","Prior Laser Treatment",3
+"Prior Anti-VEGF","Prior Anti-VEGF",3
+"Creatinine","Creatinine",3
+"Cerebrovascular History","Cerebrovascular History",3
+"Enrollment criteria","Enrollment criteria",3
+"surgical_procedure","surgical_procedure",3
+"ability_to_consent","ability_to_consent",3
+"Uncontrolled Intercurrent Illness","Uncontrolled Intercurrent Illness",3
+"Medical Illness","Medical Illness",3
+"Hematologic Labs","Hematologic Labs",3
+"Concurrent Malignancy","Concurrent Malignancy",3
+"Ability to Comply","Ability to Comply",3
+"Cerebrovascular Events","Cerebrovascular Events",3
+"Body Mass Index","Body Mass Index",3
+"safety_hazard","safety_hazard",3
+"Allowed Medications","Allowed Medications",3
+"Lab Values - Renal","Lab Values - Renal",3
+"Retinal Findings","Retinal Findings",3
+"research_samples","research_samples",3
+"CYP3A Inhibitors/Inducers","CYP3A Inhibitors/Inducers",3
+"Grapefruit","Grapefruit",3
+"bevacizumab_hypersensitivity","bevacizumab_hypersensitivity",3
+"cns_event","cns_event",3
+"Exercise intervention","Exercise intervention",3
+"other_malignancies","OTHER_MALIGNANCY",2
+"female_contraception","contraception_female",2
+"nutritional","nutrition",2
+"gender_age","age_gender",2
+"other_studies","other_study",2
+"malignancy_cns","CNS Malignancy",2
+"ocular_prior_treatment","Prior Ocular Treatment",2
+"test","testing",2
+"body_measures","body_measurement",2
+"accessibility","access",2
+"medication_compliance","medication_compliance",2
+"inadequate_response","inadequate_response",2
+"diarrhea","diarrhea",2
+"metabolic_disease","metabolic_disease",2
+"donor_criteria","donor_criteria",2
+"infection_risk","infection_risk",2
+"current_treatment","current_treatment",2
+"treatment_need","treatment_need",2
+"drug_dosing","drug_dosing",2
+"device_use","device_use",2
+"allergen_immunotherapy","allergen_immunotherapy",2
+"medical_treatment","medical_treatment",2
+"medical_imaging","medical_imaging",2
+"eligibility_criteria","eligibility_criteria",2
+"blood_loss","blood_loss",2
+"treatment_naive","treatment_naive",2
+"fluid_management","fluid_management",2
+"baseline_assessment","baseline_assessment",2
+"hepatic_renal","hepatic_renal",2
+"renal_hepatic","hepatic_renal",2
+"ocular_anatomy","ocular_anatomy",2
+"toxicity_resolution","toxicity_resolution",2
+"diverticulitis","diverticulitis",2
+"oxygen_therapy","oxygen_therapy",2
+"donor_type","donor_type",2
+"co_infection","co_infection",2
+"ocular_media","ocular_media",2
+"psychiatric_neurological","psychiatric_neurological",2
+"hearing","hearing",2
+"hla_matching","hla_matching",2
+"medical_comorbidity","medical_comorbidity",2
+"wound_status","wound_status",2
+"hepatocellular_carcinoma","hepatocellular_carcinoma",2
+"arrhythmia","arrhythmia",2
+"hypothyroidism","hypothyroidism",2
+"inflammatory_disease","inflammatory_disease",2
+"caregiver_availability","caregiver_availability",2
+"study_phase","study_phase",2
+"age_and_sex","age_and_sex",2
+"relationship","relationship",2
+"support","support",2
+"genotype","genotype",2
+"treatment_interruption","treatment_interruption",2
+"study_drug","study_drug",2
+"general_suitability","general_suitability",2
+"genetic_disease","genetic_disease",2
+"anemia_etiology","anemia_etiology",2
+"transplant_eligibility","transplant_eligibility",2
+"abdominal","abdominal",2
+"hormone_status","hormone_status",2
+"arm_specific","arm_specific",2
+"logistics","logistics",2
+"blood_product_refusal","blood_product_refusal",2
+"medication_eligibility","medication_eligibility",2
+"treatment_free_interval","treatment_free_interval",2
+"edss","edss",2
+"immunocompromised","immunocompromised",2
+"prior_b_cell_therapy","prior_b_cell_therapy",2
+"prior_natalizumab","prior_natalizumab",2
+"prior_daclizumab","prior_daclizumab",2
+"prior_teriflunomide","prior_teriflunomide",2
+"thrombosis_history","thrombosis_history",2
+"therapy","therapy",2
+"injury","injury",2
+"corneal_thickness","corneal_thickness",2
+"Treatment Type","Treatment Type",2
+"Hemolytic Anemia","Hemolytic Anemia",2
+"Drug-Specific (Docetaxel)","Drug-Specific (Docetaxel)",2
+"Neuropsychiatric","Neuropsychiatric",2
+"general_medical","general_medical",2
+"drug_absorption","drug_absorption",2
+"occupational","occupational",2
+"systemic_immunostimulation","systemic_immunostimulation",2
+"functional_limitation","functional_limitation",2
+"diabetes_exception","diabetes_exception",2
+"pulmonary_exception","pulmonary_exception",2
+"infection_exception","infection_exception",2
+"btc_specific","btc_specific",2
+"cns_trauma","cns_trauma",2
+"inflammatory_joint_disease","inflammatory_joint_disease",2
+"time_since_surgery","time_since_surgery",2
+"neurologic_status","neurologic_status",2
+"required_medication","required_medication",2
+"exacerbation","exacerbation",2
+"rehabilitation","rehabilitation",2
+"cognitive_test","cognitive_test",2
+"systemic_illness","systemic_illness",2
+"development","development",2
+"conflict_of_interest","conflict_of_interest",2
+"ability_to_swallow","ability_to_swallow",2
+"disease_presentation","disease_presentation",2
+"prior_study_compliance","prior_study_compliance",2
+"organ_involvement","organ_involvement",2
+"alkylating_agents","alkylating_agents",2
+"serious_disease","serious_disease",2
+"lab_liver","lab_liver",2
+"her2_testing","her2_testing",2
+"vital_status","vital_status",2
+"substance_screening","substance_screening",2
+"gestational_age","gestational_age",2
+"surgical_criteria","surgical_criteria",2
+"imaging_findings","imaging_findings",2
+"bronchodilator_response","bronchodilator_response",2
+"thrombocytopenia","thrombocytopenia",2
+"biologic_therapy","biologic_therapy",2
+"steroid_therapy","steroid_therapy",2
+"infection_screening","infection_screening",2
+"covid_infection","covid_infection",2
+"prior_treatment_recovery","prior_treatment_recovery",2
+"medication_ability","medication_ability",2
+"neurological_stability","neurological_stability",2
+"functional_test","functional_test",2
+"ole_reproductive_health","ole_reproductive_health",2
+"ole_liver_disease","ole_liver_disease",2
+"hiv_hbv_hcv","hiv_hbv_hcv",2
+"standard_of_care","standard_of_care",2
+"lab_creatinine_clearance","lab_creatinine_clearance",2
+"hiv_test","hiv_test",2
+"checkpoint_inhibitor_toxicity","checkpoint_inhibitor_toxicity",2
+"cns_symptoms","cns_symptoms",2
+"age_and_consent","age_and_consent",2
+"tumor_genetics","tumor_genetics",2
+"medication_sensitivity","medication_sensitivity",2
+"decompensated_liver","decompensated_liver",2
+"liver_disease_other","liver_disease_other",2
+"other_liver_disease","liver_disease_other",2
+"sample_collection","sample_collection",2
+"diagnosis_arm_a","diagnosis_arm_a",2
+"prior_antibody_therapy","prior_antibody_therapy",2
+"amyloidosis","amyloidosis",2
+"ebv_infection","ebv_infection",2
+"hbv_infection","hbv_infection",2
+"covid_19","covid_19",2
+"immunosuppressive_drugs","immunosuppressive_drugs",2
+"copd","copd",2
+"concurrent_cancer_therapy","concurrent_cancer_therapy",2
+"qtc_interval","qtc_interval",2
+"hbsag","hbsag",2
+"prior_antiviral","prior_antiviral",2
+"population_healthy_controls","population_healthy_controls",2
+"organ_transplant_type","organ_transplant_type",2
+"administration","administration",2
+"injection_site","injection_site",2
+"feeding_tube","feeding_tube",2
+"drug_eligibility","drug_eligibility",2
+"severity_score","severity_score",2
+"skin_infection","skin_infection",2
+"developmental_stage","developmental_stage",2
+"medical_test","medical_test",2
+"psychiatric_disease","psychiatric_disease",2
+"reference_study","reference_study",2
+"presentation","presentation",2
+"thrombotic_disease","thrombotic_disease",2
+"pain_management","pain_management",2
+"cardiac_abiraterone","cardiac_abiraterone",2
+"prior_allogeneic_transplant","prior_allogeneic_transplant",2
+"pancreatic","pancreatic",2
+"visual","visual",2
+"cooperation","cooperation",2
+"ebv","ebv",2
+"solid_organ_transplant","solid_organ_transplant",2
+"hlh","hlh",2
+"inr","inr",2
+"genetic_testing","genetic_testing",2
+"donor","donor",2
+"protein","protein",2
+"medical_disease","medical_disease",2
+"language_barrier","language_barrier",2
+"cmv_disease","cmv_disease",2
+"ophthalmic_assessment","ophthalmic_assessment",2
+"social_security","social_security",2
+"fracture","fracture",2
+"surgical_recovery","surgical_recovery",2
+"primary_diagnosis","primary_diagnosis",2
+"reference","reference",2
+"body_type","body_type",2
+"drug_abuse","drug_abuse",2
+"iron_status","iron_status",2
+"third_space_fluid","third_space_fluid",2
+"angina","angina",2
+"minor_procedure","minor_procedure",2
+"ability_to_take_drug","ability_to_take_drug",2
+"intracranial_hemorrhage","intracranial_hemorrhage",2
+"encephalopathy","encephalopathy",2
+"chronic_illness","chronic_illness",2
+"psychiatric_comorbidity","psychiatric_comorbidity",2
+"kidney_transplant","kidney_transplant",2
+"lens_status","lens_status",2
+"protocol_adherence","protocol_adherence",2
+"medication_route","medication_route",2
+"post_menopausal","post_menopausal",2
+"contact","contact",2
+"literacy","literacy",2
+"hba1c","hba1c",2
+"gastric_ulcer","gastric_ulcer",2
+"gi_perforation","gi_perforation",2
+"age_and_demographics","age_and_demographics",2
+"logistical","logistical",2
+"physical_capability","physical_capability",2
+"life-threatening disease","life-threatening disease",2
+"chronic disease","chronic disease",2
+"drug-specific: Rifampicin","drug-specific: Rifampicin",2
+"hematological_function","hematological_function",2
+"anatomy","anatomy",2
+"status","status",2
+"retrospective_enrollment","retrospective_enrollment",2
+"renal_failure","renal_failure",2
+"gynecology","gynecology",2
+"autoimmunity","autoimmunity",2
+"weight_loss_history","weight_loss_history",2
+"anemia","anemia",2
+"vital","vital",2
+"gi_bleed","gi_bleed",2
+"extension_criteria","extension_criteria",2
+"cns_imaging","cns_imaging",2
+"participation","participation",2
+"hbv_hcv","hbv_hcv",2
+"inhibitor_history","inhibitor_history",2
+"bone_health","bone_health",2
+"thrombosis_risk","thrombosis_risk",2
+"wbc","wbc",2
+"radiation_pneumonitis","radiation_pneumonitis",2
+"inhaled_corticosteroids","inhaled_corticosteroids",2
+"joint_counts","joint_counts",2
+"rheumatologic","rheumatologic",2
+"molecular","molecular",2
+"treatment_resistance","treatment_resistance",2
+"scan_tolerance","scan_tolerance",2
+"sample","sample",2
+"symptom_timing","symptom_timing",2
+"induction_agents","induction_agents",2
+"retinal_changes","retinal_changes",2
+"retinal_detachment","retinal_detachment",2
+"anatomical","anatomical",2
+"disease_feature","disease_feature",2
+"cardiac_status","cardiac_status",2
+"bilateral_cancer","bilateral_cancer",2
+"antibiotic_use","antibiotic_use",2
+"diabetes_status","diabetes_status",2
+"autoimmune_status","autoimmune_status",2
+"response","response",2
+"eye_exam","eye_exam",2
+"treatment_cohortA","treatment_cohortA",2
+"viral_cohortB","viral_cohortB",2
+"adjuvant_treatment","adjuvant_treatment",2
+"recent_chemotherapy","recent_chemotherapy",2
+"dermatologic_conditions","dermatologic_conditions",2
+"prognostic_score","prognostic_score",2
+"lymph_nodes","lymph_nodes",2
+"lab_hba1c","lab_hba1c",2
+"tumor_sample","tumor_sample",2
+"exposure","exposure",2
+"cardiac_biomarkers","cardiac_biomarkers",2
+"procedure_contraindication","procedure_contraindication",2
+"hepatic_renal_function","hepatic_renal_function",2
+"her2_breast_cancer","her2_breast_cancer",2
+"her2_solid_tumor","her2_solid_tumor",2
+"clinical_scale","clinical_scale",2
+"psychiatric_medication","psychiatric_medication",2
+"syphilis","syphilis",2
+"examination","examination",2
+"neovascularization","neovascularization",2
+"prior_anticoagulation","prior_anticoagulation",2
+"disease_exacerbations","disease_exacerbations",2
+"uncontrolled_pain","uncontrolled_pain",2
+"oxygenation","oxygenation",2
+"rejection_history","rejection_history",2
+"p_gp_inhibitor","p_gp_inhibitor",2
+"disability_score","disability_score",2
+"other_investigational","other_investigational",2
+"clinical_response","clinical_response",2
+"treatment_interval","treatment_interval",2
+"prior_vegf_therapy","prior_vegf_therapy",2
+"thrombotic","thrombotic",2
+"corneal_endothelial_cell_density","corneal_endothelial_cell_density",2
+"fuchs_dystrophy","fuchs_dystrophy",2
+"corneal_edema","corneal_edema",2
+"corneal_dystrophy","corneal_dystrophy",2
+"safety_risk","safety_risk",2
+"prior_pi3k_inhibitor","prior_pi3k_inhibitor",2
+"General Medical Exclusions","General Medical Exclusions",2
+"gi_surgery","gi_surgery",2
+"gvhd","gvhd",2
+"prior_local_therapy","prior_local_therapy",2
+"esophageal_varices","esophageal_varices",2
+"viral_coinfection","viral_coinfection",2
+"spinal_cord_compression","spinal_cord_compression",2
+"immunosuppressive_therapy","immunosuppressive_therapy",2
+"stroke_hemorrhage","stroke_hemorrhage",2
+"laboratory_values_platelets","laboratory_values_platelets",2
+"dialysis_requirement","dialysis_requirement",2
+"study_eligibility","study_eligibility",2
+"autoantibodies","autoantibodies",2
+"other_joint_disease","other_joint_disease",2
+"sensory_impairment","sensory_impairment",2
+"clinical_indication","clinical_indication",2
+"psychiatric_condition","psychiatric_condition",2
+"ophthalmological_condition","ophthalmological_condition",2
+"sperm_donation","sperm_donation",2
+"cardiac_rhythm","cardiac_rhythm",2
+"puberty","puberty",2
+"lymphocyte_count","lymphocyte_count",2
+"disease_transformation","disease_transformation",2
+"diagnosis_ms","diagnosis_ms",2
+"prior_treatment_ms","prior_treatment_ms",2
+"study_commitment","study_commitment",2
+"travel","travel",2
+"neuro","neuro",2
+"recurrent_infection","recurrent_infection",2
+"locoregional_therapy","locoregional_therapy",2
+"cns_metastasis","cns_metastasis",2
+"tissue_collection","tissue_collection",2
+"hla_status","hla_status",2
+"prior_treatment_study_eye","prior_treatment_study_eye",2
+"ocular_device","ocular_device",2
+"mnv_characteristics","mnv_characteristics",2
+"eyelid","eyelid",2
+"anterior_segment","anterior_segment",2
+"corneal_endothelium","corneal_endothelium",2
+"biosample","biosample",2
+"menopausal","menopausal",2
+"practical","practical",2
+"Uncontrolled comorbidities","Uncontrolled comorbidities",2
+"Lab criteria - ANC","Lab criteria - ANC",2
+"Lab criteria - Hemoglobin","Lab criteria - Hemoglobin",2
+"Lab criteria - Bilirubin","Lab criteria - Bilirubin",2
+"SARS-CoV-2","SARS-CoV-2",2
+"Active tuberculosis","Active tuberculosis",2
+"Prior major surgery","Prior major surgery",2
+"Corticosteroids contraindication","Corticosteroids contraindication",2
+"stem_cell_source","stem_cell_source",2
+"chronic_gvhd","chronic_gvhd",2
+"drainage","drainage",2
+"hemodynamic_status","hemodynamic_status",2
+"Genetic Status","Genetic Status",2
+"Airway Reactivity","Airway Reactivity",2
+"Prior Cancer Therapy","Prior Cancer Therapy",2
+"Prior Intravitreal Treatment","Prior Intravitreal Treatment",2
+"Prior Vitrectomy","Prior Vitrectomy",2
+"Hepatitis B and C","Hepatitis B and C",2
+"age_cohort_specific","age_cohort_specific",2
+"surgical_eligibility","surgical_eligibility",2
+"Hematologic Malignancy","Hematologic Malignancy",2
+"Prior cell-depleting therapy","Prior cell-depleting therapy",2
+"Medication requirement","Medication requirement",2
+"lymph_node_status","lymph_node_status",2
+"cohort_a_specific","cohort_a_specific",2
+"clinical_findings","clinical_findings",2
+"technology_use","technology_use",2
+"infection_inflammation","infection_inflammation",2
+"disease_recurrence","disease_recurrence",2
+"ulcer_size","ulcer_size",2
+"cancer_screening","cancer_screening",2
+"prior_cataract_surgery","prior_cataract_surgery",2
+"Corticosteroid Exception","Corticosteroid Exception",2
+"Pulmonary Edema","Pulmonary Edema",2
+"steroids","steroids",2
+"Autoimmune/Immunologic","Autoimmune/Immunologic",2
+"Vascular Events","Vascular Events",2
+"Other Clinical Trials","Other Clinical Trials",2
+"GI Events","GI Events",2
+"Immunosuppressive Medication Exception","Immunosuppressive Medication Exception",2
+"antiplatelet_agents","antiplatelet_agents",2
+"Prior Anti-Angiogenic Treatment","Prior Anti-Angiogenic Treatment",2
+"Prior Ophthalmic Surgery","Prior Ophthalmic Surgery",2
+"treatment_arm_specific","treatment_arm_specific",2
+"Psychiatric/Substance","Psychiatric/Substance",2
+"Pregnancy/Gender","Pregnancy/Gender",2
+"Hepatitis serology","Hepatitis serology",2
+"ocular_health","ocular_health",2
+"Non-healing Wound","Non-healing Wound",2
+"Avastin Hypersensitivity","Avastin Hypersensitivity",2
+"Tumor Grade","Tumor Grade",2
+"Pregnancy/Nursing","Pregnancy/Nursing",2
+"Anticipated Surgery","Anticipated Surgery",2
+"Urine Protein","Urine Protein",2
+"Prior Trastuzumab","Prior Trastuzumab",2
+"Antiretroviral Therapy","Antiretroviral Therapy",2
+"Disease Status - Locally Advanced","Disease Status - Locally Advanced",2
+"gi_inflammation","gi_inflammation",2
+"pd_l1","pd_l1",2
+"control_group","control_group",2
+"Prior Study Status","Prior Study Status",2
+"Gastrointestinal Complications","Gastrointestinal Complications",2
+"Uncontrolled Medical Illnesses","Uncontrolled Medical Illnesses",2
+"Laboratory Values - Liver Function","Laboratory Values - Liver Function",2
+"Respiratory Support","Respiratory Support",2
+"Disease Sites","Disease Sites",2
+"Aspirin","Aspirin",2
+"Diagnosis and Prior Therapy","Diagnosis and Prior Therapy",2
+"Richter Transformation","Richter Transformation",2
+"Psychiatric Illness","Psychiatric Illness",2
+"MRD status","MRD status",2
+"pulmonary_hypertension","pulmonary_hypertension",2
+"age_and_transplant_status","age_and_transplant_status",2
+"monitoring","monitoring",2
+"surgery_interval","surgery_interval",2
+"prior_checkpoint_inhibitor","prior_checkpoint_inhibitor",2
+"asthma_medication","asthma_medication",2
+"allergy_status","allergy_status",2
+"Immunosuppressive Treatment","Immunosuppressive Treatment",2
+"viral_hepatitis_exception","viral_hepatitis_exception",2
+"medical_risk","medical_risk",2
+"Thrombolytic Therapy","Thrombolytic Therapy",2
+"Diagnosis - Ovarian","Diagnosis - Ovarian",2
+"healthy_control","healthy_control",2
+"testing_ability","testing_ability",2
+"OSE Stage eligibility","OSE Stage eligibility",2
+"Prior therapy - proteasome inhibitor","Prior therapy - proteasome inhibitor",2
+"Renal and Hepatic Function","Renal and Hepatic Function",2
+"Elevated IgE","Elevated IgE",2
+"neurologic_disease","neurologic_disease",2
+"dlco","dlco",2
+"interstitial_lung_disease","interstitial_lung_disease",2
+"Stratum S - Skeletal maturity","Stratum S - Skeletal maturity",2
+"allergen_response","allergen_response",2
+"wound_fracture","wound_fracture",2
+"Lab - AST","Lab - AST",2
+"Lab - Creatinine","Lab - Creatinine",2
+"Prior Drug Treatment","Prior Drug Treatment",2
+"facility_type","facility_type",2
+"age_fitness","age_fitness",2
+"Laboratory - Hepatic","Laboratory - Hepatic",2
+"General Medical Condition","General Medical Condition",2
+"Corticosteroid Dosing","Corticosteroid Dosing",2
+"Contraception/Pregnancy","PREGNANCY_CONTRACEPTION",1
+"disease_measurable","MEASURABLE_DISEASE",1
+"malignancies","malignancy",1
+"pregnancy_testing","pregnancy_test",1
+"Drug-Drug Interactions","drug_interaction",1
+"pulmonary_cardiac","cardiac_pulmonary",1
+"behavior","behavioral",1
+"medications_excluded","Excluded Medications",1
+"diagnosis_and_age","age_and_diagnosis",1
+"prior_monoclonal_antibodies","Prior monoclonal antibody",1
+"Contraception and Pregnancy","pregnancy_and_contraception",1
+"infection_hcv","hcv_infection",1
+"varices_bleeding","variceal_bleeding",1
+"allergy_monoclonal_antibodies","Monoclonal Antibody Allergy",1
+"sex_and_age","age_and_sex",1
+"immunocompromise","immunocompromised",1
+"infection_hbv","hbv_infection",1
+"renal_hepatic_function","hepatic_renal_function",1
+"Oxygen","oxygenation",1
+"Uncontrolled Comorbidity","Uncontrolled comorbidities",1
+"BONE_DEVELOPMENT","BONE_DEVELOPMENT",1
+"NEUROLOGIC/PSYCHIATRIC","NEUROLOGIC/PSYCHIATRIC",1
+"psychiatric_neurologic","NEUROLOGIC/PSYCHIATRIC",1
+"mental_capacity","mental_capacity",1
+"clotting_disorder","clotting_disorder",1
+"oral_medication","oral_medication",1
+"antineoplastic_treatment","antineoplastic_treatment",1
+"standard_criteria","standard_criteria",1
+"enrollment_history","enrollment_history",1
+"multiple_organs","multiple_organs",1
+"vad","vad",1
+"graft_status","graft_status",1
+"recent_transfusion","recent_transfusion",1
+"prior_treatment_compatibility","prior_treatment_compatibility",1
+"nasal_polyps","nasal_polyps",1
+"symptom_score","symptom_score",1
+"run_in_treatment","run_in_treatment",1
+"nasal_symptoms","nasal_symptoms",1
+"recent_investigational_drug","recent_investigational_drug",1
+"leukotriene_modifier","leukotriene_modifier",1
+"run_in_systemic_cs","run_in_systemic_cs",1
+"intranasal_cs","intranasal_cs",1
+"nasal_surgery","nasal_surgery",1
+"structural_nasal_surgery","structural_nasal_surgery",1
+"epistaxis","epistaxis",1
+"immune_disorder","immune_disorder",1
+"polyp_type","polyp_type",1
+"nasal_septal_deviation","nasal_septal_deviation",1
+"rhinitis_medicamentosa","rhinitis_medicamentosa",1
+"fungal_infection","fungal_infection",1
+"aspirin_desensitization","aspirin_desensitization",1
+"diagnosis_part_a","diagnosis_part_a",1
+"diagnosis_part_b","diagnosis_part_b",1
+"diagnosis_part_c","diagnosis_part_c",1
+"hypersensitivity_part_b","hypersensitivity_part_b",1
+"hypersensitivity_part_c","hypersensitivity_part_c",1
+"drug_labeling","drug_labeling",1
+"sensitivity","sensitivity",1
+"identification","identification",1
+"radiolabeled_drug","radiolabeled_drug",1
+"progression_timing","progression_timing",1
+"resistance","resistance",1
+"metastatic_burden","metastatic_burden",1
+"none","none",1
+"disease_timing","disease_timing",1
+"metabolic_disorder","metabolic_disorder",1
+"clinical_evidence","clinical_evidence",1
+"recent_relapse","recent_relapse",1
+"suicidality","suicidality",1
+"dermatology","dermatology",1
+"brain_metastasis","brain_metastasis",1
+"rapid_progression","rapid_progression",1
+"event_history","event_history",1
+"procedure_criteria","procedure_criteria",1
+"blood_type","blood_type",1
+"metastases_and_history","metastases_and_history",1
+"surgery_and_procedures","surgery_and_procedures",1
+"cardiac_and_bleeding","cardiac_and_bleeding",1
+"gi_and_absorption","gi_and_absorption",1
+"pregnancy_cns_infection","pregnancy_cns_infection",1
+"autoimmune_and_organ","autoimmune_and_organ",1
+"eye","eye",1
+"treatment_regimen","treatment_regimen",1
+"treatment_experience","treatment_experience",1
+"lipid_management","lipid_management",1
+"risk","risk",1
+"withdrawal","withdrawal",1
+"availability","availability",1
+"treatment_timeline","treatment_timeline",1
+"adverse_event_history","adverse_event_history",1
+"sex_fertility","sex_fertility",1
+"prior_allograft","prior_allograft",1
+"cold_ischemia","cold_ischemia",1
+"donor_age","donor_age",1
+"immunological_risk","immunological_risk",1
+"hcc_type","hcc_type",1
+"organ_status","organ_status",1
+"note","note",1
+"prior_intolerance","prior_intolerance",1
+"infection_disease","infection_disease",1
+"hbeag_status","hbeag_status",1
+"hbv_genotype","hbv_genotype",1
+"gastrointestinal_bleeding","gastrointestinal_bleeding",1
+"hdv_infection","hdv_infection",1
+"dpd_deficiency","dpd_deficiency",1
+"recovery_status","recovery_status",1
+"dose_restriction","dose_restriction",1
+"inflammation_markers","inflammation_markers",1
+"blood_product_donation","blood_product_donation",1
+"consent_and_caregiver","consent_and_caregiver",1
+"caregiver_capability","caregiver_capability",1
+"immunologic_status","immunologic_status",1
+"renal_involvement","renal_involvement",1
+"part_a_vital_signs","part_a_vital_signs",1
+"part_a_medication","part_a_medication",1
+"part_b_vital_signs","part_b_vital_signs",1
+"part_b_medication","part_b_medication",1
+"organ_history","organ_history",1
+"fluid_collection","fluid_collection",1
+"hemoglobin_level","hemoglobin_level",1
+"prior_treatment_toxicity","prior_treatment_toxicity",1
+"sample_submission","sample_submission",1
+"cardiac_risk","cardiac_risk",1
+"blood_product_allergy","blood_product_allergy",1
+"prior_tocilizumab","prior_tocilizumab",1
+"prior_tocilizumab_trial","prior_tocilizumab_trial",1
+"treatment_approach","treatment_approach",1
+"treatment_ability","treatment_ability",1
+"bariatric_surgery","bariatric_surgery",1
+"treatment_modality","treatment_modality",1
+"hepatitis_or_infection","hepatitis_or_infection",1
+"age_cohort_a","age_cohort_a",1
+"diagnosis_cohort_a","diagnosis_cohort_a",1
+"age_cohort_b","age_cohort_b",1
+"diagnosis_cohort_b","diagnosis_cohort_b",1
+"age_cohort_c","age_cohort_c",1
+"diagnosis_cohort_c","diagnosis_cohort_c",1
+"inhibitor_status_cohort_c","inhibitor_status_cohort_c",1
+"immune_tolerance_induction","immune_tolerance_induction",1
+"disability_progression","disability_progression",1
+"disability_progression_criteria","disability_progression_criteria",1
+"gadolinium_intolerance","gadolinium_intolerance",1
+"neurological_disorder","neurological_disorder",1
+"somatic_disease","somatic_disease",1
+"prior_ocrelizumab","prior_ocrelizumab",1
+"prior_alemtuzumab","prior_alemtuzumab",1
+"corticosteroid_intolerance","corticosteroid_intolerance",1
+"prior_siponimod","prior_siponimod",1
+"fampridine","fampridine",1
+"prior_natalizumab_interval","prior_natalizumab_interval",1
+"prior_immunosuppressants","prior_immunosuppressants",1
+"prior_mitoxantrone","prior_mitoxantrone",1
+"prior_teriflunomide_plasma","prior_teriflunomide_plasma",1
+"exposure_history","exposure_history",1
+"physical_status","physical_status",1
+"diagnostic_data","diagnostic_data",1
+"infection_medical_condition","infection_medical_condition",1
+"excluded_treatment","excluded_treatment",1
+"immune_function","immune_function",1
+"skin_type","skin_type",1
+"alcohol_screening","alcohol_screening",1
+"gi_symptoms","gi_symptoms",1
+"iop","iop",1
+"optic_disc","optic_disc",1
+"tonometry","tonometry",1
+"corneal_condition","corneal_condition",1
+"patient_cooperation","patient_cooperation",1
+"parent_study","parent_study",1
+"treatment_benefit","treatment_benefit",1
+"discontinuation_criteria","discontinuation_criteria",1
+"drug_availability","drug_availability",1
+"drug_discontinuation","drug_discontinuation",1
+"drug_management","drug_management",1
+"prior_reaction","prior_reaction",1
+"race_ethnicity","race_ethnicity",1
+"Treatment Dosage","Treatment Dosage",1
+"Immune-mediated Adverse Events","Immune-mediated Adverse Events",1
+"Associated Conditions","Associated Conditions",1
+"Lymphoma","Lymphoma",1
+"Reproductive/Fertility","Reproductive/Fertility",1
+"neuromuscular","neuromuscular",1
+"insurance_coverage","insurance_coverage",1
+"enrollment_duration","enrollment_duration",1
+"calcium_metabolism","calcium_metabolism",1
+"cardiovascular_events","cardiovascular_events",1
+"prior_medical","prior_medical",1
+"prophylaxis","prophylaxis",1
+"bone_metabolism","bone_metabolism",1
+"endocrine_history","endocrine_history",1
+"metabolic_risk","metabolic_risk",1
+"ophthalmologic_complication","ophthalmologic_complication",1
+"tissue_banking","tissue_banking",1
+"dermatologic_exception","dermatologic_exception",1
+"bone","bone",1
+"egc_specific","egc_specific",1
+"drug_specific","drug_specific",1
+"intracranial_mass","intracranial_mass",1
+"residence","residence",1
+"metastasis_status","metastasis_status",1
+"antibody_status","antibody_status",1
+"administration_route","administration_route",1
+"premedication_contraindications","premedication_contraindications",1
+"ocular_surgery_history","ocular_surgery_history",1
+"prior_dcis_lcis","prior_dcis_lcis",1
+"prior_chemoprevention","prior_chemoprevention",1
+"neurologic_history","neurologic_history",1
+"treatment_availability","treatment_availability",1
+"meningeal_disease","meningeal_disease",1
+"gender_contraception","gender_contraception",1
+"birthweight","birthweight",1
+"physical_ability","physical_ability",1
+"coexisting_condition","coexisting_condition",1
+"care_continuity","care_continuity",1
+"disability_status","disability_status",1
+"cancer_staging","cancer_staging",1
+"serious_illness","serious_illness",1
+"neurologic_stability","neurologic_stability",1
+"neurologic_conditions","neurologic_conditions",1
+"melanoma_type","melanoma_type",1
+"ocular_toxicity","ocular_toxicity",1
+"age_of_event","age_of_event",1
+"trauma_exposure","trauma_exposure",1
+"diagnostic_criteria","diagnostic_criteria",1
+"prior_immunosuppression_long","prior_immunosuppression_long",1
+"cell_depletion","cell_depletion",1
+"prior_tcz","prior_tcz",1
+"major_infection","major_infection",1
+"active_tb","active_tb",1
+"lab_renal","lab_renal",1
+"lab_wbc","lab_wbc",1
+"lab_alc","lab_alc",1
+"daclizumab_dosing","daclizumab_dosing",1
+"immunoglobulin_vaccination","immunoglobulin_vaccination",1
+"rejection","rejection",1
+"medication_adverse_event","medication_adverse_event",1
+"prior_prevention","prior_prevention",1
+"infection_travel","infection_travel",1
+"treatment_agreement","treatment_agreement",1
+"renal_therapy","renal_therapy",1
+"disorder","disorder",1
+"pancreatic_function","pancreatic_function",1
+"thyroid_function","thyroid_function",1
+"urinary_protein","urinary_protein",1
+"obstetric_history","obstetric_history",1
+"procedure_access","procedure_access",1
+"diabetes_control","diabetes_control",1
+"weight_history","weight_history",1
+"secondary_obesity","secondary_obesity",1
+"obesity_secondary","secondary_obesity",1
+"diet_programs","diet_programs",1
+"Genetic Alterations","Genetic Alterations",1
+"Pregnancy Partner","Pregnancy Partner",1
+"partner_pregnancy","Pregnancy Partner",1
+"device_competency","device_competency",1
+"treatment_stability","treatment_stability",1
+"diagnosis_ncfb","diagnosis_ncfb",1
+"clinical_laboratory","clinical_laboratory",1
+"electrocardiogram","electrocardiogram",1
+"ecg_interval","ecg_interval",1
+"part_b_radiation","part_b_radiation",1
+"ncfb_etiology","ncfb_etiology",1
+"ncfb_exacerbation","ncfb_exacerbation",1
+"copd_primary_driver","copd_primary_driver",1
+"copd_exacerbation","copd_exacerbation",1
+"asthma_copd_overlap","asthma_copd_overlap",1
+"surgical_evaluation","surgical_evaluation",1
+"infectious_disease_hiv","infectious_disease_hiv",1
+"infectious_disease_hepatitis","infectious_disease_hepatitis",1
+"hormonal_contraception","hormonal_contraception",1
+"acetaminophen_use","acetaminophen_use",1
+"gi_bleeding_risk","gi_bleeding_risk",1
+"cns_neurological","cns_neurological",1
+"age_geographic","age_geographic",1
+"disability_scale","disability_scale",1
+"ole_eligibility","ole_eligibility",1
+"mri_imaging","mri_imaging",1
+"neurological_comorbidity","neurological_comorbidity",1
+"comorbid_neurological","neurological_comorbidity",1
+"reproductive_intent","reproductive_intent",1
+"immunocompromised_state","immunocompromised_state",1
+"bleeding_hematologic","bleeding_hematologic",1
+"medical_control","medical_control",1
+"prior_hypersensitivity","prior_hypersensitivity",1
+"functional_independence","functional_independence",1
+"genetic_confirmation","genetic_confirmation",1
+"prior_hgf_met_therapy","prior_hgf_met_therapy",1
+"gi_abnormalities","gi_abnormalities",1
+"benefit_assessment","benefit_assessment",1
+"study_discontinuation","study_discontinuation",1
+"commercially_available","commercially_available",1
+"anticancer_treatment","anticancer_treatment",1
+"atezolizumab_discontinuation","atezolizumab_discontinuation",1
+"unresolved_toxicities","unresolved_toxicities",1
+"ongoing_adverse_events","ongoing_adverse_events",1
+"biosimilar","biosimilar",1
+"mutation_therapy","mutation_therapy",1
+"lab_direct_bilirubin","lab_direct_bilirubin",1
+"lab_transaminases","lab_transaminases",1
+"lab_alp","lab_alp",1
+"lab_albumin","lab_albumin",1
+"lab_inr_pt","lab_inr_pt",1
+"lab_aptt","lab_aptt",1
+"biopsy_consent","biopsy_consent",1
+"hbv_test","hbv_test",1
+"hcv_test","hcv_test",1
+"metabolic_dysfunction","metabolic_dysfunction",1
+"antibody_hypersensitivity","antibody_hypersensitivity",1
+"hypersensitivity_antibodies","antibody_hypersensitivity",1
+"hypersensitivity_antibody","antibody_hypersensitivity",1
+"atezolizumab_hypersensitivity","atezolizumab_hypersensitivity",1
+"concurrent_anticancer","concurrent_anticancer",1
+"prior_cytotoxic_therapy","prior_cytotoxic_therapy",1
+"braf_mek_inhibitors","braf_mek_inhibitors",1
+"her2","her2",1
+"organ","organ",1
+"pharmacogenetic","pharmacogenetic",1
+"syncope","syncope",1
+"phlebotomy","phlebotomy",1
+"hcv_viral_load","hcv_viral_load",1
+"hcc","hcc",1
+"hyperparathyroidism","hyperparathyroidism",1
+"acute_renal_failure","acute_renal_failure",1
+"prior_treatment_arm_b1","prior_treatment_arm_b1",1
+"prior_treatment_arm_b2b1e3e","prior_treatment_arm_b2b1e3e",1
+"prior_treatment_arm_b4e","prior_treatment_arm_b4e",1
+"pomalidomide_prevention","pomalidomide_prevention",1
+"contraception_arm_b_female","contraception_arm_b_female",1
+"contraception_arm_b_male","contraception_arm_b_male",1
+"diagnosis_arm_c1s","diagnosis_arm_c1s",1
+"diagnosis_arm_c2s","diagnosis_arm_c2s",1
+"contraception_arm_c_female","contraception_arm_c_female",1
+"contraception_arm_c_male","contraception_arm_c_male",1
+"prior_cevostamab","prior_cevostamab",1
+"autologous_sct","autologous_sct",1
+"allogeneic_sct","allogeneic_sct",1
+"plasma_cell_count","plasma_cell_count",1
+"vital_organ_lesions","vital_organ_lesions",1
+"crs_icans_history","crs_icans_history",1
+"hlh_history","hlh_history",1
+"ebv_cmv_pcr","ebv_cmv_pcr",1
+"pregnancy_arm_b","pregnancy_arm_b",1
+"cardiovascular_arm_b","cardiovascular_arm_b",1
+"imid_rash_history","imid_rash_history",1
+"thromboprophylaxis","thromboprophylaxis",1
+"pregnancy_arm_c","pregnancy_arm_c",1
+"daratumumab_hypersensitivity","daratumumab_hypersensitivity",1
+"qt_prolonging_agents","qt_prolonging_agents",1
+"hbeag","hbeag",1
+"alt","alt",1
+"peginterferon_hypersensitivity","peginterferon_hypersensitivity",1
+"commitment","commitment",1
+"population_fontan_controls","population_fontan_controls",1
+"population_ple_fontan","population_ple_fontan",1
+"lab_hepatitis","lab_hepatitis",1
+"organ_system_disease","organ_system_disease",1
+"fertility_status","fertility_status",1
+"organ_finding","organ_finding",1
+"hematologic_disease","hematologic_disease",1
+"pain_severity","pain_severity",1
+"confounding_condition","confounding_condition",1
+"safety_followup","safety_followup",1
+"safety_monitoring","safety_monitoring",1
+"cancer_status","cancer_status",1
+"age_ethnicity","age_ethnicity",1
+"body_mass","body_mass",1
+"obesity","obesity",1
+"diagnosis_stage","diagnosis_stage",1
+"care","care",1
+"immunotherapy_eligibility","immunotherapy_eligibility",1
+"other_medical","other_medical",1
+"gi_tract","gi_tract",1
+"diabetic_ketoacidosis","diabetic_ketoacidosis",1
+"insulin","insulin",1
+"lipids","lipids",1
+"anemia_risk","anemia_risk",1
+"kidney_impairment","kidney_impairment",1
+"clinical_trial_participation","clinical_trial_participation",1
+"study_capacity","study_capacity",1
+"physical_capacity","physical_capacity",1
+"cognitive_history","cognitive_history",1
+"coagulation_and_cardiac","coagulation_and_cardiac",1
+"wound_and_ulcer","wound_and_ulcer",1
+"fistula","fistula",1
+"disease_free_interval","disease_free_interval",1
+"acute_rejection","acute_rejection",1
+"her2_status_and_disease","her2_status_and_disease",1
+"prior_treatment_and_standard_options","prior_treatment_and_standard_options",1
+"prior_her2_therapy","prior_her2_therapy",1
+"disease_biomarker","disease_biomarker",1
+"biomarker_disease","disease_biomarker",1
+"secondary_disease","secondary_disease",1
+"health","health",1
+"endocrine_abiraterone","endocrine_abiraterone",1
+"metabolic_ipatasertib","metabolic_ipatasertib",1
+"gastrointestinal_ipatasertib","gastrointestinal_ipatasertib",1
+"tumor_burden","tumor_burden",1
+"autoimmune_treated","autoimmune_treated",1
+"pain_effusion","pain_effusion",1
+"age_and_treatment_status","age_and_treatment_status",1
+"concurrent_trial_participation","concurrent_trial_participation",1
+"iop_measurement","iop_measurement",1
+"cup_to_disc_ratio","cup_to_disc_ratio",1
+"visual_field","visual_field",1
+"glaucoma_type","glaucoma_type",1
+"applanation_tonometry","applanation_tonometry",1
+"corneal_pathology","corneal_pathology",1
+"uveitis_history","uveitis_history",1
+"visual_risk","visual_risk",1
+"refractive_surgery","refractive_surgery",1
+"intraocular_surgery","intraocular_surgery",1
+"study_staff","study_staff",1
+"liver_function_ast_alt","liver_function_ast_alt",1
+"ptt","ptt",1
+"herbal_therapy","herbal_therapy",1
+"cannabis","cannabis",1
+"antiviral_treatment","antiviral_treatment",1
+"liver_decompensation","liver_decompensation",1
+"chronic_liver_disease","chronic_liver_disease",1
+"pra","pra",1
+"cold_ischemia_time","cold_ischemia_time",1
+"peptic_ulcer","peptic_ulcer",1
+"enrollment_timing","enrollment_timing",1
+"biological_sampling","biological_sampling",1
+"hemorrhage_risk","hemorrhage_risk",1
+"targeted_therapy","targeted_therapy",1
+"spleen","spleen",1
+"metabolism","metabolism",1
+"cmv_infection","cmv_infection",1
+"prior_medication_washout","prior_medication_washout",1
+"voe_frequency","voe_frequency",1
+"pain_duration","pain_duration",1
+"pain_etiology","pain_etiology",1
+"pain_type","pain_type",1
+"acute_complication","acute_complication",1
+"infectious_history","infectious_history",1
+"complement_deficiency","complement_deficiency",1
+"resistance_mechanism","resistance_mechanism",1
+"molecular_analysis","molecular_analysis",1
+"washout_crizotinib","washout_crizotinib",1
+"washout_chemotherapy","washout_chemotherapy",1
+"washout_radiation","washout_radiation",1
+"prior_alk_inhibitors","prior_alk_inhibitors",1
+"cns_progression","cns_progression",1
+"gender_and_contraception","gender_and_contraception",1
+"health_status_healthy","health_status_healthy",1
+"bmi_healthy","bmi_healthy",1
+"smoking_healthy","smoking_healthy",1
+"diagnosis_mdd","diagnosis_mdd",1
+"bmi_mdd","bmi_mdd",1
+"antidepressant_response_mdd","antidepressant_response_mdd",1
+"cgi_severity_mdd","cgi_severity_mdd",1
+"medication_stability_mdd","medication_stability_mdd",1
+"illness_healthy","illness_healthy",1
+"alcohol_consumption_healthy","alcohol_consumption_healthy",1
+"antidepressant_therapy_mdd","antidepressant_therapy_mdd",1
+"prior_treatment_mdd","prior_treatment_mdd",1
+"smoking_mdd","smoking_mdd",1
+"erosions","erosions",1
+"data_availability","data_availability",1
+"brain_metastases_treatment","brain_metastases_treatment",1
+"prior_cancer_history","prior_cancer_history",1
+"urinary","urinary",1
+"acute_treatment","acute_treatment",1
+"group1","group1",1
+"group2","group2",1
+"infection_liver","infection_liver",1
+"immunological_history","immunological_history",1
+"risk_group","risk_group",1
+"legal_capacity","legal_capacity",1
+"medical_suitability","medical_suitability",1
+"sma_type_part1","sma_type_part1",1
+"sma_type_part2","sma_type_part2",1
+"prior_sma_treatment","prior_sma_treatment",1
+"prior_cell_therapy","prior_cell_therapy",1
+"genetic_metabolic","genetic_metabolic",1
+"vaccine_allergy","vaccine_allergy",1
+"dialysis","dialysis",1
+"alcohol_abstinence","alcohol_abstinence",1
+"drug_of_abuse","drug_of_abuse",1
+"withdrawal_risk","withdrawal_risk",1
+"recovery_from_surgery","recovery_from_surgery",1
+"biopsy_surgery","biopsy_surgery",1
+"immunologic_parameter","immunologic_parameter",1
+"polypoidal_choroidal_vasculopathy","polypoidal_choroidal_vasculopathy",1
+"retinal_history","retinal_history",1
+"vitreomacular_traction","vitreomacular_traction",1
+"aphakia","aphakia",1
+"avastin_eligibility","avastin_eligibility",1
+"hematologic_status","hematologic_status",1
+"fluvoxamine","fluvoxamine",1
+"enzyme_induction","enzyme_induction",1
+"prior_pirfenidone","prior_pirfenidone",1
+"liver_tests","liver_tests",1
+"alcohol_caffeine","alcohol_caffeine",1
+"food_restrictions","food_restrictions",1
+"exercise","exercise",1
+"device_experience","device_experience",1
+"maturity","maturity",1
+"food_interactions","food_interactions",1
+"hormone_replacement","hormone_replacement",1
+"cardiopulmonary_dysfunction","cardiopulmonary_dysfunction",1
+"fibrosis","fibrosis",1
+"response_status","response_status",1
+"spinal_cord_disease","spinal_cord_disease",1
+"physician_discretion","physician_discretion",1
+"immune_disease","immune_disease",1
+"prior_immunotherapy_toxicity","prior_immunotherapy_toxicity",1
+"diagnosis_and_treatment","diagnosis_and_treatment",1
+"recurrence_risk","recurrence_risk",1
+"prior_tace","prior_tace",1
+"hepatitis_coinfection","hepatitis_coinfection",1
+"hepatitis_delta","hepatitis_delta",1
+"prior_hcc_treatment","prior_hcc_treatment",1
+"biopsy_timing","biopsy_timing",1
+"diagnosis_and_prior_treatment","diagnosis_and_prior_treatment",1
+"t_dm1_treatment","t_dm1_treatment",1
+"prior_t_dm1","prior_t_dm1",1
+"growth_hormone_history","growth_hormone_history",1
+"hormone_deficiency","hormone_deficiency",1
+"healthy_control_age","healthy_control_age",1
+"endocrine_status","endocrine_status",1
+"cardiovascular_risk","cardiovascular_risk",1
+"sleep_disorder","sleep_disorder",1
+"renal_replacement","renal_replacement",1
+"physical_activity","physical_activity",1
+"age_and_growth","age_and_growth",1
+"concurrent_infection","concurrent_infection",1
+"conflict","conflict",1
+"fev1","fev1",1
+"igg_level","igg_level",1
+"xolair_therapy","xolair_therapy",1
+"aspirin_induced_asthma","aspirin_induced_asthma",1
+"other_illness","other_illness",1
+"smbg_data","smbg_data",1
+"smbg_frequency","smbg_frequency",1
+"smartphone","smartphone",1
+"device_compatibility","device_compatibility",1
+"device_naive","device_naive",1
+"insulin_pump","insulin_pump",1
+"cgm","cgm",1
+"significant_condition","significant_condition",1
+"staff_relation","staff_relation",1
+"therapy_line","therapy_line",1
+"tissue_expander","tissue_expander",1
+"staging_pt","staging_pt",1
+"staging_pn","staging_pn",1
+"surgical_margins","surgical_margins",1
+"lymph_node_eval","lymph_node_eval",1
+"er_analysis","er_analysis",1
+"lvef","lvef",1
+"inflammatory_cancer","inflammatory_cancer",1
+"contralateral_cancer","contralateral_cancer",1
+"ipsilateral_cancer","ipsilateral_cancer",1
+"current_therapy","current_therapy",1
+"hormonal_agents","hormonal_agents",1
+"cva","cva",1
+"pvd","pvd",1
+"clinical_diagnosis","clinical_diagnosis",1
+"hospital_admission","hospital_admission",1
+"icu_status","icu_status",1
+"spinal_injury","spinal_injury",1
+"education","education",1
+"alcohol consumption","alcohol consumption",1
+"AIDS status","AIDS status",1
+"sex and contraception","sex and contraception",1
+"cognitive_score","cognitive_score",1
+"suicidal_ideation","suicidal_ideation",1
+"caffeine_intake","caffeine_intake",1
+"prior_ad_therapy","prior_ad_therapy",1
+"prior_therapy_response","prior_therapy_response",1
+"bowel_resection","bowel_resection",1
+"bowel_complications","bowel_complications",1
+"prognostic_index","prognostic_index",1
+"treatment_intent","treatment_intent",1
+"employment","employment",1
+"study_indication","study_indication",1
+"capacity","capacity",1
+"investigator_assessment","investigator_assessment",1
+"procedure_type","procedure_type",1
+"procedure_history","procedure_history",1
+"prior_cabg","prior_cabg",1
+"prior_treatment_adverse","prior_treatment_adverse",1
+"ali_ards_cause","ali_ards_cause",1
+"dnr_status","dnr_status",1
+"urological_history","urological_history",1
+"congenital_bleeding","congenital_bleeding",1
+"head_trauma_cns","head_trauma_cns",1
+"prior_antibody_treatment","prior_antibody_treatment",1
+"terminal_illness","terminal_illness",1
+"hemodynamics","hemodynamics",1
+"cardiology","cardiology",1
+"drug_response","drug_response",1
+"laboratory_confirmation","laboratory_confirmation",1
+"study_evaluations","study_evaluations",1
+"shunting","shunting",1
+"bmi_with_comorbidity","bmi_with_comorbidity",1
+"obesity_surgery","obesity_surgery",1
+"device_therapy","device_therapy",1
+"guardian","guardian",1
+"blood_disorder","blood_disorder",1
+"care_setting","care_setting",1
+"investigation","investigation",1
+"hormone_level","hormone_level",1
+"muscular","muscular",1
+"age_or_performance","age_or_performance",1
+"medical_stability","medical_stability",1
+"inflammatory","inflammatory",1
+"age_guardian","age_guardian",1
+"neurologic_disorder","neurologic_disorder",1
+"physical_examination","physical_examination",1
+"ocular_acuity","ocular_acuity",1
+"ocular_imaging","ocular_imaging",1
+"ocular_disease_etiology","ocular_disease_etiology",1
+"ocular_hemorrhage","ocular_hemorrhage",1
+"cmv_severity","cmv_severity",1
+"cmv_type","cmv_type",1
+"trial_eligibility","trial_eligibility",1
+"concomitant_investigational","concomitant_investigational",1
+"gi_tolerance","gi_tolerance",1
+"prior_prophylaxis","prior_prophylaxis",1
+"nmibc_status","nmibc_status",1
+"mibc_cisplatin_ineligibility","mibc_cisplatin_ineligibility",1
+"hearing_loss","hearing_loss",1
+"mibc_cisplatin_decline","mibc_cisplatin_decline",1
+"lymphadenectomy","lymphadenectomy",1
+"prior_intravesical_treatment","prior_intravesical_treatment",1
+"prior_intravesical_chemo","prior_intravesical_chemo",1
+"resolved_hbv","resolved_hbv",1
+"flu_vaccine","flu_vaccine",1
+"bladder_status","bladder_status",1
+"cardiac_comorbidity","cardiac_comorbidity",1
+"low_dose_corticosteroids","low_dose_corticosteroids",1
+"disease_phenotype","disease_phenotype",1
+"symptomatic_participants","symptomatic_participants",1
+"asymptomatic_participants","asymptomatic_participants",1
+"azole_use","azole_use",1
+"lubricant_use","lubricant_use",1
+"intravaginal_products","intravaginal_products",1
+"other_autoimmune_disease","other_autoimmune_disease",1
+"prior_joint_disease","prior_joint_disease",1
+"peanut_allergy_spt","peanut_allergy_spt",1
+"peanut_allergy_ige","peanut_allergy_ige",1
+"peanut_allergy_challenge","peanut_allergy_challenge",1
+"other_food_allergies","other_food_allergies",1
+"other_food_spt","other_food_spt",1
+"other_food_ige","other_food_ige",1
+"other_food_challenge","other_food_challenge",1
+"omalizumab_dosing","omalizumab_dosing",1
+"study_location","study_location",1
+"epinephrine_training","epinephrine_training",1
+"placebo_symptoms","placebo_symptoms",1
+"atopic_dermatitis","atopic_dermatitis",1
+"eosinophilic_disease","eosinophilic_disease",1
+"omalizumab_reaction","omalizumab_reaction",1
+"antihistamine_washout","antihistamine_washout",1
+"family_relation","family_relation",1
+"ecog_exception","ecog_exception",1
+"plasma_cell_leukemia","plasma_cell_leukemia",1
+"skeletal_maturation","skeletal_maturation",1
+"skeletal_maturity","skeletal_maturation",1
+"kidney_disease_severity","kidney_disease_severity",1
+"medication_dose","medication_dose",1
+"clinical_trial_history","clinical_trial_history",1
+"recent_event","recent_event",1
+"visual_status","visual_status",1
+"clinical_stability","clinical_stability",1
+"body_metrics","body_metrics",1
+"birth","birth",1
+"score","score",1
+"skeletal","skeletal",1
+"sexual_health","sexual_health",1
+"disease_interval","disease_interval",1
+"severe_disease","severe_disease",1
+"myelodysplastic_syndrome","myelodysplastic_syndrome",1
+"ability_to_take_medication","ability_to_take_medication",1
+"bowel","bowel",1
+"historical_data","historical_data",1
+"retinal_tears","retinal_tears",1
+"prior_refractive_surgery","prior_refractive_surgery",1
+"corneal_transplant","corneal_transplant",1
+"atrial_fibrillation","atrial_fibrillation",1
+"movement_disorder","movement_disorder",1
+"substance_restriction","substance_restriction",1
+"sun_exposure","sun_exposure",1
+"activity_restriction","activity_restriction",1
+"substance_history","substance_history",1
+"treatment_capability","treatment_capability",1
+"registration","registration",1
+"liver_assessment","liver_assessment",1
+"other_contraindication","other_contraindication",1
+"no_exclusions","no_exclusions",1
+"time_frame","time_frame",1
+"microbiology","microbiology",1
+"clinical_criterion","clinical_criterion",1
+"survival_prognosis","survival_prognosis",1
+"metastatic_status","metastatic_status",1
+"neurological_history","neurological_history",1
+"absorption_status","absorption_status",1
+"tumor_complications","tumor_complications",1
+"prior_breast_cancer","prior_breast_cancer",1
+"biopsy_status","biopsy_status",1
+"surgery_status","surgery_status",1
+"lipid_status","lipid_status",1
+"vaccine_status","vaccine_status",1
+"general_fitness","general_fitness",1
+"remission","remission",1
+"stable_treatment","stable_treatment",1
+"liver_inflammation","liver_inflammation",1
+"corticosteroid_taper","corticosteroid_taper",1
+"herpes_zoster","herpes_zoster",1
+"corticosteroid_dose_too_low","corticosteroid_dose_too_low",1
+"corticosteroid_dose_too_high","corticosteroid_dose_too_high",1
+"immunosuppressant_dose","immunosuppressant_dose",1
+"cell_depleting_therapy","cell_depleting_therapy",1
+"Cell-Depleting Therapies","cell_depleting_therapy",1
+"leukocyte_apheresis","leukocyte_apheresis",1
+"mi_angina","mi_angina",1
+"stroke_tia","stroke_tia",1
+"intracranial_abscess","intracranial_abscess",1
+"ipi","ipi",1
+"transformed_lymphoma","transformed_lymphoma",1
+"relapse_mri","relapse_mri",1
+"progressive_ms","progressive_ms",1
+"cns_disorder_cerebrovascular","cns_disorder_cerebrovascular",1
+"cns_tumor","cns_tumor",1
+"metabolic_myelopathy","metabolic_myelopathy",1
+"cns_degenerative","cns_degenerative",1
+"nmo_mog","nmo_mog",1
+"other_autoimmune","other_autoimmune",1
+"brain_spinal_trauma","brain_spinal_trauma",1
+"vaccine_covid","vaccine_covid",1
+"prior_tbi_transplant","prior_tbi_transplant",1
+"prior_natalizumab_fingolimod","prior_natalizumab_fingolimod",1
+"prior_aza_mmf_mtx","prior_aza_mmf_mtx",1
+"prior_csa_cladribine","prior_csa_cladribine",1
+"prior_mitoxantrone_alemtuzumab_cyclophosphamide","prior_mitoxantrone_alemtuzumab_cyclophosphamide",1
+"dalfampridine","dalfampridine",1
+"hepatitis_function","hepatitis_function",1
+"platinum_prior_treatment","platinum_prior_treatment",1
+"platinum_cycles","platinum_cycles",1
+"adjuvant_platinum","adjuvant_platinum",1
+"tumor_pain","tumor_pain",1
+"body_fluid","body_fluid",1
+"hbv_treatment","hbv_treatment",1
+"anemia_type","anemia_type",1
+"infectious_serology","infectious_serology",1
+"diagnosis_cohortA","diagnosis_cohortA",1
+"performance_status_cohortA","performance_status_cohortA",1
+"diagnosis_cohortB","diagnosis_cohortB",1
+"biomarker_cohortB","biomarker_cohortB",1
+"treatment_cohortB","treatment_cohortB",1
+"performance_status_cohortB","performance_status_cohortB",1
+"comorbidity_cohortB","comorbidity_cohortB",1
+"recent_bleeding","recent_bleeding",1
+"medication_washout","medication_washout",1
+"diagnosis_priority","diagnosis_priority",1
+"recent_therapy","recent_therapy",1
+"recent_cancer_therapy","recent_cancer_therapy",1
+"future_medications","future_medications",1
+"menopausal_status_phase1b","menopausal_status_phase1b",1
+"endometrial","endometrial",1
+"active_treatment","active_treatment",1
+"cancer_extent","cancer_extent",1
+"age_and_disease","age_and_disease",1
+"biobanking","biobanking",1
+"age_diagnosis_treatment","age_diagnosis_treatment",1
+"household_contact","household_contact",1
+"dose_escalation_histology","dose_escalation_histology",1
+"dose_escalation_prior_therapy","dose_escalation_prior_therapy",1
+"dose_escalation_relapsed","dose_escalation_relapsed",1
+"expansion_histology_score","expansion_histology_score",1
+"contraindication_chop","contraindication_chop",1
+"prior_anthracycline","prior_anthracycline",1
+"cardiovascular_pulmonary","cardiovascular_pulmonary",1
+"ejection_fraction","ejection_fraction",1
+"cyp3a4_inhibitors","cyp3a4_inhibitors",1
+"dose_escalation_mantle_cell","dose_escalation_mantle_cell",1
+"expansion_transformed_lymphoma","expansion_transformed_lymphoma",1
+"expansion_prior_nhl_therapy","expansion_prior_nhl_therapy",1
+"disease_activity_ipss_r","disease_activity_ipss_r",1
+"prior_mds_therapy","prior_mds_therapy",1
+"mds_subtype","mds_subtype",1
+"tissue_type","tissue_type",1
+"tissue_quantity","tissue_quantity",1
+"tissue_preparation","tissue_preparation",1
+"fixative","fixative",1
+"parasitic_infection","parasitic_infection",1
+"prior_omalizumab","prior_omalizumab",1
+"ivig_plasmapheresis","ivig_plasmapheresis",1
+"doxepin","doxepin",1
+"h2_antihistamine","h2_antihistamine",1
+"leukotriene_antagonist","leukotriene_antagonist",1
+"h1_antihistamine_dose","h1_antihistamine_dose",1
+"omalizumab_hypersensitivity","omalizumab_hypersensitivity",1
+"pharmacogenomics","pharmacogenomics",1
+"ancestry","ancestry",1
+"medical_disorder","medical_disorder",1
+"study_feasibility","study_feasibility",1
+"bmi_type2dm","bmi_type2dm",1
+"bmi_comorbidity","bmi_comorbidity",1
+"type1dm","type1dm",1
+"pancreas","pancreas",1
+"clinical_benefit","clinical_benefit",1
+"parent_protocol","parent_protocol",1
+"concurrent_research","concurrent_research",1
+"connectivity","connectivity",1
+"device_wear","device_wear",1
+"developmental","developmental",1
+"weight_loss_program","weight_loss_program",1
+"calcitonin","calcitonin",1
+"cardiac_contraindication","cardiac_contraindication",1
+"treatment_tolerance","treatment_tolerance",1
+"emergency","emergency",1
+"cdr_score","cdr_score",1
+"mmse","mmse",1
+"subgroup","subgroup",1
+"lumbar_puncture","lumbar_puncture",1
+"treatment_failure","treatment_failure",1
+"risk_stratification","risk_stratification",1
+"treatment_recommendation","treatment_recommendation",1
+"Ocular - Non-study Eye","Ocular - Non-study Eye",1
+"Study","Study",1
+"nursing","nursing",1
+"bone_density","bone_density",1
+"bisphosphonate_contraindication","bisphosphonate_contraindication",1
+"assessment_ability","assessment_ability",1
+"concomitant_infection","concomitant_infection",1
+"prior_infection_treatment","prior_infection_treatment",1
+"kaposi_sarcoma","kaposi_sarcoma",1
+"acyclovir_requirement","acyclovir_requirement",1
+"prior_antiretroviral","prior_antiretroviral",1
+"prior_experimental_drug","prior_experimental_drug",1
+"nephrotoxic_hepatotoxic_drugs","nephrotoxic_hepatotoxic_drugs",1
+"neuropathy_inducing_drugs","neuropathy_inducing_drugs",1
+"porphyria","porphyria",1
+"gilberts_syndrome","gilberts_syndrome",1
+"body_surface_area","body_surface_area",1
+"ostomy","ostomy",1
+"vitreoretinal","vitreoretinal",1
+"atrophy","atrophy",1
+"cardiac_presentation","cardiac_presentation",1
+"cardiac_timing","cardiac_timing",1
+"cardiac_access","cardiac_access",1
+"diagnosis_part_1a","diagnosis_part_1a",1
+"diagnosis_parts_1bc_2_3","diagnosis_parts_1bc_2_3",1
+"leukemia_bone_marrow","leukemia_bone_marrow",1
+"leukemia_biopsy","leukemia_biopsy",1
+"cns_primary","cns_primary",1
+"cns_leukemia","cns_leukemia",1
+"leukemia_subtype_apl","leukemia_subtype_apl",1
+"leukemia_subtype_burkitt","leukemia_subtype_burkitt",1
+"leukemia_subtype_tcell","leukemia_subtype_tcell",1
+"prior_mdm2","prior_mdm2",1
+"prior_venetoclax","prior_venetoclax",1
+"prior_mibg","prior_mibg",1
+"prior_hematopoietic_stem_cell","prior_hematopoietic_stem_cell",1
+"prior_gvhd_therapy","prior_gvhd_therapy",1
+"breast_cancer","breast_cancer",1
+"prior_iv_bisphosphonate","prior_iv_bisphosphonate",1
+"prior_oral_bisphosphonate","prior_oral_bisphosphonate",1
+"performance_and_life_expectancy","performance_and_life_expectancy",1
+"asthma_diagnosis","asthma_diagnosis",1
+"asthma_therapy","asthma_therapy",1
+"vocal_cord_dysfunction","vocal_cord_dysfunction",1
+"prior_investigational_treatment","prior_investigational_treatment",1
+"support_programs","support_programs",1
+"treatment_willingness","treatment_willingness",1
+"experimental_therapy","experimental_therapy",1
+"pregnancy_status_women","pregnancy_status_women",1
+"pregnancy_status_men","pregnancy_status_men",1
+"pulmonary_conditions","pulmonary_conditions",1
+"hbv_antiviral","hbv_antiviral",1
+"immunotherapy_history","immunotherapy_history",1
+"prior_chemotherapy_lines","prior_chemotherapy_lines",1
+"bevacizumab_history","bevacizumab_history",1
+"hgf_met_pathway","hgf_met_pathway",1
+"gliadel_history","gliadel_history",1
+"intracerebral_agents","intracerebral_agents",1
+"palliative_needs","palliative_needs",1
+"corticosteroid_status","corticosteroid_status",1
+"gamma_knife","gamma_knife",1
+"clinical_labs","clinical_labs",1
+"disease_context","disease_context",1
+"age_diagnosis","age_diagnosis",1
+"relapse_history","relapse_history",1
+"pulmonary_imaging","pulmonary_imaging",1
+"antitumor_therapy","antitumor_therapy",1
+"lymphoma_history","lymphoma_history",1
+"general_illness","general_illness",1
+"egfr_inhibitor","egfr_inhibitor",1
+"staging_data","staging_data",1
+"records","records",1
+"caffeine","caffeine",1
+"nsaid_intolerance","nsaid_intolerance",1
+"caregiver_requirement","caregiver_requirement",1
+"study_completion_ability","study_completion_ability",1
+"sensory_acuity","sensory_acuity",1
+"safety_discontinuation","safety_discontinuation",1
+"aria_events","aria_events",1
+"anticoagulant_use","anticoagulant_use",1
+"ms_type","ms_type",1
+"psychiatric_medical_illness","psychiatric_medical_illness",1
+"mri_gadolinium","mri_gadolinium",1
+"disease_modifying_therapy","disease_modifying_therapy",1
+"screening_participation","screening_participation",1
+"avastin_specific","avastin_specific",1
+"Procedure/Disease Type","Procedure/Disease Type",1
+"disease_stage_measurability","disease_stage_measurability",1
+"organ_function_hematologic","organ_function_hematologic",1
+"organ_function_renal","organ_function_renal",1
+"organ_function_coagulation","organ_function_coagulation",1
+"organ_function_hepatic","organ_function_hepatic",1
+"prior_taxane","prior_taxane",1
+"cardiac_ischemia","cardiac_ischemia",1
+"peripheral_vascular","peripheral_vascular",1
+"medication_status","medication_status",1
+"allergy_sensitivity","allergy_sensitivity",1
+"substudy_informed_consent","substudy_informed_consent",1
+"substudy_duration","substudy_duration",1
+"prohibited_therapy","prohibited_therapy",1
+"Prohibited Therapies","prohibited_therapy",1
+"prior_faricimab_or_brolucizumab","prior_faricimab_or_brolucizumab",1
+"corneal_trauma","corneal_trauma",1
+"corneal_imaging","corneal_imaging",1
+"iridocorneal_endothelial_syndrome","iridocorneal_endothelial_syndrome",1
+"pseudoexfoliation_syndrome","pseudoexfoliation_syndrome",1
+"herpetic_keratitis","herpetic_keratitis",1
+"intraocular_laser_therapy","intraocular_laser_therapy",1
+"prior_eye_surgery","prior_eye_surgery",1
+"intraocular_device","intraocular_device",1
+"cataract_surgery_timing","cataract_surgery_timing",1
+"rho_kinase_inhibitors","rho_kinase_inhibitors",1
+"contact_lens_wear","contact_lens_wear",1
+"corneal_transplantation","corneal_transplantation",1
+"grade_3_follicular_lymphoma","grade_3_follicular_lymphoma",1
+"adherence_ability","adherence_ability",1
+"hematologic_parameters","hematologic_parameters",1
+"antecedent_malignancy","antecedent_malignancy",1
+"transfusion_refusal","transfusion_refusal",1
+"prior_murine_antibody","prior_murine_antibody",1
+"induction_chemotherapy","induction_chemotherapy",1
+"bevacizumab_contraindication","bevacizumab_contraindication",1
+"excessive_prior_chemotherapy","excessive_prior_chemotherapy",1
+"dmard_therapy","dmard_therapy",1
+"corticosteroid_stability","corticosteroid_stability",1
+"other_rheumatic_disease","other_rheumatic_disease",1
+"functional_class","functional_class",1
+"cataract_surgery_history","cataract_surgery_history",1
+"retinal_thickness","retinal_thickness",1
+"prior_cme_treatment","prior_cme_treatment",1
+"other_ocular_diseases","other_ocular_diseases",1
+"fluorescein_allergy","fluorescein_allergy",1
+"anti_vegf_therapy","anti_vegf_therapy",1
+"study_companion","study_companion",1
+"clinical_abnormalities","clinical_abnormalities",1
+"imaging_abnormalities","imaging_abnormalities",1
+"caregiver_agreement","caregiver_agreement",1
+"gestational_stage","gestational_stage",1
+"disease_onset","disease_onset",1
+"cryoglobulinemia","cryoglobulinemia",1
+"suitability","suitability",1
+"gender_and_disease","gender_and_disease",1
+"ai_progression","ai_progression",1
+"pik3ca_mutation","pik3ca_mutation",1
+"prior_fulvestrant","prior_fulvestrant",1
+"hepatic_and_infection","hepatic_and_infection",1
+"disease management","disease management",1
+"kidney and nerve disease","kidney and nerve disease",1
+"obesity etiology","obesity etiology",1
+"treatment access","treatment access",1
+"lung disease etiology","lung disease etiology",1
+"CNS Function","CNS Function",1
+"gender_childbearing","gender_childbearing",1
+"qtc_prolongation","qtc_prolongation",1
+"endoscopy","endoscopy",1
+"metastatic_disease_location","metastatic_disease_location",1
+"prior_immunotherapy_washout","prior_immunotherapy_washout",1
+"transplant_number","transplant_number",1
+"graft_rejection","graft_rejection",1
+"antibodies","antibodies",1
+"steroid_resistance","steroid_resistance",1
+"rejection_episodes","rejection_episodes",1
+"transplant_instability","transplant_instability",1
+"immunosuppression_protocol","immunosuppression_protocol",1
+"growth_hormone","growth_hormone",1
+"refractory_partial_response","refractory_partial_response",1
+"refractory_stable_disease","refractory_stable_disease",1
+"refractory_progressive_disease","refractory_progressive_disease",1
+"hdt_ineligibility","hdt_ineligibility",1
+"pet_scan","pet_scan",1
+"male_partner_pregnancy","male_partner_pregnancy",1
+"recent_anticancer_therapy","recent_anticancer_therapy",1
+"gemcitabine_refractory","gemcitabine_refractory",1
+"laboratory_values_neutrophils","laboratory_values_neutrophils",1
+"laboratory_values_creatinine","laboratory_values_creatinine",1
+"laboratory_values_bilirubin","laboratory_values_bilirubin",1
+"laboratory_values_transaminases","laboratory_values_transaminases",1
+"laboratory_values_alkaline_phosphatase","laboratory_values_alkaline_phosphatase",1
+"hypersensitivity_cho_cells","hypersensitivity_cho_cells",1
+"cardiac_symptoms","cardiac_symptoms",1
+"cardiac_imaging","cardiac_imaging",1
+"cardiac_procedure","cardiac_procedure",1
+"myocardial_event","myocardial_event",1
+"cardiac_surgery","cardiac_surgery",1
+"study_conduct","study_conduct",1
+"hiv_treatment","hiv_treatment",1
+"viral_disease","viral_disease",1
+"lymphoma_subtype","lymphoma_subtype",1
+"transfusion_history","transfusion_history",1
+"dental","dental",1
+"specimen_availability","specimen_availability",1
+"body_characteristics","body_characteristics",1
+"access_requirements","access_requirements",1
+"ebv_cmv","ebv_cmv",1
+"afp_level","afp_level",1
+"alt_level","alt_level",1
+"hcv_rna","hcv_rna",1
+"cancer_therapy","cancer_therapy",1
+"decompensation","decompensation",1
+"stable_medication","stable_medication",1
+"b_cell_depleting","b_cell_depleting",1
+"drug_test","drug_test",1
+"male_fertility","male_fertility",1
+"seasonal","seasonal",1
+"disease_spread","disease_spread",1
+"infection_autoimmune","infection_autoimmune",1
+"active_bleed","active_bleed",1
+"maternal_condition","maternal_condition",1
+"immune_related","immune_related",1
+"cardiac_vascular","cardiac_vascular",1
+"driver_mutations","driver_mutations",1
+"checkpoint_inhibitor","checkpoint_inhibitor",1
+"cause","cause",1
+"prior_injection","prior_injection",1
+"prior_benefit","prior_benefit",1
+"treatment_adverse_event","treatment_adverse_event",1
+"organ_impairment","organ_impairment",1
+"serious_medical_condition","serious_medical_condition",1
+"clinical_outcome","clinical_outcome",1
+"bodyweight","bodyweight",1
+"bowel_function","bowel_function",1
+"genetic_disorder","genetic_disorder",1
+"menopause","menopause",1
+"response_criteria","response_criteria",1
+"study_support","study_support",1
+"claustrophobia","claustrophobia",1
+"endocrine_condition","endocrine_condition",1
+"biopsy_requirement","biopsy_requirement",1
+"pancreatic_disease","pancreatic_disease",1
+"growth_status","growth_status",1
+"growth_data","growth_data",1
+"dialysis_status","dialysis_status",1
+"hemolysis","hemolysis",1
+"nutritional_deficiency","nutritional_deficiency",1
+"prior_trial_enrollment","prior_trial_enrollment",1
+"age_and_disability","age_and_disability",1
+"disease_and_treatment","disease_and_treatment",1
+"cns_hemorrhage","cns_hemorrhage",1
+"cardiac_specific","cardiac_specific",1
+"recent_infection","recent_infection",1
+"efficacy","efficacy",1
+"medical_decision","medical_decision",1
+"age_and_life_expectancy","age_and_life_expectancy",1
+"incarceration","incarceration",1
+"locotherapy","locotherapy",1
+"autoimmune_history","autoimmune_history",1
+"visual_acuity_nse","visual_acuity_nse",1
+"optic_neuritis","optic_neuritis",1
+"rpe_tear","rpe_tear",1
+"central_serous","central_serous",1
+"autoimmune_uveitis","autoimmune_uveitis",1
+"ocular_contraindication","ocular_contraindication",1
+"concurrent_agents","concurrent_agents",1
+"sample_requirement","sample_requirement",1
+"psychiatric_and_social","psychiatric_and_social",1
+"cancer_location","cancer_location",1
+"skin","skin",1
+"concomitant_study","concomitant_study",1
+"ocular_examination","ocular_examination",1
+"visual_prognosis","visual_prognosis",1
+"hormone_receptor_status","hormone_receptor_status",1
+"ctdna","ctdna",1
+"cholesterol","cholesterol",1
+"cardiac_electrolytes","cardiac_electrolytes",1
+"alternate_diagnosis","alternate_diagnosis",1
+"environmental_exposure","environmental_exposure",1
+"biochemistry","biochemistry",1
+"age_weight","age_weight",1
+"infection_serology","infection_serology",1
+"covid_testing","covid_testing",1
+"household","household",1
+"dosing","dosing",1
+"medical_records","medical_records",1
+"ophthalmic_condition","ophthalmic_condition",1
+"active_condition","active_condition",1
+"renal_treatment","renal_treatment",1
+"specimen_collection","specimen_collection",1
+"prior_mapk_inhibitor","prior_mapk_inhibitor",1
+"prior_adjuvant","prior_adjuvant",1
+"gastrointestinal_history","gastrointestinal_history",1
+"medical_psychiatric","medical_psychiatric",1
+"node_status","node_status",1
+"metastatic","metastatic",1
+"expected_benefit","expected_benefit",1
+"unapproved_treatment","unapproved_treatment",1
+"residency","residency",1
+"occupation","occupation",1
+"expansion_only","expansion_only",1
+"surgical_healing","surgical_healing",1
+"race","race",1
+"time_window","time_window",1
+"intervention","intervention",1
+"lesion_location","lesion_location",1
+"ocular_laser","ocular_laser",1
+"contact_lens","contact_lens",1
+"retinal_hemorrhage","retinal_hemorrhage",1
+"retinal_scarring","retinal_scarring",1
+"posterior_capsule","posterior_capsule",1
+"scleral_pathology","scleral_pathology",1
+"conjunctival","conjunctival",1
+"lid_condition","lid_condition",1
+"eyelash","eyelash",1
+"corneal_sensation","corneal_sensation",1
+"eyelid_function","eyelid_function",1
+"facial_nerve","facial_nerve",1
+"intraocular_condition","intraocular_condition",1
+"specular_microscopy","specular_microscopy",1
+"pseudoexfoliation","pseudoexfoliation",1
+"keratitis","keratitis",1
+"intraocular_inflammation","intraocular_inflammation",1
+"sjogren_kcs","sjogren_kcs",1
+"ocular_behavior","ocular_behavior",1
+"orbital","orbital",1
+"her2_amplification","her2_amplification",1
+"fluid_overload","fluid_overload",1
+"vte","vte",1
+"hbv_hdv","hbv_hdv",1
+"infusion_reaction","infusion_reaction",1
+"aspiration_pneumonia","aspiration_pneumonia",1
+"ild_etiology","ild_etiology",1
+"medication_tolerability","medication_tolerability",1
+"cardiac_electrophysiology","cardiac_electrophysiology",1
+"age_and_risk","age_and_risk",1
+"baseline","baseline",1
+"prior_injury","prior_injury",1
+"treatment_option","treatment_option",1
+"site","site",1
+"tumor_lesion","tumor_lesion",1
+"anticonvulsants","anticonvulsants",1
+"symptomatic_lesions","symptomatic_lesions",1
+"viral_therapy","viral_therapy",1
+"prior_anticancer","prior_anticancer",1
+"cmv_status","cmv_status",1
+"b_cell_depletion","b_cell_depletion",1
+"multi_organ","multi_organ",1
+"radiosurgery","radiosurgery",1
+"systemic_chemotherapy","systemic_chemotherapy",1
+"prior_cns_therapy","prior_cns_therapy",1
+"cytogenetics","cytogenetics",1
+"Tissue consent","Tissue consent",1
+"Prior experimental therapy","Prior experimental therapy",1
+"Female patients with IgA","Female patients with IgA",1
+"Lupus nephritis","Lupus nephritis",1
+"MPGN","MPGN",1
+"Liver disease and infections","Liver disease and infections",1
+"Renal biopsy findings","Renal biopsy findings",1
+"Prior corticosteroids","Prior corticosteroids",1
+"Allergic reaction to Rituximab","Allergic reaction to Rituximab",1
+"Major infection episode","Major infection episode",1
+"High-dose steroids","High-dose steroids",1
+"Cardiac or pulmonary disease","Cardiac or pulmonary disease",1
+"Prior treatment for OCSCC","Prior treatment for OCSCC",1
+"Surgical resectability","Surgical resectability",1
+"PD-L1 status","PD-L1 status",1
+"Lab criteria - Lymphocyte count","Lab criteria - Lymphocyte count",1
+"Lab criteria - Platelet count","Lab criteria - Platelet count",1
+"Lab criteria - Liver enzymes","Lab criteria - Liver enzymes",1
+"Lab criteria - Creatinine clearance","Lab criteria - Creatinine clearance",1
+"Lab criteria - Serum albumin","Lab criteria - Serum albumin",1
+"Lab criteria - Coagulation","Lab criteria - Coagulation",1
+"HBV antiviral therapy","HBV antiviral therapy",1
+"Prior head and neck radiotherapy","Prior head and neck radiotherapy",1
+"Prior immune checkpoint inhibitors","Prior immune checkpoint inhibitors",1
+"Allergic reactions to antibodies","Allergic reactions to antibodies",1
+"Hypersensitivity to CHO products","Hypersensitivity to CHO products",1
+"Vital organ function","Vital organ function",1
+"Recovery from toxicities","Recovery from toxicities",1
+"CMV and COVID-19","CMV and COVID-19",1
+"Psychiatric or medical disorder","Psychiatric or medical disorder",1
+"Prior cellular therapy","Prior cellular therapy",1
+"Prior anticancer medications","Prior anticancer medications",1
+"Hypersensitivity reaction","Hypersensitivity reaction",1
+"Live vaccine before LD","Live vaccine before LD",1
+"Disease diagnosis - Cohort A","Disease diagnosis - Cohort A",1
+"Stage - Cohort A","Stage - Cohort A",1
+"Surgery - Cohort B","Surgery - Cohort B",1
+"Lymph node evaluation - Cohort B","Lymph node evaluation - Cohort B",1
+"Surgery interval - Cohort B","Surgery interval - Cohort B",1
+"Nodal status - Cohort B","Nodal status - Cohort B",1
+"Margins - Cohort B Lumpectomy","Margins - Cohort B Lumpectomy",1
+"Margins - Cohort B Mastectomy","Margins - Cohort B Mastectomy",1
+"Lab criteria - Platelets","Lab criteria - Platelets",1
+"Lab criteria - Alkaline phosphatase","Lab criteria - Alkaline phosphatase",1
+"Lab criteria - AST","Lab criteria - AST",1
+"Lab criteria - Liver enzymes constraint","Lab criteria - Liver enzymes constraint",1
+"Lab criteria - Elevated liver enzymes","Lab criteria - Elevated liver enzymes",1
+"Lab criteria - Bone metastases","Lab criteria - Bone metastases",1
+"Lab criteria - Creatinine","Lab criteria - Creatinine",1
+"Lab criteria - Proteinuria","Lab criteria - Proteinuria",1
+"Lab criteria - LVEF","Lab criteria - LVEF",1
+"FNA only - Cohort A","FNA only - Cohort A",1
+"Prior axillary staging - Cohort A","Prior axillary staging - Cohort A",1
+"Breast reconstruction - Cohort B","Breast reconstruction - Cohort B",1
+"Bilateral breast cancer","Bilateral breast cancer",1
+"Prior ipsilateral/contralateral breast cancer","Prior ipsilateral/contralateral breast cancer",1
+"Prior chemotherapy/trastuzumab/bevacizumab","Prior chemotherapy/trastuzumab/bevacizumab",1
+"Prior treatment for current cancer","Prior treatment for current cancer",1
+"Sex hormone therapy","Sex hormone therapy",1
+"History of cardiac disease","History of cardiac disease",1
+"Uncontrolled hypertension","Uncontrolled hypertension",1
+"TIA or CVA","TIA or CVA",1
+"Arterial thrombotic event","Arterial thrombotic event",1
+"Symptomatic PVD","Symptomatic PVD",1
+"Significant bleeding","Significant bleeding",1
+"Wound/ulcer/fracture","Wound/ulcer/fracture",1
+"Gastroduodenal ulcer","Gastroduodenal ulcer",1
+"Anticipated major surgery","Anticipated major surgery",1
+"Nonmalignant systemic disease","Nonmalignant systemic disease",1
+"Hypersensitivity to polysorbate 80","Hypersensitivity to polysorbate 80",1
+"Psychiatric/addictive disorders","Psychiatric/addictive disorders",1
+"cohort_requirement","cohort_requirement",1
+"liver_metastases","liver_metastases",1
+"hypertensive","hypertensive",1
+"allergic_sensitization","allergic_sensitization",1
+"challenge_test","challenge_test",1
+"basophil_activation","basophil_activation",1
+"basophil_count","basophil_count",1
+"asthma_severity","asthma_severity",1
+"nasal_anatomy","nasal_anatomy",1
+"donor_hematopoiesis","donor_hematopoiesis",1
+"cll_specification","cll_specification",1
+"malignancy_status","malignancy_status",1
+"malignancy_type","malignancy_type",1
+"dli_restriction","dli_restriction",1
+"aneurysm_treatment","aneurysm_treatment",1
+"vasospasm","vasospasm",1
+"prior_il6_therapy","prior_il6_therapy",1
+"prior_anti_cd_therapy","prior_anti_cd_therapy",1
+"prior_anti_cd4_therapy","prior_anti_cd4_therapy",1
+"demyelinating_disease","demyelinating_disease",1
+"serious_comorbidities","serious_comorbidities",1
+"wbc_count","wbc_count",1
+"anc_count","anc_count",1
+"hcv_antigen","hcv_antigen",1
+"serious_infection","serious_infection",1
+"cardiac_abnormality","cardiac_abnormality",1
+"engraftment","engraftment",1
+"corticosteroid_treatment","corticosteroid_treatment",1
+"multiple_hsct","multiple_hsct",1
+"prior_agvhd_treatment","prior_agvhd_treatment",1
+"malignancy_confirmation","malignancy_confirmation",1
+"prior_surgery_radiation","prior_surgery_radiation",1
+"program","program",1
+"HIV Culture","HIV Culture",1
+"Hepatitis B Antibody","Hepatitis B Antibody",1
+"Anti-tuberculosis Medication","Anti-tuberculosis Medication",1
+"Hepatitis B History","Hepatitis B History",1
+"Hepatitis C History","Hepatitis C History",1
+"HIV Vaccine","HIV Vaccine",1
+"Prior Immunization","Prior Immunization",1
+"Liver Involvement","Liver Involvement",1
+"Pregnancy Protection","Pregnancy Protection",1
+"Metastatic Disease Site","Metastatic Disease Site",1
+"Systemic Treatment","Systemic Treatment",1
+"Asthma Symptoms","Asthma Symptoms",1
+"Lumpectomy Margins","Lumpectomy Margins",1
+"Mastectomy Margins","Mastectomy Margins",1
+"Lymph Node Evaluation","Lymph Node Evaluation",1
+"Hormone Receptor Analysis","Hormone Receptor Analysis",1
+"Contralateral Breast Cancer","Contralateral Breast Cancer",1
+"Ipsilateral Breast Cancer History","Ipsilateral Breast Cancer History",1
+"Chemotherapy for Current Cancer","Chemotherapy for Current Cancer",1
+"Sex Hormonal Therapy","Sex Hormonal Therapy",1
+"Investigational Product","Investigational Product",1
+"Lipid Disorders","Lipid Disorders",1
+"Hypomagnesemia","Hypomagnesemia",1
+"Prior Cancer Treatment","Prior Cancer Treatment",1
+"Histological Grade","Histological Grade",1
+"Laboratory - Blood Counts","Laboratory - Blood Counts",1
+"Laboratory - Hepatic Function","Laboratory - Hepatic Function",1
+"Laboratory - Renal Function","Laboratory - Renal Function",1
+"HER2 Signaling","HER2 Signaling",1
+"Diagnostic Method","Diagnostic Method",1
+"Axillary Surgery","Axillary Surgery",1
+"Prior Ipsilateral Malignancy","Prior Ipsilateral Malignancy",1
+"Other Systemic Disease","Other Systemic Disease",1
+"Chronic Corticosteroid Use","Chronic Corticosteroid Use",1
+"Clinical Presentation","Clinical Presentation",1
+"Macular Disease","Macular Disease",1
+"Macular Degeneration","Macular Degeneration",1
+"Prior Steroids","Prior Steroids",1
+"Ranibizumab","Ranibizumab",1
+"Macular Edema","Macular Edema",1
+"Prior Triamcinolone","Prior Triamcinolone",1
+"Uncontrolled Systemic Disease","Uncontrolled Systemic Disease",1
+"Cognitive Defect","Cognitive Defect",1
+"Visual Acuity Better Than Threshold","Visual Acuity Better Than Threshold",1
+"Electrolyte Abnormalities","Electrolyte Abnormalities",1
+"Recent Trauma","Recent Trauma",1
+"Transaminases","Transaminases",1
+"Females - Pregnancy Status","Females - Pregnancy Status",1
+"Prior BCL2 Inhibitor","Prior BCL2 Inhibitor",1
+"MDS Risk Category","MDS Risk Category",1
+"CYP3A Inducers","CYP3A Inducers",1
+"Cardiovascular Status","Cardiovascular Status",1
+"Chronic Respiratory and Other Systemic Diseases","Chronic Respiratory and Other Systemic Diseases",1
+"White Blood Cell Count","White Blood Cell Count",1
+"sedation_risk","sedation_risk",1
+"airway_obstruction","airway_obstruction",1
+"neurological_status","neurological_status",1
+"skin_lesions","skin_lesions",1
+"seizure_status","seizure_status",1
+"genetic_screening","genetic_screening",1
+"neurosurgical_history","neurosurgical_history",1
+"abscess_location","abscess_location",1
+"Diagnosis Location","Diagnosis Location",1
+"Workup","Workup",1
+"Androgen Deprivation","Androgen Deprivation",1
+"Lymphadenopathy","Lymphadenopathy",1
+"provider","provider",1
+"Other autoimmune/neurodegenerative disease","Other autoimmune/neurodegenerative disease",1
+"adjuvant_therapy_washout","adjuvant_therapy_washout",1
+"tumor_staging","tumor_staging",1
+"cohort_de_specific","cohort_de_specific",1
+"biliary_obstruction","biliary_obstruction",1
+"surgery_procedures","surgery_procedures",1
+"cnv_etiology","cnv_etiology",1
+"neurodegenerative_disease","neurodegenerative_disease",1
+"rems","rems",1
+"Tolerance","Tolerance",1
+"Capability","Capability",1
+"Lymphoproliferative Disorder","Lymphoproliferative Disorder",1
+"CNS/Brain","CNS/Brain",1
+"prior_minor_surgery","prior_minor_surgery",1
+"vascular_status","vascular_status",1
+"gangrene","gangrene",1
+"arterial_disease","arterial_disease",1
+"glycemic_control","glycemic_control",1
+"age_and_procedure","age_and_procedure",1
+"prior_verteporfin_therapy","prior_verteporfin_therapy",1
+"investigational_drug_history","investigational_drug_history",1
+"systemic_anti_vegf","systemic_anti_vegf",1
+"Joint Assessment","Joint Assessment",1
+"Rheumatic/Skin Disease","Rheumatic/Skin Disease",1
+"Corticosteroid Injections","Corticosteroid Injections",1
+"Diabetes Diagnosis","Diabetes Diagnosis",1
+"Ulcer Characteristics","Ulcer Characteristics",1
+"Retinal Exam","Retinal Exam",1
+"Foot Infection","Foot Infection",1
+"Osteomyelitis","Osteomyelitis",1
+"Ulcer Etiology","Ulcer Etiology",1
+"Charcot Foot","Charcot Foot",1
+"Multiple Ulcers","Multiple Ulcers",1
+"Nutritional Status","Nutritional Status",1
+"Psychiatric/Substance Abuse","Psychiatric/Substance Abuse",1
+"Prior Growth Factor","Prior Growth Factor",1
+"Paternal Exposure Only","Paternal Exposure Only",1
+"Surgery/Wounds","Surgery/Wounds",1
+"GI/Wound Complications","GI/Wound Complications",1
+"Thromboembolic Events","Thromboembolic Events",1
+"Chronic Therapy","Chronic Therapy",1
+"squamous_cell_lung_cancer","squamous_cell_lung_cancer",1
+"other_cancer_history","other_cancer_history",1
+"food_allergy_skin_test","food_allergy_skin_test",1
+"food_specific_ige","food_specific_ige",1
+"food_challenge","food_challenge",1
+"prior_food_immunotherapy","prior_food_immunotherapy",1
+"CNS Disorders","CNS Disorders",1
+"Prior DMT","Prior DMT",1
+"Prior Immunoglobulin","Prior Immunoglobulin",1
+"Anaphylaxis","Anaphylaxis",1
+"Prior Anti-CD20","Prior Anti-CD20",1
+"GI Ostomy","GI Ostomy",1
+"Hypertension Crisis","Hypertension Crisis",1
+"Concomitant Study Enrollment","Concomitant Study Enrollment",1
+"Psychiatric/Medical Condition","Psychiatric/Medical Condition",1
+"Hematologic and End-Organ Function","Hematologic and End-Organ Function",1
+"Tumor Accessibility","Tumor Accessibility",1
+"Concomitant Investigational Agents","Concomitant Investigational Agents",1
+"Metabolic Abnormalities","Metabolic Abnormalities",1
+"Live Attenuated Vaccine","Live Attenuated Vaccine",1
+"Chemotherapy Tolerance","Chemotherapy Tolerance",1
+"PEGPH20 Arm - Vascular Events","PEGPH20 Arm - Vascular Events",1
+"PEGPH20 Arm - Thromboembolic Events","PEGPH20 Arm - Thromboembolic Events",1
+"PEGPH20 Arm - Concomitant Medication","PEGPH20 Arm - Concomitant Medication",1
+"PEGPH20 Arm - Anticoagulation","PEGPH20 Arm - Anticoagulation",1
+"Chemotherapy Initiation","Chemotherapy Initiation",1
+"Disease Verification","Disease Verification",1
+"Tumor Risk Profile","Tumor Risk Profile",1
+"Biomarker Status","Biomarker Status",1
+"Nodal Status","Nodal Status",1
+"Laboratory Parameters","Laboratory Parameters",1
+"herbal_medicine","herbal_medicine",1
+"prior_sorafenib","prior_sorafenib",1
+"cgm_monitoring","cgm_monitoring",1
+"atherosclerotic_disease","atherosclerotic_disease",1
+"adrenal_disease","adrenal_disease",1
+"mental_status","mental_status",1
+"measurable_lesion_size","measurable_lesion_size",1
+"Ability to Perform","Ability to Perform",1
+"Prior Treatment - Photocoagulation","Prior Treatment - Photocoagulation",1
+"Prior Treatment - Intraocular Steroids","Prior Treatment - Intraocular Steroids",1
+"Prior Efalizumab Treatment","Prior Efalizumab Treatment",1
+"Medical Judgment","Medical Judgment",1
+"Infectious Disease Screening","Infectious Disease Screening",1
+"Gastrointestinal Surgery","Gastrointestinal Surgery",1
+"Nicotine Use","Nicotine Use",1
+"Over-the-Counter Medications","Over-the-Counter Medications",1
+"Substance Exclusions","Substance Exclusions",1
+"Ophthalmic Complications","Ophthalmic Complications",1
+"Surgery and Trauma","Surgery and Trauma",1
+"Prior Anti-Cancer Therapy","Prior Anti-Cancer Therapy",1
+"Fever and Neutropenia","Fever and Neutropenia",1
+"Age and Health Status","Age and Health Status",1
+"Muscle Weakness","Muscle Weakness",1
+"Weakness Etiology","Weakness Etiology",1
+"Joint Function","Joint Function",1
+"Severe Weakness","Severe Weakness",1
+"Tremor and Ataxia","Tremor and Ataxia",1
+"Consent and Compliance","Consent and Compliance",1
+"Recent Laser Treatment","Recent Laser Treatment",1
+"Photography","Photography",1
+"Glaucoma Treatment","Glaucoma Treatment",1
+"Ovarian Cancer","Ovarian Cancer",1
+"Ovarian Cancer Dose Expansion","Ovarian Cancer Dose Expansion",1
+"Pancreatic Cancer","Pancreatic Cancer",1
+"Pancreatic Cancer Prior Treatment","Pancreatic Cancer Prior Treatment",1
+"Recent Anti-Tumor Therapy","Recent Anti-Tumor Therapy",1
+"Growth Hormone Therapy","Growth Hormone Therapy",1
+"Pituitary Surgery","Pituitary Surgery",1
+"synchronous_cancer","synchronous_cancer",1
+"measurement","measurement",1
+"endometrial_disease","endometrial_disease",1
+"cardiac_hepatic","cardiac_hepatic",1
+"systemic_condition","systemic_condition",1
+"Prior/Concurrent Treatment","Prior/Concurrent Treatment",1
+"Diagnosis/Prior Treatment","Diagnosis/Prior Treatment",1
+"Topical therapy","Topical therapy",1
+"Clinical judgment","Clinical judgment",1
+"Psoriasis type","Psoriasis type",1
+"Cardiovascular/pulmonary disease","Cardiovascular/pulmonary disease",1
+"Fluid Retention","Fluid Retention",1
+"Renal Support","Renal Support",1
+"Cardiac Support","Cardiac Support",1
+"Concurrent Surgery","Concurrent Surgery",1
+"Heart Transplant","Heart Transplant",1
+"Transcatheter Procedures","Transcatheter Procedures",1
+"Resuscitation","Resuscitation",1
+"Kidney History","Kidney History",1
+"Kidney Anatomy","Kidney Anatomy",1
+"Histological Confirmation","Histological Confirmation",1
+"CNS Disease (Repeated)","CNS Disease (Repeated)",1
+"treatment_restriction","treatment_restriction",1
+"cognitive_impairment","cognitive_impairment",1
+"Time to Treatment","Time to Treatment",1
+"NIHSS Score","NIHSS Score",1
+"Imaging Criteria","Imaging Criteria",1
+"Pre-morbid Status","Pre-morbid Status",1
+"NIHSS Improvement","NIHSS Improvement",1
+"Prior Stroke/Trauma","Prior Stroke/Trauma",1
+"Gastrointestinal/Genitourinary Hemorrhage","Gastrointestinal/Genitourinary Hemorrhage",1
+"Heparin and aPTT","Heparin and aPTT",1
+"Aortic Dissection","Aortic Dissection",1
+"Prior VEGF/EGFR Therapy","Prior VEGF/EGFR Therapy",1
+"HCC Rupture/Necrosis","HCC Rupture/Necrosis",1
+"Corneal Abnormalities","Corneal Abnormalities",1
+"Prior Investigational/Chemotherapy","Prior Investigational/Chemotherapy",1
+"Tumor Thrombus","Tumor Thrombus",1
+"Timing of Entry","Timing of Entry",1
+"Asthma Intubation","Asthma Intubation",1
+"Protocol-Defined Criteria","Protocol-Defined Criteria",1
+"Radiotherapy Timing","Radiotherapy Timing",1
+"MRI Documentation","MRI Documentation",1
+"Recurrent Disease","Recurrent Disease",1
+"Intratumoral Hemorrhage","Intratumoral Hemorrhage",1
+"Gliadel Wafers","Gliadel Wafers",1
+"Hypertension Control","Hypertension Control",1
+"Intracerebral Abscess","Intracerebral Abscess",1
+"Birth Control","Birth Control",1
+"Prior DCIS","Prior DCIS",1
+"PCP Prophylaxis","PCP Prophylaxis",1
+"Antifungal Therapy","Antifungal Therapy",1
+"Prior Immunomodulators","Prior Immunomodulators",1
+"Ocular Function","Ocular Function",1
+"Corneal Staining","Corneal Staining",1
+"Ocular Symptoms","Ocular Symptoms",1
+"Experimental Medication","Experimental Medication",1
+"Corneal Epithelial Defect","Corneal Epithelial Defect",1
+"Vulnerable Populations","Vulnerable Populations",1
+"Disease Status - Metastatic","Disease Status - Metastatic",1
+"Lab Values - Hematologic with Cytopenias","Lab Values - Hematologic with Cytopenias",1
+"Lab Values - Hepatic/Renal","Lab Values - Hepatic/Renal",1
+"Hemophagocytic Syndrome","Hemophagocytic Syndrome",1
+"Rash","Rash",1
+"Chronic EBV","Chronic EBV",1
+"Active Autoimmune Disease","Active Autoimmune Disease",1
+"Autoimmune Disease History","Autoimmune Disease History",1
+"extrahepatic_disease","extrahepatic_disease",1
+"portal_hypertension","portal_hypertension",1
+"tumor_invasion","tumor_invasion",1
+"vascular_involvement","vascular_involvement",1
+"abdominal_free_air","abdominal_free_air",1
+"infection_surgery","infection_surgery",1
+"Liver Failure","Liver Failure",1
+"diagnosis_exclusions","diagnosis_exclusions",1
+"clinical_improvement","clinical_improvement",1
+"transfer_plans","transfer_plans",1
+"ventilation_duration","ventilation_duration",1
+"ventilation_prognosis","ventilation_prognosis",1
+"pulmonary_fibrosis","pulmonary_fibrosis",1
+"other_investigational_drugs","other_investigational_drugs",1
+"surgery_complications","surgery_complications",1
+"retinal_risk","retinal_risk",1
+"tumor_extent","tumor_extent",1
+"family_support","family_support",1
+"endocrine_disorders","endocrine_disorders",1
+"Molecular Testing","Molecular Testing",1
+"Operability","Operability",1
+"Adjuvant Inclusion","Adjuvant Inclusion",1
+"Prior History","Prior History",1
+"Prior Treatment (Phase I)","Prior Treatment (Phase I)",1
+"Prior Treatment (Phase II Cohort A)","Prior Treatment (Phase II Cohort A)",1
+"Prior Treatment (Phase II Cohort B)","Prior Treatment (Phase II Cohort B)",1
+"Palliative Care","Palliative Care",1
+"Age Note","Age Note",1
+"Bone Maturity","Bone Maturity",1
+"hormonal","hormonal",1
+"OCT Findings","OCT Findings",1
+"Imaging Quality","Imaging Quality",1
+"Vitreous Hemorrhage","Vitreous Hemorrhage",1
+"Surgery Coordination","Surgery Coordination",1
+"Co-enrollment","Co-enrollment",1
+"Cardiac Arrhythmia","Cardiac Arrhythmia",1
+"BRAF Status","BRAF Status",1
+"Ocular Risk Factors","Ocular Risk Factors",1
+"Further Treatment","Further Treatment",1
+"followup","followup",1
+"tissue_research","tissue_research",1
+"malignancy_comorbidity","malignancy_comorbidity",1
+"study_history","study_history",1
+"Consent and Demographics","Consent and Demographics",1
+"OCT Measurement","OCT Measurement",1
+"Ocular Requirements","Ocular Requirements",1
+"Prior Systemic Treatment","Prior Systemic Treatment",1
+"Prior Study Withdrawal","Prior Study Withdrawal",1
+"Comorbidities and Malignancy","Comorbidities and Malignancy",1
+"Re-entry Criteria","Re-entry Criteria",1
+"Group 1: Ranibizumab Responders - Ability to Consent","Group 1: Ranibizumab Responders - Ability to Consent",1
+"Group 1: Ranibizumab Responders - Age","Group 1: Ranibizumab Responders - Age",1
+"Group 1: Ranibizumab Responders - Diagnosis","Group 1: Ranibizumab Responders - Diagnosis",1
+"Group 2: Normal Controls - Demographics","Group 2: Normal Controls - Demographics",1
+"Group 2: Normal Controls - Diagnosis","Group 2: Normal Controls - Diagnosis",1
+"Group 2: Normal Controls - Consent","Group 2: Normal Controls - Consent",1
+"Group 3: Anti-VEGF Initial Non-responders - Diagnosis","Group 3: Anti-VEGF Initial Non-responders - Diagnosis",1
+"Group 3: Anti-VEGF Initial Non-responders - Compliance","Group 3: Anti-VEGF Initial Non-responders - Compliance",1
+"Group 3: Anti-VEGF Initial Non-responders - Age","Group 3: Anti-VEGF Initial Non-responders - Age",1
+"Group 4: Dry AMD - Demographics","Group 4: Dry AMD - Demographics",1
+"Group 4: Dry AMD - Diagnosis","Group 4: Dry AMD - Diagnosis",1
+"Group 4: Dry AMD - Consent","Group 4: Dry AMD - Consent",1
+"Concurrent Ocular Disease","Concurrent Ocular Disease",1
+"Prior AMD Therapy","Prior AMD Therapy",1
+"Immunomodulatory Treatment","Immunomodulatory Treatment",1
+"Laboratory Values - WBC","Laboratory Values - WBC",1
+"Laboratory Values - ANC","Laboratory Values - ANC",1
+"Laboratory Values - Hemoglobin","Laboratory Values - Hemoglobin",1
+"Laboratory Values - Renal Function","Laboratory Values - Renal Function",1
+"Prior Therapy - Radiation","Prior Therapy - Radiation",1
+"Prior Therapy - Chemotherapy","Prior Therapy - Chemotherapy",1
+"Infectious Disease and Immunocompromise","Infectious Disease and Immunocompromise",1
+"Cardiac - Angina","Cardiac - Angina",1
+"Cardiac - CHF","Cardiac - CHF",1
+"Cardiac - MI","Cardiac - MI",1
+"Cardiac - Stroke","Cardiac - Stroke",1
+"Bleeding and Coagulopathy","Bleeding and Coagulopathy",1
+"Renal - Proteinuria","Renal - Proteinuria",1
+"Current Illness","Current Illness",1
+"Hepatic/Infectious","Hepatic/Infectious",1
+"Pregnancy Reporting","Pregnancy Reporting",1
+"Active Bleeding","Active Bleeding",1
+"Intracranial","Intracranial",1
+"Intracranial Procedure","Intracranial Procedure",1
+"Recent Studies","Recent Studies",1
+"Age/Maturity","Age/Maturity",1
+"Growth Parameters","Growth Parameters",1
+"Orthopedic Conditions","Orthopedic Conditions",1
+"Short Stature Type","Short Stature Type",1
+"Growth Potential","Growth Potential",1
+"Distant Metastasis","Distant Metastasis",1
+"HPV Status","HPV Status",1
+"Anti-platelet Agents","Anti-platelet Agents",1
+"Cavitation","Cavitation",1
+"Risk Status","Risk Status",1
+"Marrow Function","Marrow Function",1
+"Sperm/Oocyte Donation","Sperm/Oocyte Donation",1
+"Prior BTK/BCL2 Inhibitors","Prior BTK/BCL2 Inhibitors",1
+"CNS Hemorrhage/Stroke","CNS Hemorrhage/Stroke",1
+"HBV/HCV Management","HBV/HCV Management",1
+"CD20 Status","CD20 Status",1
+"Research Specimens","Research Specimens",1
+"CMV","CMV",1
+"Cerebral Vascular Accident","Cerebral Vascular Accident",1
+"Inflammatory Bowel Disease","Inflammatory Bowel Disease",1
+"Steroid Requirement","Steroid Requirement",1
+"Stable Dosing","Stable Dosing",1
+"Biologic Agents","Biologic Agents",1
+"Systemic Autoimmune Disease","Systemic Autoimmune Disease",1
+"TB Screening","TB Screening",1
+"Chest Imaging","Chest Imaging",1
+"Organ-Threatening Disease","Organ-Threatening Disease",1
+"Steroid Instability","Steroid Instability",1
+"Cardiopulmonary Disease","Cardiopulmonary Disease",1
+"Other Disqualifying Conditions","Other Disqualifying Conditions",1
+"Contraception duration","Contraception duration",1
+"CNS evaluation","CNS evaluation",1
+"Skin cancer","Skin cancer",1
+"Cervical cancer","Cervical cancer",1
+"Hepatitis B management","Hepatitis B management",1
+"Prior bispecific antibody","Prior bispecific antibody",1
+"Neurotoxicity assessment","Neurotoxicity assessment",1
+"Surgical intervention","Surgical intervention",1
+"Organ toxicity","Organ toxicity",1
+"Prior organ allograft","Prior organ allograft",1
+"Prior low-grade cancer","Prior low-grade cancer",1
+"Minor surgery timing","Minor surgery timing",1
+"Hemophilia A with inhibitor","Hemophilia A with inhibitor",1
+"Hemophilia A without inhibitor","Hemophilia A without inhibitor",1
+"Emicizumab dosing","Emicizumab dosing",1
+"Post-surgery prophylaxis","Post-surgery prophylaxis",1
+"Other bleeding disorder","Other bleeding disorder",1
+"Factor VIII tolerization (with inhibitor)","Factor VIII tolerization (with inhibitor)",1
+"Factor VIII tolerization duration (without inhibitor)","Factor VIII tolerization duration (without inhibitor)",1
+"FVIII for breakthrough (with inhibitor)","FVIII for breakthrough (with inhibitor)",1
+"Recent BPA or FVIII","Recent BPA or FVIII",1
+"Thrombotic microangiopathy risk","Thrombotic microangiopathy risk",1
+"Non-hemophilia investigational drug","Non-hemophilia investigational drug",1
+"Concurrent investigational drug","Concurrent investigational drug",1
+"Monoclonal antibody hypersensitivity","Monoclonal antibody hypersensitivity",1
+"gastroesophageal","gastroesophageal",1
+"cardiac_pulmonary_disease","cardiac_pulmonary_disease",1
+"household_member","household_member",1
+"staging_workup","staging_workup",1
+"nodal_disease","nodal_disease",1
+"antibody_reaction","antibody_reaction",1
+"aids","aids",1
+"anticancer_therapy","anticancer_therapy",1
+"egfr_alk","egfr_alk",1
+"radiation_interval","radiation_interval",1
+"chemotherapy_interval","chemotherapy_interval",1
+"therapy_progression","therapy_progression",1
+"lab_immunology","lab_immunology",1
+"study_skills","study_skills",1
+"asthma_medication_change","asthma_medication_change",1
+"asthma_phenotype","asthma_phenotype",1
+"lab_hematology","lab_hematology",1
+"treatment_refusal","treatment_refusal",1
+"cns_treatment","cns_treatment",1
+"alcohol_abuse","alcohol_abuse",1
+"plasma_donation","plasma_donation",1
+"disease_course","disease_course",1
+"prior_stroke","prior_stroke",1
+"head_trauma","head_trauma",1
+"stroke_type","stroke_type",1
+"angiography","angiography",1
+"RA Complications","RA Complications",1
+"Hepatitis B Treatment","Hepatitis B Treatment",1
+"Antibiotic Treatment","Antibiotic Treatment",1
+"Medication Absorption","Medication Absorption",1
+"G6PD Deficiency","G6PD Deficiency",1
+"Connective Tissue","Connective Tissue",1
+"Antacid Therapy","Antacid Therapy",1
+"age_and_comorbidity","age_and_comorbidity",1
+"skin_disorders","skin_disorders",1
+"cardiac_genetics","cardiac_genetics",1
+"recent_radiotherapy","recent_radiotherapy",1
+"prior_biotherapy","prior_biotherapy",1
+"molecular_subtype","molecular_subtype",1
+"immunosuppression_exception","immunosuppression_exception",1
+"Urologic","Urologic",1
+"Drug Exposure","Drug Exposure",1
+"Pregnancy Outcome","Pregnancy Outcome",1
+"hormonal_status","hormonal_status",1
+"concurrent_radiation","concurrent_radiation",1
+"serm","serm",1
+"exacerbation_history","exacerbation_history",1
+"dyspnea","dyspnea",1
+"maintenance_therapy","maintenance_therapy",1
+"height","height",1
+"prior_rhgh","prior_rhgh",1
+"ghd","ghd",1
+"immunomodulatory","immunomodulatory",1
+"confirmation","confirmation",1
+"biomarker_research","biomarker_research",1
+"Hospital Transfer","Hospital Transfer",1
+"GI/GU Bleed","GI/GU Bleed",1
+"PE Risk","PE Risk",1
+"PE Complications","PE Complications",1
+"CNS Excluded","CNS Excluded",1
+"CNS Vascular","CNS Vascular",1
+"Cardiac Complications","Cardiac Complications",1
+"Support Status","Support Status",1
+"Diagnosis - NSCLC","Diagnosis - NSCLC",1
+"Prior Treatment - NSCLC","Prior Treatment - NSCLC",1
+"Genetic Mutations - NSCLC","Genetic Mutations - NSCLC",1
+"Biomarker - NSCLC","Biomarker - NSCLC",1
+"Prior Anti-tumor Therapy","Prior Anti-tumor Therapy",1
+"Prior Chemotherapy - Ovarian","Prior Chemotherapy - Ovarian",1
+"Prior Treatment Count - Ovarian","Prior Treatment Count - Ovarian",1
+"Hepatic/HIV Disease","Hepatic/HIV Disease",1
+"Prior NaPi2b Therapy","Prior NaPi2b Therapy",1
+"Hypertension - Bevacizumab","Hypertension - Bevacizumab",1
+"Bevacizumab - Hypertension","Hypertension - Bevacizumab",1
+"Cardiac/Thrombotic History - Bevacizumab","Cardiac/Thrombotic History - Bevacizumab",1
+"Stroke History - Bevacizumab","Stroke History - Bevacizumab",1
+"Vascular Disease - Bevacizumab","Vascular Disease - Bevacizumab",1
+"Bevacizumab - Vascular Disease","Vascular Disease - Bevacizumab",1
+"Hemoptysis - Bevacizumab","Hemoptysis - Bevacizumab",1
+"Bevacizumab - Hemoptysis","Hemoptysis - Bevacizumab",1
+"Procedures - Bevacizumab","Procedures - Bevacizumab",1
+"Wound/Fracture - Bevacizumab","Wound/Fracture - Bevacizumab",1
+"Severity Markers","Severity Markers",1
+"Prior Anti-influenza Therapy","Prior Anti-influenza Therapy",1
+"Prior Anti-influenza Medication","Prior Anti-influenza Medication",1
+"Timing of Admission","Timing of Admission",1
+"Influenza Type","Influenza Type",1
+"Baseline Oxygenation","Baseline Oxygenation",1
+"Chronic Lung Disease","Chronic Lung Disease",1
+"Immune Suppression","Immune Suppression",1
+"ECMO Support","ECMO Support",1
+"treatment_feasibility","treatment_feasibility",1
+"ocular_pressure","ocular_pressure",1
+"skin_reaction","skin_reaction",1
+"genomic","genomic",1
+"Genetic/biomarker","Genetic/biomarker",1
+"Prior therapy - proteasome inhibitor timing","Prior therapy - proteasome inhibitor timing",1
+"Primary Malignancy","Primary Malignancy",1
+"Contraindicated Treatments","Contraindicated Treatments",1
+"Subretinal Hemorrhage","Subretinal Hemorrhage",1
+"Myopia","Myopia",1
+"BRVO Treatment","BRVO Treatment",1
+"Imaging Feasibility","Imaging Feasibility",1
+"Central Changes","Central Changes",1
+"Prior Steroid Treatment","Prior Steroid Treatment",1
+"Prior YAG Procedure","Prior YAG Procedure",1
+"Fellow Eye Vision","Fellow Eye Vision",1
+"Severe Exacerbation","Severe Exacerbation",1
+"Xolair Treatment","Xolair Treatment",1
+"High-Risk Features","High-Risk Features",1
+"Operability Status","Operability Status",1
+"Other Ocular Conditions","Other Ocular Conditions",1
+"disease_detection","disease_detection",1
+"experimental_treatment","experimental_treatment",1
+"diagnosis_arm_b","diagnosis_arm_b",1
+"allergy_arm_b","allergy_arm_b",1
+"Patient Status","Patient Status",1
+"Technology Access","Technology Access",1
+"Profession","Profession",1
+"Professional Status","Professional Status",1
+"Antiepileptic Drugs","Antiepileptic Drugs",1
+"Prior mTOR Therapy","Prior mTOR Therapy",1
+"Prior EGFR Therapy","Prior EGFR Therapy",1
+"Co-medication","Co-medication",1
+"GI Impairment","GI Impairment",1
+"Prior Biologic/Immunotherapy","Prior Biologic/Immunotherapy",1
+"Renal Insufficiency","Renal Insufficiency",1
+"Substance Abuse Screening","Substance Abuse Screening",1
+"Substance Abuse History","Substance Abuse History",1
+"Gilbert's Syndrome","Gilbert's Syndrome",1
+"Age and Cognitive Status","Age and Cognitive Status",1
+"AD Criteria","AD Criteria",1
+"Clinical Dementia Rating","Clinical Dementia Rating",1
+"MMSE Score","MMSE Score",1
+"Amyloid PET Imaging","Amyloid PET Imaging",1
+"Brain MRI","Brain MRI",1
+"Significant Medical Conditions","Significant Medical Conditions",1
+"SCT Recovery","SCT Recovery",1
+"Cancer Type and Stage","Cancer Type and Stage",1
+"Prior Cancer Therapy Recovery","Prior Cancer Therapy Recovery",1
+"Concurrent Experimental Drugs","Concurrent Experimental Drugs",1
+"Diagnosis and Treatment Indication","Diagnosis and Treatment Indication",1
+"Prior BTKi and BCL2i Therapy","Prior BTKi and BCL2i Therapy",1
+"Autoimmune Phenomenon","Autoimmune Phenomenon",1
+"Warfarin","Warfarin",1
+"Cardiotoxicity Risk","Cardiotoxicity Risk",1
+"tuberculosis_screening","tuberculosis_screening",1
+"respiratory_status","respiratory_status",1
+"clinical_criteria","clinical_criteria",1
+"randomization_readiness","randomization_readiness",1
+"congenital_immunodeficiency","congenital_immunodeficiency",1
+"tracheostomy","tracheostomy",1
+"grade","grade",1
+"cardiac_ecg","cardiac_ecg",1
+"serum_ige_level","serum_ige_level",1
+"neoplasia","neoplasia",1
+"immunoglobulin_therapy","immunoglobulin_therapy",1
+"noncompliance","noncompliance",1
+"specific_study_exclusion","specific_study_exclusion",1
+"fasting_glucose","fasting_glucose",1
+"advanced_tumor_stage","advanced_tumor_stage",1
+"swallowing_ability","swallowing_ability",1
+"supplemental_oxygen","supplemental_oxygen",1
+"compliance_inability","compliance_inability",1
+"primary_site","primary_site",1
+"prior_therapy_metastatic","prior_therapy_metastatic",1
+"prior_therapy_recurrent","prior_therapy_recurrent",1
+"nasopharyngeal_cancer","nasopharyngeal_cancer",1
+"prior_her_inhibitor","prior_her_inhibitor",1
+"prior_egfr_inhibitor","prior_egfr_inhibitor",1
+"cardiac_failure","cardiac_failure",1
+"surgical_ineligibility","surgical_ineligibility",1
+"cirrhosis_status","cirrhosis_status",1
+"hormonal_therapy_exception","hormonal_therapy_exception",1
+"hcc_variant","hcc_variant",1
+"transplant_list","transplant_list",1
+"hbv_hcv_coinfection","hbv_hcv_coinfection",1
+"tips_cohort_a","tips_cohort_a",1
+"diagnostic_paracentesis_allowance","diagnostic_paracentesis_allowance",1
+"ascites_management","ascites_management",1
+"spontaneous_bacterial_peritonitis","spontaneous_bacterial_peritonitis",1
+"recovery_from_prior_therapy","recovery_from_prior_therapy",1
+"alkaline_phosphatase","alkaline_phosphatase",1
+"prior_drug_therapy","prior_drug_therapy",1
+"hiv_disease","hiv_disease",1
+"investigational_study","investigational_study",1
+"Treatment Criteria","Treatment Criteria",1
+"Cardiac Assessment","Cardiac Assessment",1
+"HIV/HTLV","HIV/HTLV",1
+"Immunophenotype","Immunophenotype",1
+"Xolair Cohort","Xolair Cohort",1
+"Prior Xolair","Prior Xolair",1
+"Inhibitor Level","Inhibitor Level",1
+"Immunomodulatory Therapy","Immunomodulatory Therapy",1
+"Immunological Treatment","Immunological Treatment",1
+"High Responding Inhibitor","High Responding Inhibitor",1
+"Factor VIII Use","Factor VIII Use",1
+"Factor VIII Timing","Factor VIII Timing",1
+"Infections/Hepatic disease","Infections/Hepatic disease",1
+"Insurance/benefit","Insurance/benefit",1
+"Parental enrollment","Parental enrollment",1
+"Stratum S - Pill swallowing","Stratum S - Pill swallowing",1
+"Stratum S - Body surface area","Stratum S - Body surface area",1
+"Stratum S - Contraception","Stratum S - Contraception",1
+"Imaging capability","Imaging capability",1
+"Asymptomatic metastases","Asymptomatic metastases",1
+"HER2 status (Arm C)","HER2 status (Arm C)",1
+"Arm B - Blood pressure","Arm B - Blood pressure",1
+"Arm B - Bleeding","Arm B - Bleeding",1
+"Arm B - GI history","Arm B - GI history",1
+"Arm B - Wound healing","Arm B - Wound healing",1
+"Arm B - Proteinuria","Arm B - Proteinuria",1
+"disease_age","disease_age",1
+"asthma_worsening","asthma_worsening",1
+"AML Subtype","AML Subtype",1
+"gender_disease","gender_disease",1
+"cns_anatomic","cns_anatomic",1
+"cns_pathology","cns_pathology",1
+"surgical_complication","surgical_complication",1
+"Prior Experimental Treatment","Prior Experimental Treatment",1
+"Age - Cohort 1","Age - Cohort 1",1
+"Age - Cohort 2","Age - Cohort 2",1
+"Exercise Capacity","Exercise Capacity",1
+"Diagnosis - Cohort 1","Diagnosis - Cohort 1",1
+"Imaging - Cohort 1","Imaging - Cohort 1",1
+"Prior Treatment - Cohort 1","Prior Treatment - Cohort 1",1
+"Diagnosis - Cohort 2","Diagnosis - Cohort 2",1
+"Imaging - Cohort 2","Imaging - Cohort 2",1
+"Disease Progression - Cohort 2","Disease Progression - Cohort 2",1
+"Prior Treatment - Cohort 2 (Tocilizumab)","Prior Treatment - Cohort 2 (Tocilizumab)",1
+"Prior Treatment - Cohort 2 (Nintedanib)","Prior Treatment - Cohort 2 (Nintedanib)",1
+"Biopsy - Cohort 2","Biopsy - Cohort 2",1
+"OLE Period","OLE Period",1
+"OLE Period - Benefit/Risk","OLE Period - Benefit/Risk",1
+"Oxygen Saturation","Oxygen Saturation",1
+"Prior Lung Transplant","Prior Lung Transplant",1
+"Other ILD - Cohort 1","Other ILD - Cohort 1",1
+"Emphysema - Cohort 1","Emphysema - Cohort 1",1
+"Other ILD - Cohort 2","Other ILD - Cohort 2",1
+"Autoimmune Disease - Cohort 2","Autoimmune Disease - Cohort 2",1
+"Prior Treatment - Cohort 2","Prior Treatment - Cohort 2",1
+"Drug Combination - Cohort 2","Drug Combination - Cohort 2",1
+"Compliance - OLE Period","Compliance - OLE Period",1
+"New Disease - OLE Period","New Disease - OLE Period",1
+"Dose Escalation Stage","Dose Escalation Stage",1
+"Expansion Stage","Expansion Stage",1
+"Cardiovascular and Liver","Cardiovascular and Liver",1
+"optics","optics",1
+"procedure_willingness","procedure_willingness",1
+"arm_a_age","arm_a_age",1
+"arm_a_disease_status","arm_a_disease_status",1
+"arm_a_prior_treatment","arm_a_prior_treatment",1
+"arm_b_age_treatment_naive","arm_b_age_treatment_naive",1
+"arm_b_age_unfit","arm_b_age_unfit",1
+"cardiac_safety","cardiac_safety",1
+"lab_values_coagulation_renal","lab_values_coagulation_renal",1
+"lab_values_proteinuria","lab_values_proteinuria",1
+"prior_chemotherapy_timing","prior_chemotherapy_timing",1
+"childbearing_status","childbearing_status",1
+"brain_metastases_criteria","brain_metastases_criteria",1
+"free_air","free_air",1
+"seafood_allergy","seafood_allergy",1
+"autoimmune_immunodeficiency","autoimmune_immunodeficiency",1
+"diagnosis_disease_status","diagnosis_disease_status",1
+"progressive_disease","progressive_disease",1
+"anticoagulation_ability","anticoagulation_ability",1
+"rems_program","rems_program",1
+"pregnancy_monitoring","pregnancy_monitoring",1
+"thrombophlebitis","thrombophlebitis",1
+"concurrent_investigational","concurrent_investigational",1
+"n2_confirmation","n2_confirmation",1
+"treatment_candidacy","treatment_candidacy",1
+"study_understanding","study_understanding",1
+"carcinoid","carcinoid",1
+"Lab - INR","Lab - INR",1
+"Prior Anti-myeloma Therapy","Prior Anti-myeloma Therapy",1
+"Left Ventricular Function","Left Ventricular Function",1
+"Albuminuria","Albuminuria",1
+"Uncontrolled Malignancy","Uncontrolled Malignancy",1
+"Carcinomatous Meningitis","Carcinomatous Meningitis",1
+"Prior BRAF/MEK Inhibitor","Prior BRAF/MEK Inhibitor",1
+"Macular Thickening","Macular Thickening",1
+"Untreated Diabetes","Untreated Diabetes",1
+"Prior Ranibizumab","Prior Ranibizumab",1
+"Proliferative Diabetic Retinopathy","Proliferative Diabetic Retinopathy",1
+"Uveitis and Related","Uveitis and Related",1
+"Left Ventricular Ejection Fraction","Left Ventricular Ejection Fraction",1
+"Diabetes and Infection","Diabetes and Infection",1
+"data_requirement","data_requirement",1
+"marker","marker",1
+"Muscular/Neuromuscular","Muscular/Neuromuscular",1
+"Hepatitis B Infection","Hepatitis B Infection",1
+"Hepatitis C Infection","Hepatitis C Infection",1
+"Cognitive/Medical Status","Cognitive/Medical Status",1
+"Prior Pathway Therapy","Prior Pathway Therapy",1
+"NSAID Hypersensitivity","NSAID Hypersensitivity",1
+"Tumor Encasement","Tumor Encasement",1
+"Bone Fracture","Bone Fracture",1
+"Liver Transplant","Liver Transplant",1
+"Treatment Assignment","Treatment Assignment",1
+"Extension Study","Extension Study",1
+"Ophthalmologic Condition","Ophthalmologic Condition",1
+"Expansion Cohort - MSI Status","Expansion Cohort - MSI Status",1
+"Expansion Cohort - Measurable Disease","Expansion Cohort - Measurable Disease",1
+"Expansion Cohort - Progression","Expansion Cohort - Progression",1
+"Expansion Cohort - Biopsies","Expansion Cohort - Biopsies",1
+"radiation_recovery","radiation_recovery",1
+"seizure_prophylaxis","seizure_prophylaxis",1
+"misc","misc",1
+"planned_therapy","planned_therapy",1
+"medical_care","medical_care",1
+"contact_information","contact_information",1
+"clinical_features","clinical_features",1
+"sle","sle",1
+"infection_prophylaxis","infection_prophylaxis",1
+"Ability to Take Study Drug","Ability to Take Study Drug",1
+"Central Venous Access","Central Venous Access",1
+"Central Catheter","Central Catheter",1
+"Abdominal Issues","Abdominal Issues",1
+"Clinical Response Status","Clinical Response Status",1
+"Clinical Response with Flare","Clinical Response with Flare",1
+"Concomitant Therapy - Immunosuppressive","Concomitant Therapy - Immunosuppressive",1
+"Concomitant Therapy - Corticosteroids","Concomitant Therapy - Corticosteroids",1
+"Diagnosis and Staging","Diagnosis and Staging",1
+"Proteinuria Screening","Proteinuria Screening",1
+"Supplementation","Supplementation",1
+"Bleeding Risk - Active Bleeding","Bleeding Risk - Active Bleeding",1
+"Bleeding Risk - Prior Bleeding Requiring Intervention","Bleeding Risk - Prior Bleeding Requiring Intervention",1
+"Bleeding Risk - Hemoptysis","Bleeding Risk - Hemoptysis",1
+"Cardiac History - Acute Events","Cardiac History - Acute Events",1
+"Cardiac History - Chronic Conditions","Cardiac History - Chronic Conditions",1
+"CNS - Cerebrovascular","CNS - Cerebrovascular",1
+"Monoclonal Antibody Reaction","Monoclonal Antibody Reaction",1
+"Carcinoma of Unknown Primary","Carcinoma of Unknown Primary",1
+"Biopsy-Proven Metastatic Carcinoma","Biopsy-Proven Metastatic Carcinoma",1
+"Biopsy Material","Biopsy Material",1
+"Laboratory - Hematology","Laboratory - Hematology",1
+"Cancer Type for Treatment","Cancer Type for Treatment",1
+"Specific Syndromes - Neuroendocrine","Specific Syndromes - Neuroendocrine",1
+"Specific Syndromes - Female Adenocarcinoma","Specific Syndromes - Female Adenocarcinoma",1
+"Specific Syndromes - Peritoneal Adenocarcinoma","Specific Syndromes - Peritoneal Adenocarcinoma",1
+"Specific Syndromes - Single Site","Specific Syndromes - Single Site",1
+"Specific Syndromes - Squamous Limited to Lymph Nodes","Specific Syndromes - Squamous Limited to Lymph Nodes",1
+"Biopsy Insufficiency","Biopsy Insufficiency",1
+"Bevacizumab - Cardiac History","Bevacizumab - Cardiac History",1
+"Bevacizumab - Hypertensive Crisis","Bevacizumab - Hypertensive Crisis",1
+"Bevacizumab - PEG/G Tubes","Bevacizumab - PEG/G Tubes",1
+"Bevacizumab - Major Surgery","Bevacizumab - Major Surgery",1
+"Bevacizumab - Proteinuria","Bevacizumab - Proteinuria",1
+"Bevacizumab - Wound Complications","Bevacizumab - Wound Complications",1
+"Bevacizumab - Bleeding Diathesis","Bevacizumab - Bleeding Diathesis",1
+"Bevacizumab - GI Complications","Bevacizumab - GI Complications",1
+"Bevacizumab - Stroke","Bevacizumab - Stroke",1
+"BTKi Arm Treatment","BTKi Arm Treatment",1
+"BCL2i Arm Treatment","BCL2i Arm Treatment",1
+"Bulky Disease","Bulky Disease",1
+"Clinical Progression","Clinical Progression",1
+"Prior CAR-T or Radioimmunotherapy","Prior CAR-T or Radioimmunotherapy",1
+"Transplantation History","Transplantation History",1
+"Ongoing Toxicity","Ongoing Toxicity",1
+"Richter Transformation and CNS","Richter Transformation and CNS",1
+"Concurrent Immunosuppression","Concurrent Immunosuppression",1
+"Hemophagocytic Lymphohistiocytosis","Hemophagocytic Lymphohistiocytosis",1
+"Progressive Multifocal Leukoencephalopathy","Progressive Multifocal Leukoencephalopathy",1
+"Significant Comorbidity","Significant Comorbidity",1
+"Microsatellite Status","Microsatellite Status",1
+"High-Risk Features - CEA","High-Risk Features - CEA",1
+"High-Risk Features - Lymphocyte-Monocyte Ratio","High-Risk Features - Lymphocyte-Monocyte Ratio",1
+"High-Risk Features - Differentiation","High-Risk Features - Differentiation",1
+"High-Risk Features - Lymphovascular Invasion","High-Risk Features - Lymphovascular Invasion",1
+"High-Risk Features - Perineural Invasion","High-Risk Features - Perineural Invasion",1
+"High-Risk Features - T Stage and Size","High-Risk Features - T Stage and Size",1
+"High-Risk Features - Regional Lymphadenopathy","High-Risk Features - Regional Lymphadenopathy",1
+"Hepatic Enzymes","Hepatic Enzymes",1
+"Coagulation - Non-Anticoagulated","Coagulation - Non-Anticoagulated",1
+"Coagulation - Anticoagulated","Coagulation - Anticoagulated",1
+"Hepatitis B Surface Antigen","Hepatitis B Surface Antigen",1
+"Hepatitis C Serology","Hepatitis C Serology",1
+"Malignant Effusions","Malignant Effusions",1
+"Autoimmune Disease - General","Autoimmune Disease - General",1
+"Autoimmune - Hypothyroidism Exception","Autoimmune - Hypothyroidism Exception",1
+"Autoimmune - Type 1 Diabetes Exception","Autoimmune - Type 1 Diabetes Exception",1
+"Autoimmune - Dermatologic Exception","Autoimmune - Dermatologic Exception",1
+"Pneumonitis History","Pneumonitis History",1
+"Therapeutic Antibiotics","Therapeutic Antibiotics",1
+"Anti-HBV Therapy","Anti-HBV Therapy",1
+"Synchronous or Prior Colorectal Cancer","Synchronous or Prior Colorectal Cancer",1
+"Prior Checkpoint Blockade","Prior Checkpoint Blockade",1
+"Systemic Immunosuppression","Systemic Immunosuppression",1
+"Severe Allergic Reaction","Severe Allergic Reaction",1
+"Hypersensitivity - CHO Products","Hypersensitivity - CHO Products",1
+"Hypersensitivity - Chemotherapy","Hypersensitivity - Chemotherapy",1
+"Pregnancy and Breastfeeding","Pregnancy and Breastfeeding",1
+"Baseline IgE Level","Baseline IgE Level",1
+"Investigational Drug Use","Investigational Drug Use",1
+"Allergies and Diseases","Allergies and Diseases",1
+"ECG Abnormalities","ECG Abnormalities",1
+"Unacceptable Risk","Unacceptable Risk",1
+"Uncontrolled Disease States","Uncontrolled Disease States",1
+"Mycobacterial Infection","Mycobacterial Infection",1
+"Latent TB","Latent TB",1
+"TB Testing","TB Testing",1
+"Incomplete TB Treatment","Incomplete TB Treatment",1
+"Chest X-ray Abnormalities","Chest X-ray Abnormalities",1
+"Investigational Medication","Investigational Medication",1
+"Central Demyelinating Disorder","Central Demyelinating Disorder",1
+"Prior Alkylating Agent","Prior Alkylating Agent",1
+"Etoposide","Etoposide",1
+"IVIG","IVIG",1
+"TNF Blocker","TNF Blocker",1
+"Laboratory - Renal","Laboratory - Renal",1
+"Laboratory - Bilirubin","Laboratory - Bilirubin",1
+"Laboratory - Platelets","Laboratory - Platelets",1
+"Laboratory - Hemoglobin","Laboratory - Hemoglobin",1
+"Laboratory - WBC","Laboratory - WBC",1
+"Laboratory - Neutrophils","Laboratory - Neutrophils",1
+"Prior Carboplatin","Prior Carboplatin",1
+"Leptomeningeal Carcinomatosis","Leptomeningeal Carcinomatosis",1
+"CNS Hemorrhage - Baseline","CNS Hemorrhage - Baseline",1
+"CNS Hemorrhage - History","CNS Hemorrhage - History",1
+"Wound Complications","Wound Complications",1
+"Prior Thoracic Surgery","Prior Thoracic Surgery",1
+"Folate Supplementation","Folate Supplementation",1
+"ALK Fusion","ALK Fusion",1
