@@ -60,6 +60,123 @@ export interface SemanticGroupFacet {
   topCriteria: CriteriaTextEntry[]
 }
 
+// --- Server-side criteria queries ---
+
+interface GroupSummaryRow {
+  semantic_group: string | null
+  criterion_type: string
+  trial_count: number
+  criteria_count: number
+}
+
+export function useCriteriaGroupSummary() {
+  return useQuery({
+    queryKey: ['clintrial', 'criteria-group-summary'],
+    queryFn: async () => {
+      const r = await reportQuery<GroupSummaryRow>(
+        `SELECT elem->>'semantic_group' as semantic_group,
+                elem->>'criterion_type' as criterion_type,
+                COUNT(DISTINCT nct_id) as trial_count,
+                COUNT(*) as criteria_count
+         FROM clintrial.doc_ct_trial_eligibility__v2, jsonb_array_elements(criteria) as elem
+         WHERE criteria IS NOT NULL
+         GROUP BY elem->>'semantic_group', elem->>'criterion_type'
+         ORDER BY criteria_count DESC`,
+        [],
+        200,
+      )
+      // Aggregate into facet structure
+      const groupMap = new Map<string, { trialCount: number; count: number; inclusionCount: number; exclusionCount: number }>()
+      for (const row of r.rows) {
+        const g = row.semantic_group ?? 'UNCLASSIFIED'
+        let entry = groupMap.get(g)
+        if (!entry) entry = { trialCount: 0, count: 0, inclusionCount: 0, exclusionCount: 0 }
+        entry.count += row.criteria_count
+        entry.trialCount = Math.max(entry.trialCount, row.trial_count)
+        if (row.criterion_type === 'inclusion') entry.inclusionCount += row.criteria_count
+        else entry.exclusionCount += row.criteria_count
+        groupMap.set(g, entry)
+      }
+      return groupMap
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+export function useCriteriaGroupDetail(group: string | null, typeFilter: 'all' | 'inclusion' | 'exclusion' = 'all') {
+  return useQuery({
+    queryKey: ['clintrial', 'criteria-group-detail', group, typeFilter],
+    queryFn: async () => {
+      if (!group) return []
+      const groupCondition = group === 'UNCLASSIFIED'
+        ? "elem->>'semantic_group' IS NULL"
+        : "elem->>'semantic_group' = $1"
+      const typeCondition = typeFilter !== 'all' ? ` AND elem->>'criterion_type' = '${typeFilter}'` : ''
+      const params = group === 'UNCLASSIFIED' ? [] : [group]
+
+      const r = await reportQuery<{ text: string; criterion_type: string; category: string; trial_count: number }>(
+        `SELECT elem->>'text' as text,
+                elem->>'criterion_type' as criterion_type,
+                elem->>'category' as category,
+                COUNT(DISTINCT nct_id) as trial_count
+         FROM clintrial.doc_ct_trial_eligibility__v2, jsonb_array_elements(criteria) as elem
+         WHERE criteria IS NOT NULL AND ${groupCondition}${typeCondition}
+         GROUP BY elem->>'text', elem->>'criterion_type', elem->>'category'
+         ORDER BY trial_count DESC`,
+        params,
+        5000,
+      )
+      return r.rows.map((row) => ({
+        text: row.text,
+        type: row.criterion_type as 'inclusion' | 'exclusion',
+        category: row.category,
+        trialCount: row.trial_count,
+      }))
+    },
+    enabled: !!group,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useCriteriaSearch(searchText: string | undefined, typeFilter: 'all' | 'inclusion' | 'exclusion' = 'all') {
+  return useQuery({
+    queryKey: ['clintrial', 'criteria-search', searchText, typeFilter],
+    queryFn: async () => {
+      if (!searchText) return null
+      const typeCondition = typeFilter !== 'all' ? ` AND elem->>'criterion_type' = '${typeFilter}'` : ''
+
+      const r = await reportQuery<{ semantic_group: string | null; text: string; criterion_type: string; trial_count: number }>(
+        `SELECT elem->>'semantic_group' as semantic_group,
+                elem->>'text' as text,
+                elem->>'criterion_type' as criterion_type,
+                COUNT(DISTINCT nct_id) as trial_count
+         FROM clintrial.doc_ct_trial_eligibility__v2, jsonb_array_elements(criteria) as elem
+         WHERE criteria IS NOT NULL
+           AND elem->>'text' ILIKE $1${typeCondition}
+         GROUP BY elem->>'semantic_group', elem->>'text', elem->>'criterion_type'
+         ORDER BY trial_count DESC`,
+        [`%${searchText}%`],
+        2000,
+      )
+
+      // Group results by semantic group
+      const byGroup = new Map<string, CriteriaTextEntry[]>()
+      for (const row of r.rows) {
+        const g = row.semantic_group ?? 'UNCLASSIFIED'
+        if (!byGroup.has(g)) byGroup.set(g, [])
+        byGroup.get(g)!.push({
+          text: row.text,
+          type: row.criterion_type as 'inclusion' | 'exclusion',
+          trialCount: row.trial_count,
+        })
+      }
+      return byGroup
+    },
+    enabled: !!searchText && searchText.length >= 2,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export interface PopulationProfile {
   ageMin?: number
   ageMax?: number

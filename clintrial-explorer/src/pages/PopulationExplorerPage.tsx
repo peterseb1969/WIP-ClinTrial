@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, Fragment } from 'react'
+import React, { useState, useMemo, useCallback, Fragment } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Users, Search, RotateCcw, X, GitCompare, Check, HelpCircle, ChevronRight, ChevronDown, Filter, ListPlus, ListChecks, TestTubes, FileText, Trash2, Layers, Download } from 'lucide-react'
+import { Users, Search, RotateCcw, X, GitCompare, Check, HelpCircle, ChevronRight, ChevronDown, Filter, ListPlus, ListChecks, TestTubes, FileText, Trash2, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   usePopulationSearch,
@@ -8,10 +8,12 @@ import {
   setOntologyLabels,
   getGroupLabel,
   parseArray,
+  useCriteriaGroupSummary,
+  useCriteriaGroupDetail,
+  useCriteriaSearch,
   type PopulationProfile,
   type ScoredTrial,
   type MatchStatus,
-  type SemanticGroupFacet,
   type Criterion,
   type CriteriaTextEntry,
 } from '@/hooks/usePopulationExplorer'
@@ -189,36 +191,50 @@ function ProfileSidebar({
 
 type TypeFilter = 'all' | 'inclusion' | 'exclusion'
 
-function downloadCriteriaCsv(facets: SemanticGroupFacet[], typeFilter: TypeFilter, searchFilter: string) {
-  const rows: string[] = ['semantic_group,type,criteria_text,trial_count']
-  for (const facet of facets) {
-    for (const c of facet.topCriteria) {
-      if (typeFilter !== 'all' && c.type !== typeFilter) continue
-      if (searchFilter && !c.text.toLowerCase().includes(searchFilter.toLowerCase())) continue
-      const escaped = c.text.replace(/"/g, '""')
-      rows.push(`"${facet.label}","${c.type}","${escaped}",${c.trialCount}`)
-    }
-  }
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `eligibility_criteria_${typeFilter}${searchFilter ? '_' + searchFilter : ''}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
-}
 
 function CriteriaBrowser({
-  facets, facetFilter, onFacetChange,
+  facetFilter, onFacetChange,
 }: {
-  facets: SemanticGroupFacet[]; facetFilter: FacetFilter; onFacetChange: (f: FacetFilter) => void
+  facetFilter: FacetFilter; onFacetChange: (f: FacetFilter) => void
 }) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [criteriaSearch, setCriteriaSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [collapsed, setCollapsed] = useState(false)
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
 
+  // Debounce search for server queries
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout>>()
+  const handleSearchChange = useCallback((value: string) => {
+    setCriteriaSearch(value)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedSearch(value), 300)
+  }, [])
+
+  // Server-side data
+  const { data: groupSummary } = useCriteriaGroupSummary()
+  const { data: searchResults } = useCriteriaSearch(debouncedSearch || undefined, typeFilter)
+
   const hasFacetFilters = facetFilter.groups.size > 0 || facetFilter.categories.size > 0
+
+  // Build group list from summary
+  const groups = useMemo(() => {
+    if (!groupSummary) return []
+    const list: { group: string; label: string; trialCount: number; count: number }[] = []
+    for (const [group, info] of groupSummary) {
+      // Apply type filter to visibility
+      if (typeFilter === 'inclusion' && info.inclusionCount === 0) continue
+      if (typeFilter === 'exclusion' && info.exclusionCount === 0) continue
+      list.push({ group, label: getGroupLabel(group), trialCount: info.trialCount, count: info.count })
+    }
+    list.sort((a, b) => b.count - a.count)
+
+    // If searching, filter to groups that have results
+    if (debouncedSearch && searchResults) {
+      return list.filter((g) => searchResults.has(g.group))
+    }
+    return list
+  }, [groupSummary, typeFilter, debouncedSearch, searchResults])
 
   const toggleExpand = useCallback((group: string) => {
     setExpandedGroups((prev) => { const n = new Set(prev); n.has(group) ? n.delete(group) : n.add(group); return n })
@@ -233,24 +249,15 @@ function CriteriaBrowser({
     onFacetChange(next)
   }, [facetFilter, onFacetChange])
 
-  const toggleFilterCategory = useCallback((group: string, category: string) => {
-    const key = `${group}::${category}`
-    const next = { groups: new Set(facetFilter.groups), categories: new Set(facetFilter.categories) }
-    if (next.categories.has(key)) { next.categories.delete(key) }
-    else { next.categories.add(key); setExpandedGroups((prev) => new Set(prev).add(group)) }
-    onFacetChange(next)
-  }, [facetFilter, onFacetChange])
-
   return (
     <Card>
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
         <button onClick={() => setCollapsed(!collapsed)} className="flex items-center gap-2 text-sm font-semibold text-text-primary">
           <Layers className="h-4 w-4 text-primary" />
-          Criteria Groups
+          Criteria Groups ({groups.length})
           {collapsed ? <ChevronRight className="h-3.5 w-3.5 text-text-muted" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
         </button>
         <div className="flex items-center gap-2">
-          {/* Type filter */}
           <div className="flex rounded border border-border overflow-hidden">
             {(['all', 'inclusion', 'exclusion'] as TypeFilter[]).map((t) => (
               <button key={t} onClick={() => setTypeFilter(t)}
@@ -261,12 +268,6 @@ function CriteriaBrowser({
               </button>
             ))}
           </div>
-          {/* CSV download */}
-          <button onClick={() => downloadCriteriaCsv(facets, typeFilter, criteriaSearch)}
-            className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline font-medium"
-            title="Download all criteria as CSV">
-            <Download className="h-3 w-3" /> CSV
-          </button>
           {hasFacetFilters && (
             <button onClick={() => onFacetChange(EMPTY_FACET_FILTER)} className="text-[10px] text-danger hover:underline">Clear filters</button>
           )}
@@ -274,29 +275,19 @@ function CriteriaBrowser({
       </div>
       {!collapsed && (
         <div className="px-4 py-3">
-          {/* Search box */}
           <div className="flex gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-text-muted" />
-              <input type="text" placeholder="Search criteria across all groups..."
-                value={criteriaSearch} onChange={(e) => setCriteriaSearch(e.target.value)}
+              <input type="text" placeholder="Search criteria across all groups (server-side, no limits)..."
+                value={criteriaSearch} onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full rounded border border-border bg-surface pl-8 pr-8 py-1.5 text-sm" />
               {criteriaSearch && (
-                <button onClick={() => { setCriteriaSearch(''); setExpandedGroups(new Set()) }} className="absolute right-2 top-2 text-text-muted hover:text-text-primary"><X className="h-3.5 w-3.5" /></button>
+                <button onClick={() => { handleSearchChange(''); setDebouncedSearch(''); setExpandedGroups(new Set()) }} className="absolute right-2 top-2 text-text-muted hover:text-text-primary"><X className="h-3.5 w-3.5" /></button>
               )}
             </div>
-            {criteriaSearch && (
+            {debouncedSearch && searchResults && (
               <button
-                onClick={() => {
-                  const csq = criteriaSearch.toLowerCase()
-                  const matching = new Set(facets
-                    .filter((f) => {
-                      const typed = typeFilter !== 'all' ? f.topCriteria.filter((c) => c.type === typeFilter) : f.topCriteria
-                      return f.categories.some((c) => c.category.toLowerCase().includes(csq)) || typed.some((c) => c.text.toLowerCase().includes(csq))
-                    })
-                    .map((f) => f.group))
-                  setExpandedGroups(matching)
-                }}
+                onClick={() => setExpandedGroups(new Set(searchResults.keys()))}
                 className="rounded border border-primary/30 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5 whitespace-nowrap"
               >
                 Expand all matches
@@ -304,86 +295,37 @@ function CriteriaBrowser({
             )}
           </div>
 
-          {/* Groups grid — use multi-column layout now that we have full width */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 max-h-[50vh] overflow-y-auto">
-            {facets.map((facet) => {
-              const isGroupFiltered = facetFilter.groups.has(facet.group)
-              const isExpanded = expandedGroups.has(facet.group)
-              const csq = criteriaSearch.toLowerCase()
-
-              // Apply type filter to criteria for visibility checks
-              const typedCriteria = typeFilter !== 'all' ? facet.topCriteria.filter((c) => c.type === typeFilter) : facet.topCriteria
-
-              // Hide groups with no matches when searching or type-filtering
-              if (csq || typeFilter !== 'all') {
-                const hasCatMatch = csq ? facet.categories.some((c) => c.category.toLowerCase().includes(csq)) : false
-                const hasCriteriaMatch = csq
-                  ? typedCriteria.some((c) => c.text.toLowerCase().includes(csq))
-                  : typedCriteria.length > 0
-                if (!hasCatMatch && !hasCriteriaMatch) return null
-              }
+            {groups.map((g) => {
+              const isGroupFiltered = facetFilter.groups.has(g.group)
+              const isExpanded = expandedGroups.has(g.group)
 
               return (
-                <div key={facet.group} className={cn('rounded', isExpanded && 'col-span-2 bg-surface-alt/30 p-2 mb-1')}>
+                <div key={g.group} className={cn('rounded', isExpanded && 'col-span-2 bg-surface-alt/30 p-2 mb-1')}>
                   <div className="flex items-center">
-                    <button onClick={() => toggleExpand(facet.group)} className="p-0.5 text-text-muted hover:text-text-primary">
+                    <button onClick={() => toggleExpand(g.group)} className="p-0.5 text-text-muted hover:text-text-primary">
                       {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                     </button>
                     <button
-                      onClick={() => toggleFilterGroup(facet.group)}
+                      onClick={() => toggleFilterGroup(g.group)}
                       className={cn(
                         'flex-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-left text-xs transition-colors',
                         isGroupFiltered ? 'bg-primary/10 text-primary font-semibold' : 'text-text-primary hover:bg-surface-alt',
                       )}
                     >
-                      <span className="flex-1 truncate">{facet.label}</span>
-                      <span className={cn('text-[10px] flex-shrink-0', isGroupFiltered ? 'text-primary' : 'text-text-muted')}>{facet.trialCount}t</span>
+                      <span className="flex-1 truncate">{g.label}</span>
+                      <span className={cn('text-[10px] flex-shrink-0', isGroupFiltered ? 'text-primary' : 'text-text-muted')}>{g.trialCount}t</span>
                     </button>
                   </div>
 
-                  {isExpanded && (() => {
-                    const filteredCats = csq ? facet.categories.filter((c) => c.category.toLowerCase().includes(csq)) : facet.categories
-                    const typeFiltered = typeFilter !== 'all' ? facet.topCriteria.filter((c) => c.type === typeFilter) : facet.topCriteria
-                    const hasMatchingCriteria = csq ? typeFiltered.some((c) => c.text.toLowerCase().includes(csq)) : typeFiltered.length > 0
-
-                    if (csq && filteredCats.length === 0 && !hasMatchingCriteria) {
-                      return <div className="ml-5 text-[10px] text-text-muted py-1 italic">No matches</div>
-                    }
-
-                    return (
-                      <div className="mt-1 grid grid-cols-2 gap-x-4">
-                        {/* Left: categories */}
-                        <div>
-                          <div className="text-[10px] text-text-muted font-medium mb-1">Categories ({filteredCats.length})</div>
-                          <div className="space-y-0.5">
-                            {filteredCats.slice(0, 20).map((cat) => {
-                              const catKey = `${facet.group}::${cat.category}`
-                              const isCatFiltered = facetFilter.categories.has(catKey)
-                              return (
-                                <button key={cat.category}
-                                  onClick={() => toggleFilterCategory(facet.group, cat.category)}
-                                  className={cn(
-                                    'flex w-full items-center justify-between px-1.5 py-0.5 rounded text-[11px] transition-colors text-left',
-                                    isCatFiltered ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:bg-surface-alt',
-                                  )}
-                                >
-                                  <span className="truncate">{cat.category}</span>
-                                  <span className={cn('flex-shrink-0 ml-1', isCatFiltered ? 'text-primary' : 'text-text-muted')}>{cat.count}</span>
-                                </button>
-                              )
-                            })}
-                            {filteredCats.length > 20 && <div className="px-1.5 py-0.5 text-[10px] text-text-muted">+{filteredCats.length - 20} more</div>}
-                          </div>
-                        </div>
-                        {/* Right: criteria text preview */}
-                        <div>
-                          {(hasMatchingCriteria || !csq) && facet.topCriteria.length > 0 && (
-                            <CriteriaPreview criteria={facet.topCriteria} groupLabel={facet.label} trialCount={facet.trialCount} searchFilter={criteriaSearch || undefined} typeFilter={typeFilter} onCriteriaClick={(text) => setCriteriaSearch(text.slice(0, 60))} />
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })()}
+                  {isExpanded && (
+                    <GroupDetail
+                      group={g.group}
+                      typeFilter={typeFilter}
+                      searchResults={debouncedSearch && searchResults ? searchResults.get(g.group) : undefined}
+                      onCriteriaClick={(text) => handleSearchChange(text.slice(0, 60))}
+                    />
+                  )}
                 </div>
               )
             })}
@@ -394,45 +336,46 @@ function CriteriaBrowser({
   )
 }
 
-function CriteriaPreview({ criteria, trialCount, searchFilter, typeFilter = 'all', onCriteriaClick }: {
-  criteria: CriteriaTextEntry[]; groupLabel?: string; trialCount: number; searchFilter?: string; typeFilter?: TypeFilter; onCriteriaClick?: (text: string) => void
+function GroupDetail({ group, typeFilter, searchResults, onCriteriaClick }: {
+  group: string; typeFilter: TypeFilter; searchResults?: CriteriaTextEntry[]; onCriteriaClick: (text: string) => void
 }) {
+  const { data: criteria, isLoading } = useCriteriaGroupDetail(group, typeFilter)
   const [showAll, setShowAll] = useState(false)
-  const filtered = useMemo(() => {
-    let result = criteria
-    if (typeFilter !== 'all') result = result.filter((c) => c.type === typeFilter)
-    if (searchFilter) { const q = searchFilter.toLowerCase(); result = result.filter((c) => c.text.toLowerCase().includes(q)) }
-    return result
-  }, [criteria, searchFilter, typeFilter])
-  const visible = showAll ? filtered : filtered.slice(0, 8)
-  if (searchFilter && filtered.length === 0) return null
+
+  // Use search results if available, otherwise use the full group detail query
+  const displayCriteria = searchResults ?? criteria ?? []
+  const visible = showAll ? displayCriteria : displayCriteria.slice(0, 15)
+
+  if (isLoading && !searchResults) return <div className="ml-5 text-[10px] text-text-muted py-1">Loading...</div>
+  if (displayCriteria.length === 0) return <div className="ml-5 text-[10px] text-text-muted py-1 italic">No criteria</div>
 
   return (
-    <div>
+    <div className="mt-1 ml-2">
       <div className="text-[10px] text-text-muted font-medium mb-1">
-        {searchFilter ? `${filtered.length} matching criteria` : `Top criteria (${trialCount} trials)`}
+        {searchResults ? `${displayCriteria.length} matching criteria` : `${displayCriteria.length} criteria (all, no limit)`}
       </div>
-      <div className="space-y-0.5 max-h-48 overflow-y-auto">
+      <div className="space-y-0.5 max-h-64 overflow-y-auto">
         {visible.map((c, i) => (
-          <button key={i} onClick={() => onCriteriaClick?.(c.text)}
+          <button key={i} onClick={() => onCriteriaClick(c.text)}
             className="flex w-full items-start gap-1 px-1 py-0.5 text-[10px] leading-tight text-left rounded hover:bg-primary/5 transition-colors"
             title="Click to search for this criterion">
             <span className={cn('flex-shrink-0 font-medium uppercase', c.type === 'inclusion' ? 'text-success' : 'text-danger')}>
               {c.type === 'inclusion' ? 'IN' : 'EX'}
             </span>
-            <span className="text-text-secondary flex-1 line-clamp-2">{c.text}</span>
+            <span className="text-text-secondary flex-1">{c.text}</span>
             <span className="text-text-muted flex-shrink-0 ml-1">{c.trialCount}t</span>
           </button>
         ))}
       </div>
-      {filtered.length > 8 && (
+      {displayCriteria.length > 15 && (
         <button onClick={() => setShowAll(!showAll)} className="text-[10px] text-primary hover:underline mt-0.5 px-1">
-          {showAll ? 'Show less' : `Show all ${filtered.length}`}
+          {showAll ? 'Show less' : `Show all ${displayCriteria.length}`}
         </button>
       )}
     </div>
   )
 }
+
 
 // ─── ComparisonMatrix ───
 
@@ -539,7 +482,7 @@ export function PopulationExplorerPage() {
   const [listOnly, setListOnly] = useState(false)
 
   const basket = useStudyBasket()
-  const { results: allResults, facets, isLoading, totalProfiles } = usePopulationSearch(profile)
+  const { results: allResults, isLoading, totalProfiles } = usePopulationSearch(profile)
   const { data: ontology } = useEligibilityOntology()
 
   // Push ontology labels into the global label resolver
@@ -642,7 +585,7 @@ export function PopulationExplorerPage() {
           )}
 
           {/* Criteria browser — full width */}
-          <CriteriaBrowser facets={facets} facetFilter={facetFilter} onFacetChange={handleFacetChange} />
+          <CriteriaBrowser facetFilter={facetFilter} onFacetChange={handleFacetChange} />
 
           {/* Results table */}
           <Card>
