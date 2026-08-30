@@ -20,8 +20,14 @@
     {"name": "life_expectancy_weeks", "label": "Life Expectancy (weeks)", "type": "integer"},
     {"name": "accepts_healthy_volunteers", "label": "Accepts Healthy Volunteers", "type": "boolean"},
     {"name": "criteria_json", "label": "Criteria (JSON)", "type": "string", "full_text_indexed": true},
+    {"name": "criteria", "label": "Criteria", "type": "array", "items": {"type": "object", "template_ref": "CT_CRITERION"}},
     {"name": "extraction_model", "label": "Extraction Model", "type": "string", "mandatory": true},
     {"name": "extracted_at", "label": "Extracted At", "type": "date"}
   ],
-  "reporting": {"sync_enabled": true, "sync_strategy": "latest_only"}
+  "reporting": {
+    "sync_enabled": true,
+    "sync_strategy": "latest_only",
+    "flatten_arrays": true,
+    "max_array_elements": 100
+  }
 }

@@ -1,0 +1,16 @@
+{
+  "value": "CT_CRITERION",
+  "label": "Eligibility Criterion",
+  "description": "Nested template defining a single eligibility criterion — used as array_template_ref in CT_TRIAL_ELIGIBILITY",
+  "namespace": "clintrial",
+  "identity_fields": [],
+  "fields": [
+    { "name": "text", "label": "Criterion Text", "type": "string", "mandatory": true },
+    { "name": "criterion_type", "label": "Type", "type": "string", "mandatory": true },
+    { "name": "category", "label": "Category", "type": "string" },
+    { "name": "semantic_group", "label": "Semantic Group", "type": "string" }
+  ],
+  "reporting": {
+    "sync_enabled": false
+  }
+}

@@ -246,7 +246,7 @@ function CriteriaBrowser({
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
         <button onClick={() => setCollapsed(!collapsed)} className="flex items-center gap-2 text-sm font-semibold text-text-primary">
           <Layers className="h-4 w-4 text-primary" />
-          Criteria Groups ({facets.length})
+          Criteria Groups
           {collapsed ? <ChevronRight className="h-3.5 w-3.5 text-text-muted" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
         </button>
         <div className="flex items-center gap-2">
@@ -275,13 +275,32 @@ function CriteriaBrowser({
       {!collapsed && (
         <div className="px-4 py-3">
           {/* Search box */}
-          <div className="relative mb-3">
-            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-text-muted" />
-            <input type="text" placeholder="Filter criteria text across expanded groups..."
-              value={criteriaSearch} onChange={(e) => setCriteriaSearch(e.target.value)}
-              className="w-full rounded border border-border bg-surface pl-8 pr-8 py-1.5 text-sm" />
+          <div className="flex gap-2 mb-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-text-muted" />
+              <input type="text" placeholder="Search criteria across all groups..."
+                value={criteriaSearch} onChange={(e) => setCriteriaSearch(e.target.value)}
+                className="w-full rounded border border-border bg-surface pl-8 pr-8 py-1.5 text-sm" />
+              {criteriaSearch && (
+                <button onClick={() => { setCriteriaSearch(''); setExpandedGroups(new Set()) }} className="absolute right-2 top-2 text-text-muted hover:text-text-primary"><X className="h-3.5 w-3.5" /></button>
+              )}
+            </div>
             {criteriaSearch && (
-              <button onClick={() => setCriteriaSearch('')} className="absolute right-2 top-2 text-text-muted hover:text-text-primary"><X className="h-3.5 w-3.5" /></button>
+              <button
+                onClick={() => {
+                  const csq = criteriaSearch.toLowerCase()
+                  const matching = new Set(facets
+                    .filter((f) => {
+                      const typed = typeFilter !== 'all' ? f.topCriteria.filter((c) => c.type === typeFilter) : f.topCriteria
+                      return f.categories.some((c) => c.category.toLowerCase().includes(csq)) || typed.some((c) => c.text.toLowerCase().includes(csq))
+                    })
+                    .map((f) => f.group))
+                  setExpandedGroups(matching)
+                }}
+                className="rounded border border-primary/30 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5 whitespace-nowrap"
+              >
+                Expand all matches
+              </button>
             )}
           </div>
 
@@ -291,6 +310,18 @@ function CriteriaBrowser({
               const isGroupFiltered = facetFilter.groups.has(facet.group)
               const isExpanded = expandedGroups.has(facet.group)
               const csq = criteriaSearch.toLowerCase()
+
+              // Apply type filter to criteria for visibility checks
+              const typedCriteria = typeFilter !== 'all' ? facet.topCriteria.filter((c) => c.type === typeFilter) : facet.topCriteria
+
+              // Hide groups with no matches when searching or type-filtering
+              if (csq || typeFilter !== 'all') {
+                const hasCatMatch = csq ? facet.categories.some((c) => c.category.toLowerCase().includes(csq)) : false
+                const hasCriteriaMatch = csq
+                  ? typedCriteria.some((c) => c.text.toLowerCase().includes(csq))
+                  : typedCriteria.length > 0
+                if (!hasCatMatch && !hasCriteriaMatch) return null
+              }
 
               return (
                 <div key={facet.group} className={cn('rounded', isExpanded && 'col-span-2 bg-surface-alt/30 p-2 mb-1')}>
@@ -347,7 +378,7 @@ function CriteriaBrowser({
                         {/* Right: criteria text preview */}
                         <div>
                           {(hasMatchingCriteria || !csq) && facet.topCriteria.length > 0 && (
-                            <CriteriaPreview criteria={facet.topCriteria} groupLabel={facet.label} trialCount={facet.trialCount} searchFilter={criteriaSearch || undefined} typeFilter={typeFilter} />
+                            <CriteriaPreview criteria={facet.topCriteria} groupLabel={facet.label} trialCount={facet.trialCount} searchFilter={criteriaSearch || undefined} typeFilter={typeFilter} onCriteriaClick={(text) => setCriteriaSearch(text.slice(0, 60))} />
                           )}
                         </div>
                       </div>
@@ -363,8 +394,8 @@ function CriteriaBrowser({
   )
 }
 
-function CriteriaPreview({ criteria, trialCount, searchFilter, typeFilter = 'all' }: {
-  criteria: CriteriaTextEntry[]; groupLabel?: string; trialCount: number; searchFilter?: string; typeFilter?: TypeFilter
+function CriteriaPreview({ criteria, trialCount, searchFilter, typeFilter = 'all', onCriteriaClick }: {
+  criteria: CriteriaTextEntry[]; groupLabel?: string; trialCount: number; searchFilter?: string; typeFilter?: TypeFilter; onCriteriaClick?: (text: string) => void
 }) {
   const [showAll, setShowAll] = useState(false)
   const filtered = useMemo(() => {
@@ -383,13 +414,15 @@ function CriteriaPreview({ criteria, trialCount, searchFilter, typeFilter = 'all
       </div>
       <div className="space-y-0.5 max-h-48 overflow-y-auto">
         {visible.map((c, i) => (
-          <div key={i} className="flex items-start gap-1 px-1 py-0.5 text-[10px] leading-tight">
+          <button key={i} onClick={() => onCriteriaClick?.(c.text)}
+            className="flex w-full items-start gap-1 px-1 py-0.5 text-[10px] leading-tight text-left rounded hover:bg-primary/5 transition-colors"
+            title="Click to search for this criterion">
             <span className={cn('flex-shrink-0 font-medium uppercase', c.type === 'inclusion' ? 'text-success' : 'text-danger')}>
               {c.type === 'inclusion' ? 'IN' : 'EX'}
             </span>
             <span className="text-text-secondary flex-1 line-clamp-2">{c.text}</span>
             <span className="text-text-muted flex-shrink-0 ml-1">{c.trialCount}t</span>
-          </div>
+          </button>
         ))}
       </div>
       {filtered.length > 8 && (

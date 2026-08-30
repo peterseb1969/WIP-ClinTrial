@@ -434,7 +434,7 @@ export function usePopulationSearch(search: PopulationProfile) {
       const topCriteria: CriteriaTextEntry[] = [...data.textCounts.entries()]
         .map(([text, info]) => ({ text, type: info.type, trialCount: info.trials.size }))
         .sort((a, b) => b.trialCount - a.trialCount)
-        .slice(0, 50)
+        .slice(0, 200)
 
       facetList.push({
         group,
