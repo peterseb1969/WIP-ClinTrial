@@ -22,7 +22,8 @@
     {"name": "criteria_json", "label": "Criteria (JSON)", "type": "string", "full_text_indexed": true},
     {"name": "criteria", "label": "Criteria", "type": "array", "items": {"type": "object", "template_ref": "CT_CRITERION"}},
     {"name": "extraction_model", "label": "Extraction Model", "type": "string", "mandatory": true},
-    {"name": "extracted_at", "label": "Extracted At", "type": "date"}
+    {"name": "extracted_at", "label": "Extracted At", "type": "date"},
+    {"name": "source_hash", "label": "Source Text Hash", "type": "string"}
   ],
   "reporting": {
     "sync_enabled": true,

@@ -1,0 +1,215 @@
+clinical_event,rows,available
+"Week 9999",1,41
+"Long Term Follow Up Month 24",1,9
+"Unscheduled / Retest ",1,8
+"Cycle 3 Day 17",1,5
+"Month 28 Follow Up",2,5
+"C3D3F Irinotecan post 5-FU",1,3
+"Cycle 2 Day 17",1,3
+"Day 28 (33)",1,3
+"BASELINEBSR2",1,2
+"C2D30",1,2
+"CYCLE_21",1,2
+"Cycle 4 Day 16",1,2
+"Cycle 4 Day 17",1,2
+"Cycle 6 Day 17",1,2
+"Cycle 6 Day 3",1,2
+"Cycle 9 Day 10",1,2
+"Day 2 24 HR PRE BACK UP",1,2
+"Early term biopsy",1,2
+"End of C21",1,2
+"Follow-up Month 29",1,2
+"P2",1,2
+"Retest INSULIN 2HR",1,2
+"Survival Follow-Up Week 48",1,2
+"Unscheduled Visit/Retest RETESTV6",1,2
+"UNSCH/RETEST C41D1",1,2
+"Visit 6 Day 8 Predose  BLUE",1,2
+"WK80",1,2
+"12WK FOLLOW UP",1,1
+"1 Year Follow-Up",1,1
+"2 Day",1,1
+"3 Day",1,1
+"3-month Follow Up A1",1,1
+"48 HOUR POST INFUSION",1,1
+"Archival, Day -9",1,1
+"ARM B CYCLE 2 D1 PRE MPDL3280A",1,1
+"ARM E CYCLE 14 D1 PRE",1,1
+"ARM E CYCLE 1 D15 UNSCH/RETEST",1,1
+"AWEEK16",1,1
+"AWEEK24",1,1
+"B cell monitoring visit 19",1,1
+"B cell monitoring visit 20",1,1
+"BWEEK12",1,1
+"C1D1 Predose",1,1
+"C1D1 SM5 MEGF0444A PK",1,1
+"C1D22 B",1,1
+"C1D29D42",1,1
+"C1D4TO5 72_OR_96_HRS_POST_DOSE",1,1
+"C20D1pre",1,1
+"C2D1PREDOSE",1,1
+"C3D1 SM4 MEGF0444A PK 1 hr Post Extra sample",1,1
+"C3D2F 5-FU 0.5HR POST",1,1
+"C3D2F IRIN 24 HR POST",1,1
+"C6D15D",1,1
+"C8D1COM POST",1,1
+"C8D1 SM6 MEGF0444A ATA",1,1
+"CD0P",1,1
+"CD4P",1,1
+"Cycle 10 Day 3",1,1
+"CYCLE11_DAY2",1,1
+"Cycle 12 Day 3",1,1
+"CYCLE14_DAY2",1,1
+"CYCLE15_DAY2",1,1
+"CYCLE17_DAY2",1,1
+"CYCLE18_DAY5",1,1
+"Cycle 1 Day 1 4hr P1a",1,1
+"CYCLE 1 DAY 15 A7",1,1
+"Cycle 1 Day 1A 2-4 HR",1,1
+"CYCLE20_DAY2",1,1
+"CYCLE23_DAY5",1,1
+"CYCLE24_DAY2",1,1
+"CYCLE 2 DAY 1 30MIN",1,1
+"Cycle 2 Day 1* SM4/ Serum PD Pre",1,1
+"CYCLE 381A",1,1
+"Cycle 3 Day 15 (Crossover)",1,1
+"CYCLE 4 DAY 1 30MIN STUDY COMPL/EARLY TERM",1,1
+"Cycle 4 Day 1 SM16/ Serum Bev PK 30 MIN POST",1,1
+"Cycle 5 Day 1 - Treatment Discontinuation",1,1
+"Cycle 8 Day 1 Actual",1,1
+"Cycle 8 Day 3",1,1
+"Cycle 9 Day 1 SM7/ Serum PD Pre ALIQUOT 2",1,1
+"D372",1,1
+"Day 1 4h",1,1
+"Day 20 Post-dose 4h",1,1
+"Day -8",1,1
+"Day 8 99m D-High",1,1
+"FACS Visit",1,1
+"Follow Up 1",1,1
+"Follow up Completion of Combination Therapy 33 Month",1,1
+"Follow up Completion of Combination Therapy 9 Month",1,1
+"Follow Up Month 4",1,1
+"FU 4&12&36",1,1
+"FUM 3",1,1
+"FUT1 C9D1_PREDOSE",1,1
+"FUT8 C16D1_30_MIN_POST_DOSE",1,1
+"M10",1,1
+"MM",1,1
+"Mobile Nursing Visit 4/Maternal",1,1
+"Month 33",1,1
+"Month 35",1,1
+"OCT/FFPE Fresh Biopsy, Post Dose",1,1
+"OLE Unscheduled 4",1,1
+"P1B-UN1",1,1
+"P2B-UN1",1,1
+"PDSWK40",1,1
+"Post Dose, Day 20.",1,1
+"QW C9 D1 30 MIN UNSCHED/RETEST",1,1
+"RESCUE WEEK 4",1,1
+"Retest Cohort SC SM2 PK 1 hr post EOI",1,1
+"Retest D309",1,1
+"Retest Week 0",1,1
+"Retreat 4 wk 8",1,1
+"Retreat 5 wk 8",1,1
+"Retreat Uns Visit 3",1,1
+"Retreat Uns Visit 4",1,1
+"Safety Follow Up  23",1,1
+"Sample 11",1,1
+"Sample 14",1,1
+"Sample 17",1,1
+"Screening Archival Tumor",1,1
+"SM6/ OPT RCR Tumor Frozen",1,1
+"SRL BX LST WK VEM RI BLD",1,1
+"Study Comp Week 6",1,1
+"Tau PET Scan Visit 1",1,1
+"Termination SM1/MEG PK PRE",1,1
+"Treatment End",1,1
+"TXCW_MD",1,1
+"UDNAC22",1,1
+"UNSCH C9D1",1,1
+"Unscheduled/Retest Predose",1,1
+"UNSCH/RETEST C28D1",1,1
+"UNSCH/RETEST C5D1 30",1,1
+"UNSCH/RETEST C6D1 30",1,1
+"UNSCH SCRN",1,1
+"UNS Whole Blood Genetic",1,1
+"V29",1,1
+"Visit 10 Day 36 SM2/PD PRE GREEN -70 FROZEN",1,1
+"Visit 28",1,1
+"Visit 6 Day 8",1,1
+"Visit 8 Aliquot 1",1,1
+"W1D1",1,1
+"WEEK0IGE",1,1
+"Week 105 SC",1,1
+"WEEK 116",1,1
+"Week 24 Switch",1,1
+"Week 25 SC",1,1
+"Week 4 Day 22 - Mobile Nursing",1,1
+"WEEK 60 RESC",1,1
+"WK24 RE-TRT 2",1,1
+"111",1,0
+"21  RT 6 DAY 1",1,0
+"21  RT 6 DAY 15",1,0
+"21  RT 7 DAY 1",1,0
+"45 Month",1,0
+"9MFU",1,0
+"ARM C CYCLE 21 D1",1,0
+"AUCPOOL",1,0
+"Baseline (Day -7 to -1)",1,0
+"C11 DAY 1",1,0
+"C15 D1 PRE P1B IV",1,0
+"C17D15 -0.17H",1,0
+"C18D1 -0.17H",1,0
+"C19 DAY 1 PREDOSE",1,0
+"C1D2S1NONBIOP",1,0
+"C21D15 -0.17H",1,0
+"C22D1 -0.17H",1,0
+"C24D1C",1,0
+"C27 D1 P1A",1,0
+"C3D1 PRE WKLY DSE",1,0
+"C4D1 Preinfusion",1,0
+"C5 D1  PRE P1B IV",1,0
+"C6D1 Predose",1,0
+"Crossover C2XD1",1,0
+"CTC",1,0
+"CYCLE 1 WEEK 4",1,0
+"Cycle 8 ay 1 Predose",1,0
+"D 1",1,0
+"DAY 15 EOI+1 HOUR",1,0
+"DAY 15 PRE-DOSE",1,0
+"Day 19 ",1,0
+"DAY 1 RE-TRT 13",1,0
+"Day 21 ",1,0
+"DAY 224 VISIT 11",1,0
+"EARLY DISCONTINUATION",1,0
+"FU 36 WEEKS",1,0
+"Histoguard TMA core Control",1,0
+"Implant Post Refill Month 35 Day 7",1,0
+"M6.5",1,0
+"M66",1,0
+"Maintenance Phase End of Cycle 2",1,0
+"Medium Methylated DNA Control",1,0
+"Monotherapy Phase End of Cycle 2",1,0
+"Part A Week 2 Day 2",1,0
+"PB-UN1",1,0
+"Pooling Group 3",1,0
+"Pooling Group 9",1,0
+"Post Bypassing Treatment 4",1,0
+"POST C8 F/U Trx2 PREDOSE",1,0
+"QW C1 D4 OR D5",1,0
+"QW C4 D1",1,0
+"Retest M1",1,0
+"RT D1",1,0
+"RUND7",1,0
+"S2C7D1",1,0
+"S2C9D1",1,0
+"SAFETY FOLLOW UP P1A",1,0
+"SCRN 2 hours Post PK",1,0
+"UNSCHEDULED1",1,0
+"Unscheduled2",1,0
+"V4 SM4/ ATA Serum",1,0
+"V5.1",1,0
+"Visit 1 ALIQUOT 1",1,0
+"Week 1 Day -7",1,0
+"Week 24/PD",1,0
+"WK 104 RE-TRT 7 (or WITHDRAWAL)",2,0

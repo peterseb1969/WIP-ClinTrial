@@ -5,6 +5,7 @@ import {
   Bookmark,
   ClipboardCheck,
   TrendingUp,
+  ShieldCheck,
 } from 'lucide-react'
 import {
   BarChart,
@@ -22,6 +23,7 @@ import { Card, CardHeader, CardTitle } from '@/components/Card'
 import { PageLoading } from '@/components/LoadingSpinner'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { useFilteredTrials, useSampleCounts } from '@/hooks/useFilteredTrials'
+import { useEligibilityCoverage } from '@/hooks/useEligibilityCoverage'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useTrialFilters } from '@/hooks/useTrialFilters'
 import { countBy, deduplicateConditions, formatStatus, formatPhase } from '@/lib/trial-utils'
@@ -37,6 +39,7 @@ const PIE_COLORS = [
 export function DashboardPage() {
   const { trials: filtered, allTrials, isLoading, error, refetch } = useFilteredTrials()
   const { data: sampleCounts } = useSampleCounts()
+  const { data: eligCoverage } = useEligibilityCoverage()
   const { count: bookmarkCount } = useBookmarks()
   const { hasActive } = useTrialFilters()
   const navigate = useNavigate()
@@ -119,6 +122,54 @@ export function DashboardPage() {
           </div>
         )
       })()}
+
+      {/* Eligibility extraction coverage */}
+      {eligCoverage && (
+        <div className="rounded-lg border bg-surface px-4 py-2.5">
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium uppercase text-text-muted">Eligibility Extraction</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <span>
+              <strong className="text-success">{formatNumber(eligCoverage.extracted)}</strong>
+              <span className="text-text-muted"> extracted</span>
+            </span>
+            {eligCoverage.pending > 0 && (
+              <span>
+                <strong className="text-accent">{formatNumber(eligCoverage.pending)}</strong>
+                <span className="text-text-muted"> pending</span>
+              </span>
+            )}
+            <span className="text-gray-300">|</span>
+            {eligCoverage.withHash > 0 ? (
+              <>
+                <span>
+                  <strong className="text-success">{formatNumber(eligCoverage.current)}</strong>
+                  <span className="text-text-muted"> current</span>
+                </span>
+                {eligCoverage.stale > 0 && (
+                  <span>
+                    <strong className="text-danger">{formatNumber(eligCoverage.stale)}</strong>
+                    <span className="text-text-muted"> stale</span>
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-text-muted text-xs">staleness tracking not yet populated</span>
+            )}
+          </div>
+          <div className="mt-1.5 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-success"
+              style={{ width: `${(eligCoverage.extracted / eligCoverage.totalWithText) * 100}%` }}
+            />
+          </div>
+          <p className="mt-1 text-xs text-text-muted">
+            {((eligCoverage.extracted / eligCoverage.totalWithText) * 100).toFixed(1)}% of {formatNumber(eligCoverage.totalWithText)} trials with eligibility text
+          </p>
+        </div>
+      )}
 
       {/* Charts row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">
