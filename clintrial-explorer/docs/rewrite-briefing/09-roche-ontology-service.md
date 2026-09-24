@@ -8,9 +8,17 @@ This is a potential canonical vocabulary source for cross-source entity normaliz
 
 ## Authentication
 
-- OAuth2 authorization code flow via `https://wam.roche.com/as/authorization.oauth2`
-- Basic auth also works for interactive use
-- Some endpoints (e.g., terminology export) require elevated privileges
+The Swagger UI documents OAuth2 (authorization code flow via PingFederate), but **Basic auth works directly on every API endpoint** — the service authenticates against Roche SAM on each request. No token exchange needed.
+
+For programmatic access:
+- Store credentials (Roche username + password) as a server-side secret
+- Send `Authorization: Basic <base64(user:pass)>` on every request
+- No token management, refresh, or OAuth flow required
+- In an app: add a server-side proxy route (like the existing WIP proxy) that injects the Basic auth header, so credentials never reach the browser
+
+The token endpoint at `/api/int/token.oauth2/swagger` is strictly an authorization_code exchange for the Swagger UI — it does not accept client_credentials or password grants.
+
+Some endpoints (e.g., terminology export) require elevated privileges beyond basic read access.
 
 ## API Structure
 

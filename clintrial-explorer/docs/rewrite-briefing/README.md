@@ -15,6 +15,7 @@ This folder captures the domain knowledge, data model, features, and design less
 | 7 | [Design Decisions & Lessons](07-design-decisions.md) | What worked, what didn't, tradeoffs encountered |
 | 8 | [Open Questions for Rewrite](08-open-questions.md) | Known gaps, unfinished work, design questions to revisit |
 | 9 | [Roche Ontology Service](09-roche-ontology-service.md) | Internal RTS API — 39 terminologies, 5,869 indications, potential canonical vocabulary source |
+| 10 | [Timepoint Normalization Rules](10-timepoint-normalization-rules.md) | 19 regex patterns, seconds formulas, anchor rules — reproducible from this doc |
 
 ## Scope
 
