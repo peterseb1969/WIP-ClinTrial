@@ -285,6 +285,19 @@ Listed in priority order. First match wins. All matching is case-insensitive unl
 
 While 22% of unique event strings are unmapped, they cover only 2.7% of samples — the long tail of rare, study-specific labels.
 
+### Sample Temporal Precision
+
+Three levels of temporal information are available, depending on how well the event string could be parsed:
+
+| Level | Description | Total samples | Available | % of total |
+|-------|-------------|--------------|-----------|------------|
+| Full (seconds from anchor) | Chronologically sortable within a study | 7,705,943 | 6,211,231 | **67%** |
+| Phase only (no seconds) | Sequenceable by phase order (SCREENING → BASELINE → ON_TREATMENT → EOT → FOLLOW_UP) but no within-phase ordering | 3,426,463 | 2,207,509 | **30%** |
+| No phase | No temporal information at all | 314,211 | 231,647 | **3%** |
+| | **Total** | **11,446,617** | **8,650,387** | |
+
+97% of samples have at least phase-level sequence information, enabling coarse chronological ordering even when exact timing is unknown.
+
 ### Term-Level Coverage
 
 | Category | Events | % of 10,713 |
