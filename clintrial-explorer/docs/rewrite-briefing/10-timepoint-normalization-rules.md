@@ -367,6 +367,37 @@ The top 4 timepoints (Not specified, Screening, Cycle 1 Day 1, Baseline) account
 
 The 2,352 unmapped terms are study-specific labels that don't match any pattern — e.g., "SDDV", "TOC4129g", "RCR", "AB", bare numbers ("1", "2"), compound-specific PK labels. Most have low sample counts. See `unmapped_clinical_events.csv` for the 214 events not even in the mapping table (236 total available samples).
 
+## Cycle Duration: From Per-Cycle to Absolute Time
+
+The current mapping anchors within each cycle (Cycle 2 Day 1 = 0 seconds from CYCLE_2) but does not compute absolute time from baseline. To do that, you need the cycle length per study:
+
+```
+absolute_seconds = (cycle - 1) × cycle_length_days × 86400 + (day - 1) × 86400
+```
+
+Cycle length varies per study — 21 days (Q3W) is most common in oncology, but 28-day cycles also occur.
+
+### Source: ClinicalTrials.gov ARM Descriptions
+
+Cycle length is extractable from the CT.gov JSON without parsing PDFs. It appears in `armsInterventionsModule.armGroups[].description` and `interventions[].description`:
+
+| Study | Cycle Length | Source Text |
+|-------|-------------|-------------|
+| BO40933 | 28 days | "in each 28-day cycle" |
+| BO29561 | 21 days | "Induction (Cycles 1–6; 21-day cycles)" |
+| MO29983 | 21 days | "every 3 weeks (Q3W)" |
+| WO30085 | 21 days | "Day 1 of each 21-day cycle" |
+| MO42319 | 21 days | "Day 1 of each 21-day cycle" |
+
+A regex like `(\d+)[- ]?day cycle|every\s+(\d+)\s+weeks|Q(\d+)W` extracts the value reliably. Verified on 5/5 protocols — the CT.gov arm descriptions match the protocol PDFs exactly.
+
+### Recommendation for Rewrite
+
+- Extract `cycle_length_days` per study at import time from arm/intervention descriptions
+- Store as a field on the trial entity
+- Use it to compute absolute seconds for cycle-based SAMI events, enabling cross-study chronological comparison even for oncology trials with different cycle lengths
+- 468 SAMI studies use cycle notation; 344 of those are on CT.gov
+
 ## How to Extend
 
 When a new SAMI export contains unrecognized event strings:
